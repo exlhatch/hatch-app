@@ -1,456 +1,638 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   E P H E M E R A  —  G U I D I N G   I N T E L L I G E N C E
-   Live river intelligence for fly fishers
+   E P H E M E R A  —  v3.0
+   Timely Insight. Better Days.
+   Premium fly fishing intelligence — 64 UK trout rivers
    ═══════════════════════════════════════════════════════════════════════════ */
 
-// ── BRAND ──
-const EphemeraLogo = ({ s = 140 }) => (
-  <svg width={s} height={s * 0.5} viewBox="0 0 300 150" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M150 45 Q120 10 95 30 Q115 40 140 48Z" fill="#C4973A" opacity="0.25"/><path d="M150 45 Q180 10 205 30 Q185 40 160 48Z" fill="#C4973A" opacity="0.25"/>
-    <path d="M150 52 Q135 35 125 42 Q135 48 146 52Z" fill="#C4973A" opacity="0.15"/><path d="M150 52 Q165 35 175 42 Q165 48 154 52Z" fill="#C4973A" opacity="0.15"/>
-    <line x1="150" y1="38" x2="150" y2="68" stroke="#C4973A" strokeWidth="0.8" opacity="0.2"/>
-    <path d="M150 68 Q147 76 144 82" stroke="#C4973A" strokeWidth="0.5" opacity="0.15" fill="none"/>
-    <path d="M150 68 Q153 76 156 82" stroke="#C4973A" strokeWidth="0.5" opacity="0.15" fill="none"/>
-    <line x1="50" y1="88" x2="250" y2="88" stroke="#C4973A" strokeWidth="0.4" opacity="0.25"/>
-    <text x="150" y="115" textAnchor="middle" fontFamily="'Playfair Display',Georgia,serif" fontSize="38" fontWeight="900" fill="#EDE5D5" letterSpacing="6">EPHEMERA</text>
-    <text x="150" y="136" textAnchor="middle" fontFamily="'Barlow',sans-serif" fontSize="8" fontWeight="600" fill="#C4973A" letterSpacing="5">GUIDING INTELLIGENCE</text>
-    <line x1="50" y1="143" x2="250" y2="143" stroke="#C4973A" strokeWidth="0.4" opacity="0.25"/>
-  </svg>
-);
-const Mark = () => (
-  <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-    <svg width="18" height="18" viewBox="0 0 20 20"><path d="M10 5 Q13.5 1 15.5 4 Q12.5 6.5 10 7.5Z" fill="#C4973A" opacity="0.3"/><path d="M10 5 Q6.5 1 4.5 4 Q7.5 6.5 10 7.5Z" fill="#C4973A" opacity="0.3"/></svg>
-    <span style={{ fontFamily:"var(--sf)", fontSize:15, fontWeight:900, color:"#EDE5D5", letterSpacing:"0.15em" }}>EPHEMERA</span>
-  </div>
-);
+/* ═══ PALETTE ═══ */
+const C={
+  bg:"#141A14",c1:"#1A221A",c2:"#202A20",c3:"#283228",
+  bd:"#2E3E2E",bdL:"#3A4E3A",
+  tx:"#DDE1DE",txM:"#8A948F",txD:"#5F6F7B",
+  rust:"#C36A3D",rustDim:"rgba(195,106,61,0.15)",rustGlow:"rgba(195,106,61,0.3)",
+  grn:"#5A9E6F",grnDim:"rgba(90,158,111,0.15)",
+  warn:"#D4A843",warnDim:"rgba(212,168,67,0.12)",
+  hi:"#C75B4A",
+  fog:"#DDE1DE",bone:"#F3F0E8",
+  bar:{strong:"#C36A3D",mod:"#D4A843",sparse:"#5A9E6F",off:"#3A4A3A"},
+};
+const ff="'Barlow',sans-serif";
 
-/* ═══ DATA ═══ */
-const RIVERS = {
-  test:{n:"River Test",ea:"Test",desc:"The quintessential chalkstream. Birthplace of dry fly fishing.",beats:[
-    {id:"broadlands",n:"Broadlands",lat:50.988,lng:-1.499},{id:"timsbury",n:"Timsbury",lat:51.015,lng:-1.488},{id:"mottisfont",n:"Mottisfont",lat:51.057,lng:-1.533},{id:"horsebridge",n:"Horsebridge",lat:51.078,lng:-1.533},{id:"park-stream",n:"Park Stream",lat:51.079,lng:-1.530},{id:"stockbridge",n:"Stockbridge",lat:51.089,lng:-1.494},{id:"leckford",n:"Leckford",lat:51.112,lng:-1.478},{id:"longparish",n:"Longparish",lat:51.178,lng:-1.401},{id:"whitchurch",n:"Whitchurch",lat:51.225,lng:-1.337},{id:"laverstoke",n:"Laverstoke",lat:51.228,lng:-1.296}]},
-  itchen:{n:"River Itchen",ea:"Itchen",desc:"Premier chalkstream. Technical, cathedral water.",beats:[
-    {id:"itchen-abbas",n:"Itchen Abbas",lat:51.089,lng:-1.227},{id:"martyr-worthy",n:"Martyr Worthy",lat:51.083,lng:-1.262},{id:"abbotts-barton",n:"Abbotts Barton",lat:51.072,lng:-1.313},{id:"twyford",n:"Twyford",lat:51.023,lng:-1.328}]},
-  kennet:{n:"River Kennet",ea:"Kennet",desc:"Diverse chalkstream. Strong olives. Fine grayling.",beats:[
-    {id:"ramsbury",n:"Ramsbury",lat:51.443,lng:-1.596},{id:"littlecote",n:"Littlecote",lat:51.428,lng:-1.541},{id:"hungerford",n:"Hungerford",lat:51.413,lng:-1.515},{id:"kintbury",n:"Kintbury",lat:51.399,lng:-1.448}]},
-  anton:{n:"River Anton",ea:"Anton",desc:"Intimate Test tributary. Reliable early hatches.",beats:[
-    {id:"goodworth",n:"Goodworth Clatford",lat:51.184,lng:-1.513},{id:"anton-lakes",n:"Anton Lakes",lat:51.205,lng:-1.481}]},
-  avon:{n:"Hampshire Avon",ea:"Avon Hampshire",desc:"Broad, powerful. Excellent mayfly. Big fish.",beats:[
-    {id:"amesbury",n:"Amesbury",lat:51.172,lng:-1.774},{id:"netheravon",n:"Netheravon",lat:51.226,lng:-1.792},{id:"salisbury",n:"Salisbury",lat:51.068,lng:-1.798}]},
-  wylye:{n:"River Wylye",ea:"Wylye",desc:"Beautiful, underrated. Superb evening rises.",beats:[
-    {id:"heytesbury",n:"Heytesbury",lat:51.186,lng:-2.099},{id:"codford",n:"Codford",lat:51.169,lng:-2.059}]},
+/* ═══ BRAND MARK ═══ */
+const Mark=({s=32})=>(
+<svg width={s} height={s} viewBox="0 0 48 48" fill="none">
+  <path d="M24 4C24 4 14 14 14 25C14 32 18 36 24 37C30 36 34 32 34 25C34 14 24 4 24 4Z" stroke={C.fog} strokeWidth="1.6" strokeLinejoin="round"/>
+  <path d="M24 10L24 34" stroke={C.fog} strokeWidth="0.5" opacity="0.3"/>
+  <path d="M20 18Q24 15 28 18" stroke={C.fog} strokeWidth="0.5" opacity="0.25"/>
+  <path d="M18 23Q24 19 30 23" stroke={C.fog} strokeWidth="0.5" opacity="0.25"/>
+  <path d="M17 28Q24 24 31 28" stroke={C.fog} strokeWidth="0.5" opacity="0.2"/>
+  <path d="M10 40Q17 38.5 24 40Q31 38.5 38 40" stroke={C.fog} strokeWidth="1" opacity="0.35" fill="none"/>
+  <path d="M12 43Q18 41.5 24 43Q30 41.5 36 43" stroke={C.fog} strokeWidth="0.8" opacity="0.25" fill="none"/>
+  <path d="M14 46Q19 44.5 24 46Q29 44.5 34 46" stroke={C.rust} strokeWidth="0.9" opacity="0.75" fill="none"/>
+</svg>);
+
+/* ═══ REGIONS ═══ */
+const REGS={chalk:"Hampshire Chalkstreams",chalk2:"Other Chalkstreams",west:"West Country",wales:"Wales",peak:"Peak District",yorks:"Yorkshire",ne:"North East",nw:"North West",scot:"Scotland",mid:"Midlands"};
+const REG_ORDER=["chalk","chalk2","west","wales","peak","yorks","ne","nw","scot","mid"];
+const RTYPES={chalk:"Chalkstream",lime:"Limestone",spate:"Spate",free:"Freestone"};
+
+/* ═══ RIVER DATABASE — 64 UK trout rivers ═══ */
+const RV=[
+{id:"test",n:"River Test",rg:"chalk",rt:"chalk",lat:51.09,lng:-1.49,ea:"3400TH",d:"The birthplace of dry fly fishing.",a:[{n:"Upper Test, nr Whitchurch",la:51.225,lo:-1.337},{n:"Longparish",la:51.178,lo:-1.401},{n:"Stockbridge",la:51.089,lo:-1.494},{n:"Leckford",la:51.112,lo:-1.478},{n:"Horsebridge",la:51.078,lo:-1.533},{n:"Mottisfont",la:51.057,lo:-1.533},{n:"Broadlands, nr Romsey",la:50.988,lo:-1.499}]},
+{id:"itchen",n:"River Itchen",rg:"chalk",rt:"chalk",lat:51.06,lng:-1.30,ea:"2682TH",d:"Premier technical chalkstream. Cathedral water.",a:[{n:"Ovington",la:51.09,lo:-1.19},{n:"Itchen Abbas",la:51.09,lo:-1.24},{n:"Easton",la:51.08,lo:-1.27},{n:"Martyr Worthy",la:51.08,lo:-1.29},{n:"Winchester",la:51.06,lo:-1.32},{n:"Twyford",la:51.02,lo:-1.33}]},
+{id:"kennet",n:"River Kennet",rg:"chalk",rt:"chalk",lat:51.41,lng:-1.48,ea:"2641TH",d:"Marlborough to Reading. Prolific grayling.",a:[{n:"Upper Kennet, nr Marlborough",la:51.42,lo:-1.73},{n:"Ramsbury",la:51.44,lo:-1.60},{n:"Hungerford",la:51.41,lo:-1.51},{n:"Kintbury",la:51.40,lo:-1.44},{n:"Newbury",la:51.40,lo:-1.32}]},
+{id:"anton",n:"River Anton",rg:"chalk",rt:"chalk",lat:51.21,lng:-1.47,ea:"3401TH",d:"Intimate Hampshire chalk tributary.",a:[{n:"Andover",la:51.21,lo:-1.49},{n:"Goodworth Clatford",la:51.18,lo:-1.48}]},
+{id:"avon_h",n:"Hampshire Avon",rg:"chalk",rt:"chalk",lat:51.08,lng:-1.78,ea:"2504TH",d:"Wide, powerful chalk. Grayling and trout.",a:[{n:"Amesbury",la:51.17,lo:-1.78},{n:"Salisbury",la:51.06,lo:-1.80},{n:"Downton",la:51.00,lo:-1.74},{n:"Fordingbridge",la:50.93,lo:-1.79}]},
+{id:"wylye",n:"River Wylye",rg:"chalk",rt:"chalk",lat:51.12,lng:-2.02,ea:"2505TH",d:"Quiet Wiltshire chalk through meadows.",a:[{n:"Warminster",la:51.21,lo:-2.18},{n:"Heytesbury",la:51.20,lo:-2.09},{n:"Wylye village",la:51.15,lo:-2.00},{n:"Wilton",la:51.08,lo:-1.86}]},
+{id:"lambourn",n:"River Lambourn",rg:"chalk2",rt:"chalk",lat:51.45,lng:-1.52,ea:"2642TH",d:"Pristine Berkshire chalk. Crystal clear.",a:[{n:"Upper Lambourn",la:51.52,lo:-1.53},{n:"Lambourn village",la:51.51,lo:-1.53},{n:"Great Shefford",la:51.46,lo:-1.50}]},
+{id:"dever",n:"River Dever",rg:"chalk2",rt:"chalk",lat:51.17,lng:-1.36,ea:"3401TH",d:"Tiny chalk jewel. Test tributary.",a:[{n:"Bullington",la:51.18,lo:-1.36},{n:"Wonston",la:51.14,lo:-1.38}]},
+{id:"ebble",n:"River Ebble",rg:"chalk2",rt:"chalk",lat:51.02,lng:-1.90,ea:"2506TH",d:"Small unspoilt Wiltshire chalk.",a:[{n:"Broad Chalke",la:51.03,lo:-1.96},{n:"Bishopstone",la:51.04,lo:-1.89}]},
+{id:"nadder",n:"River Nadder",rg:"chalk2",rt:"chalk",lat:51.08,lng:-2.05,ea:"2507TH",d:"Wiltshire chalk through Tisbury.",a:[{n:"Tisbury",la:51.06,lo:-2.08},{n:"Fovant",la:51.06,lo:-1.99},{n:"Wilton",la:51.08,lo:-1.86}]},
+{id:"piddle",n:"River Piddle",rg:"chalk2",rt:"chalk",lat:50.73,lng:-2.19,ea:"2803TH",d:"Dorset chalkstream. Wild browns.",a:[{n:"Piddletrenthide",la:50.80,lo:-2.36},{n:"Puddletown",la:50.72,lo:-2.29},{n:"Tolpuddle",la:50.74,lo:-2.24}]},
+{id:"mimram",n:"River Mimram",rg:"chalk2",rt:"chalk",lat:51.82,lng:-0.20,ea:"2280TH",d:"Hertfordshire chalk spring.",a:[{n:"Whitwell",la:51.85,lo:-0.24},{n:"Welwyn",la:51.83,lo:-0.21}]},
+{id:"chess",n:"River Chess",rg:"chalk2",rt:"chalk",lat:51.66,lng:-0.53,ea:"2211TH",d:"Chilterns chalkstream. Short but characterful.",a:[{n:"Chesham",la:51.71,lo:-0.61},{n:"Latimer",la:51.68,lo:-0.55},{n:"Rickmansworth",la:51.64,lo:-0.47}]},
+{id:"darent",n:"River Darent",rg:"chalk2",rt:"chalk",lat:51.37,lng:0.17,ea:"2109TH",d:"Kent's only true chalkstream.",a:[{n:"Westerham",la:51.27,lo:0.07},{n:"Shoreham",la:51.33,lo:0.18},{n:"Eynsford",la:51.37,lo:0.21}]},
+{id:"exe",n:"River Exe",rg:"west",rt:"spate",lat:50.87,lng:-3.40,ea:"4502TH",d:"Classic Devon spate. Salmon and sea trout.",a:[{n:"Exmoor headwaters",la:51.10,lo:-3.55},{n:"Exebridge",la:50.99,lo:-3.50},{n:"Tiverton",la:50.90,lo:-3.49},{n:"Bickleigh",la:50.78,lo:-3.49}]},
+{id:"dart",n:"River Dart",rg:"west",rt:"spate",lat:50.50,lng:-3.72,ea:"4602TH",d:"Dartmoor spate. Boulder-strewn pockets.",a:[{n:"Dartmeet",la:50.53,lo:-3.82},{n:"Holne",la:50.52,lo:-3.78},{n:"Buckfastleigh",la:50.48,lo:-3.77},{n:"Totnes",la:50.43,lo:-3.68}]},
+{id:"tamar",n:"River Tamar",rg:"west",rt:"spate",lat:50.62,lng:-4.24,ea:"4803TH",d:"Devon-Cornwall border. Sea trout legendary.",a:[{n:"nr Bude",la:50.82,lo:-4.41},{n:"Launceston",la:50.64,lo:-4.36},{n:"Gunnislake",la:50.53,lo:-4.22}]},
+{id:"torridge",n:"River Torridge",rg:"west",rt:"spate",lat:50.95,lng:-4.15,ea:"4507TH",d:"North Devon. Tarka country.",a:[{n:"Hatherleigh",la:50.82,lo:-4.06},{n:"Torrington",la:50.95,lo:-4.14},{n:"Bideford",la:51.02,lo:-4.21}]},
+{id:"taw",n:"River Taw",rg:"west",rt:"spate",lat:50.95,lng:-3.80,ea:"4508TH",d:"Exmoor to Barnstaple.",a:[{n:"South Molton",la:51.01,lo:-3.83},{n:"Umberleigh",la:50.97,lo:-3.86},{n:"Barnstaple",la:51.08,lo:-4.06}]},
+{id:"barle",n:"River Barle",rg:"west",rt:"spate",lat:51.07,lng:-3.60,ea:"4503TH",d:"Exmoor gem. Tumbling moorland.",a:[{n:"Simonsbath",la:51.14,lo:-3.77},{n:"Withypool",la:51.10,lo:-3.68},{n:"Dulverton",la:51.04,lo:-3.55}]},
+{id:"lyn",n:"River Lyn",rg:"west",rt:"spate",lat:51.22,lng:-3.82,ea:"4509TH",d:"Dramatic Exmoor gorge fishing.",a:[{n:"Watersmeet",la:51.22,lo:-3.79},{n:"Lynmouth",la:51.23,lo:-3.83}]},
+{id:"camel",n:"River Camel",rg:"west",rt:"spate",lat:50.54,lng:-4.82,ea:"4902TH",d:"North Cornwall. Bodmin Moor headwaters.",a:[{n:"Camelford",la:50.62,lo:-4.68},{n:"Dunmere",la:50.50,lo:-4.76},{n:"Wadebridge",la:50.51,lo:-4.83}]},
+{id:"usk",n:"River Usk",rg:"wales",rt:"free",lat:51.80,lng:-3.10,ea:"5604TH",d:"Premier Welsh trout and salmon river.",a:[{n:"Sennybridge",la:51.95,lo:-3.58},{n:"Brecon",la:51.95,lo:-3.40},{n:"Crickhowell",la:51.86,lo:-3.14},{n:"Abergavenny",la:51.82,lo:-3.02},{n:"Usk town",la:51.70,lo:-2.90}]},
+{id:"wye",n:"River Wye",rg:"wales",rt:"free",lat:51.90,lng:-2.90,ea:"5504TH",d:"One of the great UK rivers.",a:[{n:"Rhayader",la:52.30,lo:-3.52},{n:"Builth Wells",la:52.15,lo:-3.40},{n:"Hay-on-Wye",la:52.07,lo:-3.12},{n:"Hereford",la:52.05,lo:-2.72},{n:"Ross-on-Wye",la:51.91,lo:-2.58},{n:"Monmouth",la:51.81,lo:-2.72}]},
+{id:"dee_w",n:"River Dee (Wales)",rg:"wales",rt:"spate",lat:53.00,lng:-3.30,ea:"6702TH",d:"Bala to Chester. Grayling stronghold.",a:[{n:"Bala",la:52.91,lo:-3.60},{n:"Corwen",la:52.98,lo:-3.38},{n:"Llangollen",la:52.97,lo:-3.17},{n:"Bangor-on-Dee",la:52.94,lo:-2.94}]},
+{id:"teifi",n:"River Teifi",rg:"wales",rt:"spate",lat:52.10,lng:-4.40,ea:"6004TH",d:"Wild Welsh spate. Sea trout from June.",a:[{n:"Tregaron",la:52.22,lo:-3.93},{n:"Lampeter",la:52.11,lo:-4.08},{n:"Llandysul",la:52.04,lo:-4.29},{n:"Newcastle Emlyn",la:52.04,lo:-4.47},{n:"Cenarth",la:52.05,lo:-4.54}]},
+{id:"towy",n:"River Towy",rg:"wales",rt:"spate",lat:51.88,lng:-3.90,ea:"5906TH",d:"Longest river in Wales.",a:[{n:"Llandovery",la:51.99,lo:-3.80},{n:"Llandeilo",la:51.88,lo:-3.98},{n:"Carmarthen",la:51.85,lo:-4.31}]},
+{id:"cothi",n:"River Cothi",rg:"wales",rt:"spate",lat:51.95,lng:-3.93,ea:"5907TH",d:"Beautiful Towy tributary.",a:[{n:"Pumsaint",la:52.01,lo:-3.92},{n:"Brechfa",la:51.94,lo:-4.12}]},
+{id:"irfon",n:"River Irfon",rg:"wales",rt:"spate",lat:52.12,lng:-3.55,ea:"5505TH",d:"Wild Wye tributary. Remote.",a:[{n:"Llanwrtyd Wells",la:52.10,lo:-3.63},{n:"Builth confluence",la:52.15,lo:-3.40}]},
+{id:"monnow",n:"River Monnow",rg:"wales",rt:"free",lat:51.85,lng:-2.85,ea:"5507TH",d:"Welsh borders. Intimate freestone.",a:[{n:"Longtown",la:51.95,lo:-2.98},{n:"Skenfrith",la:51.84,lo:-2.85},{n:"Monmouth",la:51.81,lo:-2.72}]},
+{id:"derwent_p",n:"Derwent (Derbys)",rg:"peak",rt:"free",lat:53.10,lng:-1.50,ea:"3003TH",d:"Peak District freestone.",a:[{n:"Bamford",la:53.36,lo:-1.69},{n:"Baslow",la:53.24,lo:-1.62},{n:"Chatsworth",la:53.22,lo:-1.61},{n:"Matlock",la:53.14,lo:-1.56}]},
+{id:"dove",n:"River Dove",rg:"peak",rt:"lime",lat:53.07,lng:-1.78,ea:"3004TH",d:"Izaak Walton's river. Dovedale.",a:[{n:"Longnor",la:53.15,lo:-1.84},{n:"Dovedale",la:53.07,lo:-1.78},{n:"Mappleton",la:53.00,lo:-1.75},{n:"Rocester",la:52.93,lo:-1.82}]},
+{id:"manifold",n:"River Manifold",rg:"peak",rt:"lime",lat:53.07,lng:-1.83,ea:"3005TH",d:"Disappears underground in dry summers.",a:[{n:"Longnor",la:53.14,lo:-1.85},{n:"Wetton Mill",la:53.08,lo:-1.82},{n:"Ilam",la:53.06,lo:-1.77}]},
+{id:"wye_p",n:"Wye (Derbys)",rg:"peak",rt:"lime",lat:53.25,lng:-1.68,ea:"3006TH",d:"Crystal limestone. Monsal Dale.",a:[{n:"Buxton",la:53.26,lo:-1.91},{n:"Monsal Dale",la:53.24,lo:-1.72},{n:"Bakewell",la:53.21,lo:-1.68}]},
+{id:"lathkill",n:"River Lathkill",rg:"peak",rt:"lime",lat:53.18,lng:-1.72,ea:"3007TH",d:"Purest limestone stream in England.",a:[{n:"Monyash",la:53.19,lo:-1.76},{n:"Over Haddon",la:53.19,lo:-1.70},{n:"Alport",la:53.18,lo:-1.67}]},
+{id:"wharfe",n:"River Wharfe",rg:"yorks",rt:"lime",lat:53.92,lng:-1.65,ea:"2702TH",d:"Yorkshire Dales classic.",a:[{n:"Langstrothdale",la:54.18,lo:-2.10},{n:"Buckden",la:54.16,lo:-2.04},{n:"Grassington",la:54.07,lo:-1.98},{n:"Burnsall",la:54.02,lo:-1.94},{n:"Bolton Abbey",la:53.98,lo:-1.89},{n:"Ilkley",la:53.92,lo:-1.82}]},
+{id:"ure",n:"River Ure",rg:"yorks",rt:"free",lat:54.18,lng:-1.78,ea:"2703TH",d:"Wensleydale. Wild browns and grayling.",a:[{n:"Hawes",la:54.30,lo:-2.20},{n:"Aysgarth",la:54.30,lo:-1.96},{n:"Middleham",la:54.28,lo:-1.81},{n:"Masham",la:54.22,lo:-1.66},{n:"Ripon",la:54.13,lo:-1.52}]},
+{id:"swale",n:"River Swale",rg:"yorks",rt:"free",lat:54.30,lng:-1.60,ea:"2704TH",d:"Fastest-rising river in England.",a:[{n:"Keld",la:54.39,lo:-2.17},{n:"Muker",la:54.38,lo:-2.11},{n:"Reeth",la:54.39,lo:-1.94},{n:"Richmond",la:54.40,lo:-1.74}]},
+{id:"nidd",n:"River Nidd",rg:"yorks",rt:"lime",lat:54.00,lng:-1.55,ea:"2705TH",d:"Nidderdale limestone.",a:[{n:"Lofthouse",la:54.14,lo:-1.84},{n:"Pateley Bridge",la:54.08,lo:-1.76},{n:"Birstwith",la:54.04,lo:-1.64},{n:"Knaresborough",la:54.00,lo:-1.46}]},
+{id:"rye",n:"River Rye",rg:"yorks",rt:"free",lat:54.22,lng:-1.05,ea:"2706TH",d:"North York Moors freestone.",a:[{n:"Helmsley",la:54.25,lo:-1.06},{n:"Nunnington",la:54.21,lo:-0.99}]},
+{id:"costa",n:"Costa Beck",rg:"yorks",rt:"chalk",lat:54.21,lng:-0.80,ea:"2707TH",d:"England's northernmost chalkstream.",a:[{n:"Costa, nr Pickering",la:54.21,lo:-0.80}]},
+{id:"esk_y",n:"Esk (Yorks)",rg:"yorks",rt:"spate",lat:54.45,lng:-0.72,ea:"2708TH",d:"North York Moors to Whitby.",a:[{n:"Castleton",la:54.44,lo:-1.06},{n:"Danby",la:54.46,lo:-0.98},{n:"Lealholm",la:54.46,lo:-0.85},{n:"Grosmont",la:54.44,lo:-0.73}]},
+{id:"styne",n:"South Tyne",rg:"ne",rt:"free",lat:54.90,lng:-2.25,ea:"2302TH",d:"North Pennines freestone.",a:[{n:"Alston",la:54.81,lo:-2.44},{n:"Haltwhistle",la:54.97,lo:-2.46},{n:"Haydon Bridge",la:54.97,lo:-2.25}]},
+{id:"ntyne",n:"North Tyne",rg:"ne",rt:"free",lat:55.10,lng:-2.20,ea:"2303TH",d:"Kielder to Hexham. Strong grayling.",a:[{n:"Bellingham",la:55.14,lo:-2.33},{n:"Wark",la:55.08,lo:-2.25},{n:"Chollerford",la:55.03,lo:-2.13}]},
+{id:"coquet",n:"River Coquet",rg:"ne",rt:"spate",lat:55.30,lng:-1.80,ea:"2304TH",d:"Northumberland gem. Sea trout.",a:[{n:"Alwinton",la:55.38,lo:-2.11},{n:"Harbottle",la:55.36,lo:-2.06},{n:"Rothbury",la:55.31,lo:-1.91},{n:"Felton",la:55.28,lo:-1.72}]},
+{id:"wear",n:"River Wear",rg:"ne",rt:"free",lat:54.70,lng:-1.60,ea:"2306TH",d:"Pennine headwaters to Durham.",a:[{n:"Wearhead",la:54.72,lo:-2.20},{n:"Stanhope",la:54.74,lo:-2.00},{n:"Wolsingham",la:54.73,lo:-1.88},{n:"Durham",la:54.77,lo:-1.57}]},
+{id:"tees",n:"River Tees",rg:"ne",rt:"free",lat:54.55,lng:-1.70,ea:"2307TH",d:"High Force to lowlands. Wild browns.",a:[{n:"Upper Teesdale",la:54.64,lo:-2.20},{n:"Middleton",la:54.63,lo:-2.09},{n:"Barnard Castle",la:54.54,lo:-1.92}]},
+{id:"eden",n:"River Eden",rg:"nw",rt:"free",lat:54.70,lng:-2.60,ea:"7604TH",d:"One of England's finest trout rivers.",a:[{n:"Kirkby Stephen",la:54.47,lo:-2.35},{n:"Appleby",la:54.58,lo:-2.49},{n:"Temple Sowerby",la:54.63,lo:-2.60},{n:"Langwathby",la:54.68,lo:-2.68},{n:"Armathwaite",la:54.78,lo:-2.77}]},
+{id:"lune",n:"River Lune",rg:"nw",rt:"spate",lat:54.18,lng:-2.65,ea:"7205TH",d:"Lancashire/Cumbria. Sea trout from July.",a:[{n:"Tebay",la:54.44,lo:-2.58},{n:"Sedbergh",la:54.32,lo:-2.53},{n:"Kirkby Lonsdale",la:54.20,lo:-2.60},{n:"Caton",la:54.08,lo:-2.72}]},
+{id:"ribble",n:"River Ribble",rg:"nw",rt:"free",lat:53.90,lng:-2.35,ea:"7106TH",d:"Three Peaks to Preston. Strong grayling.",a:[{n:"Horton-in-Ribblesdale",la:54.15,lo:-2.30},{n:"Settle",la:54.07,lo:-2.28},{n:"Long Preston",la:54.02,lo:-2.26},{n:"Clitheroe",la:53.87,lo:-2.39}]},
+{id:"kent_r",n:"River Kent",rg:"nw",rt:"lime",lat:54.33,lng:-2.72,ea:"7605TH",d:"South Lakeland limestone.",a:[{n:"Kentmere",la:54.43,lo:-2.82},{n:"Staveley",la:54.38,lo:-2.82},{n:"Burneside",la:54.35,lo:-2.75},{n:"Kendal",la:54.33,lo:-2.74}]},
+{id:"rawthey",n:"River Rawthey",rg:"nw",rt:"free",lat:54.35,lng:-2.50,ea:"7206TH",d:"Lune tributary. Howgill Fells.",a:[{n:"Cautley",la:54.38,lo:-2.47},{n:"Sedbergh",la:54.32,lo:-2.53}]},
+{id:"tweed",n:"River Tweed",rg:"scot",rt:"free",lat:55.60,lng:-2.50,ea:null,d:"Borders legend. World-class trout.",a:[{n:"Peebles",la:55.65,lo:-3.19},{n:"Innerleithen",la:55.62,lo:-3.07},{n:"Melrose",la:55.60,lo:-2.72},{n:"Kelso",la:55.60,lo:-2.43},{n:"Coldstream",la:55.65,lo:-2.25}]},
+{id:"tay",n:"River Tay",rg:"scot",rt:"spate",lat:56.45,lng:-3.50,ea:null,d:"Scotland's mightiest river.",a:[{n:"Aberfeldy",la:56.62,lo:-3.87},{n:"Dunkeld",la:56.56,lo:-3.58},{n:"Stanley",la:56.47,lo:-3.44},{n:"Perth",la:56.40,lo:-3.43}]},
+{id:"dee_s",n:"Dee (Scotland)",rg:"scot",rt:"spate",lat:57.05,lng:-2.75,ea:null,d:"Royal Deeside. Classic Highland spate.",a:[{n:"Braemar",la:57.01,lo:-3.40},{n:"Ballater",la:57.05,lo:-3.04},{n:"Aboyne",la:57.08,lo:-2.78},{n:"Banchory",la:57.05,lo:-2.50}]},
+{id:"spey",n:"River Spey",rg:"scot",rt:"spate",lat:57.30,lng:-3.30,ea:null,d:"Fastest major river in Britain.",a:[{n:"Newtonmore",la:57.07,lo:-4.12},{n:"Aviemore",la:57.20,lo:-3.83},{n:"Grantown-on-Spey",la:57.33,lo:-3.61},{n:"Aberlour",la:57.46,lo:-3.23},{n:"Fochabers",la:57.59,lo:-3.10}]},
+{id:"don_s",n:"Don (Scotland)",rg:"scot",rt:"free",lat:57.20,lng:-2.60,ea:null,d:"Aberdeenshire. Underrated.",a:[{n:"Strathdon",la:57.22,lo:-3.04},{n:"Alford",la:57.23,lo:-2.70},{n:"Monymusk",la:57.21,lo:-2.54},{n:"Inverurie",la:57.29,lo:-2.37}]},
+{id:"findhorn",n:"River Findhorn",rg:"scot",rt:"spate",lat:57.48,lng:-3.75,ea:null,d:"Wild Highland spate. Deep gorges.",a:[{n:"Tomatin",la:57.35,lo:-4.08},{n:"Dulsie Bridge",la:57.42,lo:-3.88},{n:"Forres",la:57.61,lo:-3.63}]},
+{id:"nith",n:"River Nith",rg:"scot",rt:"spate",lat:55.25,lng:-3.60,ea:null,d:"Dumfriesshire salmon and sea trout.",a:[{n:"Sanquhar",la:55.37,lo:-3.93},{n:"Thornhill",la:55.25,lo:-3.77},{n:"Dumfries",la:55.07,lo:-3.60}]},
+{id:"annan",n:"River Annan",rg:"scot",rt:"spate",lat:55.15,lng:-3.25,ea:null,d:"Borders spate. Fast responding.",a:[{n:"Moffat",la:55.33,lo:-3.44},{n:"Lockerbie",la:55.12,lo:-3.35},{n:"Annan town",la:54.98,lo:-3.26}]},
+{id:"deveron",n:"River Deveron",rg:"scot",rt:"spate",lat:57.50,lng:-2.60,ea:null,d:"Aberdeenshire. Underrated sea trout.",a:[{n:"Huntly",la:57.45,lo:-2.79},{n:"Turriff",la:57.54,lo:-2.46},{n:"Banff",la:57.67,lo:-2.53}]},
+{id:"teme",n:"River Teme",rg:"mid",rt:"free",lat:52.30,lng:-2.60,ea:"5406TH",d:"Welsh Marches. Best wild trout in England.",a:[{n:"Knighton",la:52.35,lo:-3.04},{n:"Leintwardine",la:52.37,lo:-2.87},{n:"Ludlow",la:52.37,lo:-2.72},{n:"Tenbury Wells",la:52.31,lo:-2.60}]},
+{id:"lugg",n:"River Lugg",rg:"mid",rt:"free",lat:52.15,lng:-2.78,ea:"5408TH",d:"Herefordshire. Gentle freestone.",a:[{n:"Presteigne",la:52.27,lo:-3.00},{n:"Kingsland",la:52.23,lo:-2.84},{n:"Leominster",la:52.23,lo:-2.74}]},
+{id:"arrow",n:"River Arrow",rg:"mid",rt:"free",lat:52.22,lng:-2.90,ea:"5409TH",d:"Lugg tributary. Welsh borders.",a:[{n:"New Radnor",la:52.24,lo:-3.15},{n:"Pembridge",la:52.20,lo:-2.91}]},
+];
+
+/* ═══ HATCH SPECIES — 12 key species ═══ */
+const SP=[
+{id:"ed",n:"The Mayfly",latin:"Ephemera danica",hook:"8-10",months:[5,6],tempMin:11,tempMax:18,optMin:13,optMax:16,note:"Green Drake. The headline event.",clr:"#D4C472",peak:true},
+{id:"ldo",n:"Large Dark Olive",latin:"Baetis rhodani",hook:"14-16",months:[1,2,3,4,5,10,11,12],tempMin:4,tempMax:14,optMin:7,optMax:12,note:"Year-round stalwart. Best overcast.",clr:"#5A7E4D"},
+{id:"mdo",n:"Medium Olive",latin:"Baetis vernus",hook:"14-16",months:[4,5,6,7,8,9],tempMin:8,tempMax:18,optMin:10,optMax:15,note:"Summer olive. Replaces LDO.",clr:"#6B8E4E"},
+{id:"ib",n:"Iron Blue",latin:"Baetis niger",hook:"16-18",months:[4,5,9,10],tempMin:5,tempMax:13,optMin:7,optMax:11,note:"Cold blustery days. April & autumn.",clr:"#3D4E6B"},
+{id:"bwo",n:"Blue-Winged Olive",latin:"Serratella ignita",hook:"14-16",months:[5,6,7,8,9],tempMin:10,tempMax:20,optMin:12,optMax:17,note:"Summer evenings. Sherry spinners at dusk.",clr:"#5E7848"},
+{id:"hw",n:"Hawthorn Fly",latin:"Bibio marci",hook:"12-14",months:[4,5],tempMin:8,tempMax:16,optMin:10,optMax:14,note:"Wind-blown terrestrial. Dangly legs.",clr:"#2D2D2D"},
+{id:"gr",n:"Grannom",latin:"Brachycentrus subnubilis",hook:"14-16",months:[3,4,5],tempMin:6,tempMax:14,optMin:8,optMax:12,note:"First major caddis. Huge hatches.",clr:"#7A6E52"},
+{id:"pmb",n:"Yellow May Dun",latin:"Heptagenia sulphurea",hook:"12-14",months:[5,6,7],tempMin:10,tempMax:18,optMin:12,optMax:16,note:"Evening hatches on fast water.",clr:"#C4B062"},
+{id:"bk",n:"Black Gnat",latin:"Bibio johannis",hook:"18-20",months:[5,6,7,8],tempMin:10,tempMax:22,optMin:13,optMax:18,note:"Summer staple. Calm evenings.",clr:"#1D1D1D"},
+{id:"sdo",n:"Small Spurwing",latin:"Centroptilum luteolum",hook:"18-20",months:[5,6,7,8,9],tempMin:10,tempMax:20,optMin:12,optMax:17,note:"Delicate. Slow water.",clr:"#7E9E6E"},
+{id:"os",n:"Sedges",latin:"Various Trichoptera",hook:"12-14",months:[5,6,7,8,9],tempMin:10,tempMax:20,optMin:13,optMax:17,note:"Skittering egg-layers at dusk.",clr:"#6E7E4E"},
+{id:"rs",n:"Reed Smuts",latin:"Simulium spp.",hook:"22-26",months:[5,6,7,8,9],tempMin:10,tempMax:22,optMin:12,optMax:18,note:"Tiny. Maddening rises. Fish feed hard.",clr:"#3A3A3A"},
+];
+
+/* ═══ FLY BOX ═══ */
+const FLIES={
+dry:[
+  {n:"CDC F-Fly (Olive)",sz:"14-16",sp:["ldo","mdo"],note:"Universal. First fly on."},
+  {n:"Klinkhammer (Olive)",sz:"14-16",sp:["ldo","mdo","bwo"],note:"Parachute emerger. In the film."},
+  {n:"Adams",sz:"14-18",sp:["ldo","mdo","bwo"],note:"All-round searching dry."},
+  {n:"Iron Blue CDC",sz:"16-18",sp:["ib"],note:"Essential cold blustery days."},
+  {n:"Grey Wulff",sz:"10-12",sp:["ed"],note:"Mayfly. High-floating, visible."},
+  {n:"French Partridge Mayfly",sz:"10-12",sp:["ed"],note:"Spent mayfly. Evening fall."},
+  {n:"Elk Hair Caddis",sz:"14-16",sp:["gr","os"],note:"Sedge and grannom. Skate it."},
+  {n:"Hawthorn Fly",sz:"12-14",sp:["hw"],note:"Big, black, dangly legs."},
+  {n:"Black Gnat",sz:"18-20",sp:["bk"],note:"Summer evenings. Keep them small."},
+  {n:"Sherry Spinner",sz:"14-16",sp:["bwo"],note:"BWO spinner. Dusk."},
+  {n:"Blue-Winged Olive",sz:"14-16",sp:["bwo"],note:"No-hackle. Technical water."},
+],
+emerger:[
+  {n:"CDC Shuttlecock (Olive)",sz:"14-16",sp:["ldo","mdo"],note:"Deadly in the film."},
+  {n:"Deer Hair Emerger",sz:"14-18",sp:["ldo","mdo","bwo"],note:"Emerging dun. Simple."},
+  {n:"Suspender Buzzer",sz:"14-18",sp:["ldo","mdo"],note:"Hangs in the film."},
+  {n:"Snowshoe Emerger",sz:"14-16",sp:["bwo","mdo"],note:"Sits flush. Good visibility."},
+  {n:"CDC Mayfly Emerger",sz:"10-12",sp:["ed"],note:"Through the film."},
+],
+nymph:[
+  {n:"Pheasant Tail Nymph",sz:"14-18",sp:["ldo","mdo","bwo"],note:"The universal nymph."},
+  {n:"Hare's Ear (GRHE)",sz:"14-16",sp:["ldo","mdo","bwo"],note:"Buggy, impressionistic."},
+  {n:"Copper John",sz:"14-18",sp:["ldo","ib"],note:"Fast sink. Deeper runs."},
+  {n:"Perdigon",sz:"16-20",sp:["mdo","sdo","ib"],note:"Euro-nymph. Heavy, slim."},
+  {n:"Sawyer's Killer Bug",sz:"14-16",sp:["ldo","mdo"],note:"Avon legend. Grayling magnet."},
+],
 };
 
-const H=[
-  {id:"danica",nm:"Ephemera danica",cm:"The Mayfly",cat:"m",t:1,s:135,e:172,tMn:12,tMx:18,pk:[12,13,14,15,16],hk:"10-12 LD",sz:"20-25mm"},
-  {id:"vulgata",nm:"E. vulgata",cm:"Dark Mackerel",cat:"m",t:2,s:140,e:178,tMn:13,tMx:17,pk:[13,14,15,16],hk:"10-12",sz:"18-22mm"},
-  {id:"ldo",nm:"Baetis rhodani",cm:"Large Dark Olive",cat:"o",t:2,s:60,e:150,tMn:7,tMx:14,pk:[10,11,12,13],hk:"14-16",sz:"10-12mm"},
-  {id:"mo",nm:"Baetis vernus",cm:"Medium Olive",cat:"o",t:3,s:100,e:180,tMn:10,tMx:16,pk:[11,12,13,14],hk:"16",sz:"8-10mm"},
-  {id:"bwo",nm:"Serratella ignita",cm:"Blue-winged Olive",cat:"o",t:2,s:150,e:290,tMn:12,tMx:18,pk:[17,18,19,20],hk:"14-16",sz:"9-11mm"},
-  {id:"ib",nm:"Baetis niger",cm:"Iron Blue",cat:"o",t:2,s:105,e:165,tMn:8,tMx:14,pk:[11,12,13,14],hk:"16-18",sz:"6-8mm"},
-  {id:"pw",nm:"Baetis fuscatus",cm:"Pale Watery",cat:"o",t:3,s:125,e:260,tMn:12,tMx:18,pk:[14,15,16,17,18],hk:"16-18",sz:"6-8mm"},
-  {id:"ss",nm:"C. luteolum",cm:"Small Spurwing",cat:"o",t:3,s:135,e:270,tMn:13,tMx:18,pk:[15,16,17,18],hk:"18-20",sz:"5-7mm"},
-  {id:"ymd",nm:"H. sulphurea",cm:"Yellow May Dun",cat:"o",t:3,s:135,e:180,tMn:12,tMx:17,pk:[18,19,20],hk:"14",sz:"12-14mm"},
-  {id:"caen",nm:"Caenis spp.",cm:"Angler's Curse",cat:"o",t:3,s:155,e:250,tMn:15,tMx:20,pk:[5,6,7,19,20,21],hk:"20-22",sz:"3-5mm"},
-  {id:"gran",nm:"B. subnubilus",cm:"Grannom",cat:"c",t:2,s:100,e:130,tMn:9,tMx:14,pk:[11,12,13,14,15],hk:"14-16",sz:"10-12mm"},
-  {id:"sedge",nm:"Trichoptera",cm:"Sedges",cat:"c",t:2,s:135,e:275,tMn:13,tMx:20,pk:[19,20,21],hk:"12-16",sz:"8-18mm"},
-  {id:"haw",nm:"Bibio marci",cm:"Hawthorn Fly",cat:"t",t:2,s:108,e:135,tMn:10,tMx:16,pk:[11,12,13,14,15,16],hk:"12-14",sz:"12-14mm"},
-  {id:"bg",nm:"Bibio johannis",cm:"Black Gnat",cat:"t",t:3,s:120,e:250,tMn:12,tMx:20,pk:[12,13,14,15,16,17],hk:"16-18",sz:"5-8mm"},
-  {id:"smut",nm:"Simulium",cm:"Reed Smuts",cat:"t",t:3,s:135,e:270,tMn:13,tMx:20,pk:[10,11,12,13,14,15,16,17],hk:"20-24",sz:"2-4mm"},
-];
+/* ═══ HELPERS ═══ */
+const haversine=(a,b,c,d)=>{const R=3959,r=Math.PI/180,x=(c-a)*r,y=(d-b)*r,s=Math.sin(x/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin(y/2)**2;return R*2*Math.atan2(Math.sqrt(s),Math.sqrt(1-s))};
+const fmtD=d=>d<1?`${Math.round(d*5280)}ft`:d<10?`${d.toFixed(1)}mi`:`${Math.round(d)}mi`;
+const tScore=(sp,t)=>{if(t==null)return 0.5;if(t<sp.tempMin||t>sp.tempMax)return 0;if(t>=sp.optMin&&t<=sp.optMax)return 1;return t<sp.optMin?(t-sp.tempMin)/(sp.optMin-sp.tempMin):(sp.tempMax-t)/(sp.tempMax-sp.optMax)};
+const mScore=sp=>sp.months.includes(new Date().getMonth()+1)?1:0;
+const hScore=(sp,t)=>Math.round(tScore(sp,t)*mScore(sp)*100);
+const wxI=c=>{if(c<=1)return"☀";if(c<=3)return"⛅";if(c<=48)return"☁";if(c<=67)return"🌧";if(c<=82)return"🌦";if(c<=86)return"❄";return"⛈"};
+const scoreLbl=s=>s>=70?"Strong":s>=40?"Moderate":s>0?"Sparse":"Off";
+const scoreClr=s=>s>=70?C.rust:s>=40?C.warn:s>0?C.grn:C.txD;
 
-const CC={m:"#C4973A",o:"#7A9E7E",c:"#8B7355",t:"#6B8DA6"};
-const CL={m:"MAYFLY",o:"UPWINGED",c:"CADDIS",t:"TERRESTRIAL"};
+/* ═══ DATA FETCHING ═══ */
+const fetchEA=async(ref)=>{
+  if(!ref)return{level:null,temp:null,trend:null};
+  try{
+    const r=await fetch(`https://environment.data.gov.uk/hydrology/id/stations/${ref}`);
+    if(!r.ok)return{level:null,temp:null,trend:null};
+    const d=await r.json();const ms=d?.items?.measures||[];
+    let level=null,temp=null,trend=null;
+    for(const m of ms){
+      const mid=typeof m==='string'?m:m?.["@id"]||"";
+      if(mid.includes("level")){try{const x=await fetch(`${mid}/readings?_sorted&_limit=6`);if(x.ok){const j=await x.json();const it=j?.items||[];if(it.length>0){level=parseFloat(it[0].value);if(it.length>=6){const o=parseFloat(it[5].value);trend=level>o+0.02?"RISING":level<o-0.02?"FALLING":"STEADY";}}}}catch(e){}}
+      if(mid.includes("emp")){try{const x=await fetch(`${mid}/readings?_sorted&_limit=1`);if(x.ok){const j=await x.json();const it=j?.items||[];if(it.length>0)temp=parseFloat(it[0].value);}}catch(e){}}
+    }
+    return{level,temp,trend};
+  }catch(e){return{level:null,temp:null,trend:null};}
+};
+const fetchWx=async(la,lo)=>{try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${la}&longitude=${lo}&hourly=temperature_2m,precipitation_probability,windspeed_10m,cloudcover,weathercode&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weathercode&current_weather=true&timezone=Europe%2FLondon&forecast_days=7`);return r.ok?await r.json():null;}catch(e){return null;}};
 
-const FL={
-  dry:[{nm:"Grey Wulff",sz:"10-14",mt:["danica","vulgata"],ef:5,nt:"Classic mayfly. Floats forever."},{nm:"Spent Gnat",sz:"10-12",mt:["danica","vulgata"],ef:5,nt:"Spinner fall essential."},{nm:"Kite's Imperial",sz:"14-16",mt:["ldo","mo"],ef:5,nt:"THE olive pattern."},{nm:"Sherry Spinner",sz:"14-16",mt:["bwo"],ef:5,nt:"BWO spinner. Evening essential."},{nm:"Iron Blue Dun",sz:"16-18",mt:["ib"],ef:4,nt:"Foul weather."},{nm:"Adams",sz:"14-18",mt:["ldo","mo","bwo"],ef:4,nt:"Searching pattern."},{nm:"Last Hope",sz:"16-20",mt:["pw","ss","caen"],ef:4,nt:"Ultra-selective fish."},{nm:"Elk Hair Caddis",sz:"12-16",mt:["sedge"],ef:4,nt:"Static or skated."},{nm:"Griffith's Gnat",sz:"18-24",mt:["smut","caen"],ef:3,nt:"Smuts and caenis."}],
-  emerger:[{nm:"Klinkhamer Special",sz:"12-18",mt:["ldo","mo","bwo","danica"],ef:5,nt:"Most versatile chalkstream fly."},{nm:"Danica Emerger",sz:"10-12 LD",mt:["danica","vulgata"],ef:5,nt:"THE mayfly fly. In the film."},{nm:"CDC Shuttlecock",sz:"14-20",mt:["ldo","mo","bwo","ib","pw"],ef:5,nt:"Tie sparse. Devastating."},{nm:"F Fly",sz:"16-20",mt:["pw","ss","smut","caen"],ef:4,nt:"Two CDC feathers. Simple, deadly."},{nm:"Grannom Pupa",sz:"14-16",mt:["gran"],ef:3,nt:"Green body. Subsurface."}],
-  nymph:[{nm:"Pheasant Tail Nymph",sz:"14-18",mt:["ldo","mo","bwo","ib","pw"],ef:5,nt:"Desert island nymph."},{nm:"Gold-Ribbed Hare's Ear",sz:"14-16",mt:["ldo","mo","bwo"],ef:5,nt:"Buggy. Works when nothing else does."},{nm:"Sawyer's Killer Bug",sz:"14-16",mt:["ldo","mo","pw"],ef:4,nt:"Cold water killer."},{nm:"Danica Nymph",sz:"10-12 LD",mt:["danica","vulgata"],ef:4,nt:"Pre-hatch essential. Deep gravel."},{nm:"Czech Nymph",sz:"12-16",mt:["ldo","mo","gran"],ef:3,nt:"Check beat rules."}],
+/* ═══ UK MAP COMPONENT ═══ */
+const UKMap=({rivers,loc,onSelect})=>{
+  // Simplified UK outline, projects lat/lng to SVG coordinates
+  const proj=(la,lo)=>{
+    const x=((lo+8)/14)*300+50;
+    const y=((59-la)/10)*450+20;
+    return[x,y];
+  };
+  return(
+    <svg viewBox="0 0 400 500" style={{width:"100%",maxHeight:420}}>
+      {/* Simplified UK coastline */}
+      <path d="M180,480 L160,460 L140,430 L120,400 L115,370 L120,350 L140,340 L130,310 L100,300 L90,280 L100,260 L115,240 L110,220 L90,210 L80,190 L75,160 L85,140 L95,120 L100,100 L90,80 L100,60 L120,45 L140,35 L165,30 L185,25 L210,20 L230,22 L250,30 L260,35 L270,50 L280,70 L275,90 L260,95 L250,110 L255,130 L270,140 L280,155 L270,170 L255,175 L250,190 L260,200 L270,210 L265,230 L250,240 L245,260 L250,280 L260,300 L275,310 L285,330 L280,350 L265,360 L255,380 L260,400 L250,420 L235,440 L220,450 L200,465 L180,480Z"
+        fill="none" stroke={C.bd} strokeWidth="1.5" opacity="0.5"/>
+      {/* Scotland */}
+      <path d="M100,60 L90,40 L100,20 L130,10 L150,15 L170,10 L200,15 L220,12 L240,20 L250,30"
+        fill="none" stroke={C.bd} strokeWidth="1" opacity="0.3"/>
+      {/* Wales approx */}
+      <path d="M115,370 L100,360 L90,340 L85,320 L90,300 L100,280 L90,260 L100,260"
+        fill="none" stroke={C.bd} strokeWidth="1" opacity="0.3"/>
+
+      {/* River dots */}
+      {rivers.map(r=>{
+        const[x,y]=proj(r.lat,r.lng);
+        const isChalk=r.rt==="chalk";
+        return <g key={r.id} onClick={()=>onSelect(r)} style={{cursor:"pointer"}}>
+          <circle cx={x} cy={y} r={isChalk?5:4}
+            fill={isChalk?C.rust:r.rt==="lime"?C.grn:r.rt==="spate"?C.txD:C.txM}
+            opacity={0.7} stroke={C.c1} strokeWidth="1"/>
+          <circle cx={x} cy={y} r={8} fill="transparent"/>
+        </g>;
+      })}
+
+      {/* User location */}
+      {loc&&(()=>{const[x,y]=proj(loc.lat,loc.lng);return<>
+        <circle cx={x} cy={y} r={6} fill="none" stroke={C.rust} strokeWidth="1.5" opacity="0.6">
+          <animate attributeName="r" from="4" to="12" dur="2s" repeatCount="indefinite"/>
+          <animate attributeName="opacity" from="0.8" to="0" dur="2s" repeatCount="indefinite"/>
+        </circle>
+        <circle cx={x} cy={y} r={4} fill={C.rust}/>
+      </>;})()}
+
+      {/* Legend */}
+      <g transform="translate(10,460)">
+        <circle cx={6} cy={0} r={4} fill={C.rust} opacity="0.7"/><text x={14} y={4} fill={C.txD} fontSize="9" fontFamily={ff}>Chalk</text>
+        <circle cx={66} cy={0} r={4} fill={C.grn} opacity="0.7"/><text x={74} y={4} fill={C.txD} fontSize="9" fontFamily={ff}>Limestone</text>
+        <circle cx={146} cy={0} r={4} fill={C.txD} opacity="0.7"/><text x={154} y={4} fill={C.txD} fontSize="9" fontFamily={ff}>Spate</text>
+        <circle cx={206} cy={0} r={4} fill={C.txM} opacity="0.7"/><text x={214} y={4} fill={C.txD} fontSize="9" fontFamily={ff}>Freestone</text>
+        {loc&&<><circle cx={286} cy={0} r={4} fill={C.rust}/><text x={294} y={4} fill={C.txD} fontSize="9" fontFamily={ff}>You</text></>}
+      </g>
+    </svg>
+  );
 };
 
-const WEBCAMS=[
-  {nm:"River Test, Whitchurch",url:"https://www.farsondigitalwatercams.com/locations/whitchurch",river:"test",desc:"HD live cam. Whitchurch Fulling Mill beat. Farson Digital Watercams.",embed:"https://www.farsondigitalwatercams.com/locations/whitchurch"},
-  {nm:"River Test, Testcombe",url:"https://www.farsondigitalwatercams.com/",river:"test",desc:"Check Farson Digital for additional Test cameras."},
-  {nm:"River Itchen, Winchester",url:"https://www.farsondigitalwatercams.com/",river:"itchen",desc:"Check Farson Digital for Itchen cameras."},
-];
-
-const LEARN=[
-  {lvl:"Beginner",clr:"#6B8DA6",items:[
-    {t:"What is fly fishing?",d:"The basics. How it differs from other fishing. Why chalkstreams are special."},
-    {t:"Essential kit",d:"Rod, reel, line, leader, tippet. What you actually need to start. Nothing else."},
-    {t:"Your first cast",d:"The overhead cast. How to load the rod. Common mistakes and how to fix them."},
-    {t:"Reading the water",d:"Where fish sit and why. Current, depth, cover. What to look for."},
-    {t:"Your first fly",d:"The Klinkhamer. Why it works. How to tie it on. How to fish it."},
-    {t:"Watercraft basics",d:"How to approach the river. Why stealth matters. Walking, wading, watching."},
-    {t:"Catch and release",d:"How to handle fish properly. Barbless hooks. Net, unhook, return."},
-    {t:"River etiquette",d:"The unwritten rules. Upstream right of way. Spacing. Respect the beat."},
-  ]},
-  {lvl:"Intermediate",clr:"#7A9E7E",items:[
-    {t:"Understanding hatches",d:"Mayflies, olives, sedges. What they look like. When they hatch. Why it matters."},
-    {t:"Matching the hatch",d:"Identifying what's on the water. Choosing the right fly. Size over pattern."},
-    {t:"Presentation",d:"Drag-free drift. Mending line. Slack line casts. Why presentation beats pattern."},
-    {t:"Nymph fishing",d:"Upstream nymph. Czech nymphing. Induced take. Reading the leader."},
-    {t:"Emerger techniques",d:"Fishing the film. Klinkhamer, shuttlecock, suspender. The crucial transition zone."},
-    {t:"Leader construction",d:"Tapered leaders. Tippet rings. Fluorocarbon vs nylon. When to use what."},
-    {t:"Spotting fish",d:"Polaroids, angles, shadows. Seeing fish before they see you. Reading behaviour."},
-    {t:"Evening rise tactics",d:"BWO, sherry spinners, sedges. The magic hour. How to fish it."},
-  ]},
-  {lvl:"Advanced",clr:"#C4973A",items:[
-    {t:"Selective trout",d:"Why fish refuse. Micro-drag. Tippet diameter. The Last Hope approach."},
-    {t:"Entomology deep dive",d:"Life cycles. Nymph behaviour. Emergence triggers. Temperature and pressure."},
-    {t:"Upstream dry fly",d:"The Halford method. Casting to rising fish. Position, timing, accuracy."},
-    {t:"Sight nymphing",d:"Watching the take. Plume tips. Indicator-free fishing. The ultimate skill."},
-    {t:"Low water tactics",d:"Summer conditions. Longer leaders. Smaller flies. Dawn and dusk."},
-    {t:"River management",d:"Weed cutting, stocking policy, habitat. Understanding the beat you fish."},
-    {t:"Fly tying for chalkstreams",d:"Tying the essential patterns. Materials, proportions, the key dozen flies."},
-    {t:"Guiding and teaching",d:"Sharing the knowledge. Teaching casting. Building a guiding business."},
-  ]},
-];
-
-const GUIDES=[
-  {nm:"Charles Jardine",type:"Guide & Casting Coach",river:"Test, Itchen",note:"One of the UK's finest. Author, artist, instructor.",verified:true},
-  {nm:"Alex Jardine",type:"Professional Guide",river:"Test, Itchen, Kennet",note:"Chalkstream specialist. Full day and half day guided sessions.",verified:true},
-  {nm:"Dermot Wilson School",type:"Fishing School",river:"River Test",note:"Established school at Nether Wallop. Beginners to advanced.",verified:true},
-  {nm:"Orvis Stockbridge",type:"Guide Service & School",river:"River Test",note:"Guided days, casting instruction, equipment demos.",verified:true},
-];
-
-const LOCALS={
-  test:{tackle:[{nm:"Robjents of Stockbridge",a:"High Street, Stockbridge",n:"THE chalkstream shop."},{nm:"Orvis Stockbridge",a:"High Street, Stockbridge",n:"Flagship. Rod demos."}],
-  food:[{nm:"The Mayfly",tp:"Pub",a:"Testcombe",n:"ON the river. Book during mayfly."},{nm:"The Greyhound",tp:"Pub",a:"Stockbridge",n:"Good food, good beer."},{nm:"Thyme & Tides",tp:"Cafe",a:"Stockbridge",n:"Quick fuel."},{nm:"The Peat Spade",tp:"Inn",a:"Longstock",n:"Boutique. Great food."},{nm:"The White Hart",tp:"Pub",a:"Whitchurch",n:"Upper river."}]},
-};
-
-/* ═══ API LAYER ═══ */
-const cache={};
-const EA="https://environment.data.gov.uk/hydrology";
-
-async function fetchEA(riverName){const k=`st_${riverName}`;if(cache[k])return cache[k];try{const r=await fetch(`${EA}/id/stations?riverName=${encodeURIComponent(riverName)}&_limit=50`);if(!r.ok)throw 0;const d=await r.json();const s=(d.items||[]).map(s=>({id:s["@id"]?.split("/").pop(),lat:s.lat,lng:s.long,measures:(s.measures||[]).map(m=>({id:typeof m==="string"?m:m["@id"],p:typeof m==="string"?null:(m.parameterName||m.parameter)}))}));cache[k]=s;return s}catch{return null}}
-
-async function fetchR(mId,days=30){if(!mId)return null;const k=`r_${mId}`;const n=Date.now();if(cache[k]&&n-cache[k].t<9e5)return cache[k].d;try{const since=new Date(Date.now()-days*864e5).toISOString().split("T")[0];const u=mId.startsWith("http")?`${mId}/readings?since=${since}&_sorted&_limit=2000`:`${EA}/id/measures/${mId}/readings?since=${since}&_sorted&_limit=2000`;const r=await fetch(u);if(!r.ok)throw 0;const d=await r.json();const rd=(d.items||[]).map(r=>({dt:r.dateTime,v:r.value})).filter(r=>r.v!=null);cache[k]={d:rd,t:n};return rd}catch{return null}}
-
-async function fetchWx(lat,lng){const k=`wx_${lat.toFixed(2)}_${lng.toFixed(2)}`;const n=Date.now();if(cache[k]&&n-cache[k].t<36e5)return cache[k].d;try{const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,precipitation_probability,pressure_msl,wind_speed_10m,wind_direction_10m,cloud_cover&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max&timezone=Europe/London&forecast_days=7`);if(!r.ok)throw 0;const d=await r.json();cache[k]={d,t:n};return d}catch{return null}}
-
-function nearStn(stns,lat,lng){if(!stns?.length)return null;let b=null,bd=Infinity;stns.forEach(s=>{const d=Math.sqrt((s.lat-lat)**2+(s.lng-lng)**2);if(d<bd){bd=d;b=s}});return b}
-
-function parseWx(wx){if(!wx?.hourly||!wx?.daily)return null;const{hourly:h,daily:d}=wx;const days=[];for(let i=0;i<(d.time?.length||0)&&i<7;i++){const dt=new Date(d.time[i]);const dn=i===0?"Today":i===1?"Tmrw":dt.toLocaleDateString("en-GB",{weekday:"short"});const df=dt.toLocaleDateString("en-GB",{day:"numeric",month:"short"});const hrs=[];for(let hr=5;hr<=22;hr++){const idx=i*24+hr;if(idx>=(h.time?.length||0))break;hrs.push({h:hr,airT:h.temperature_2m?.[idx],rain:h.precipitation_probability?.[idx],pr:h.pressure_msl?.[idx]?Math.round(h.pressure_msl[idx]):null,ws:h.wind_speed_10m?.[idx]?Math.round(h.wind_speed_10m[idx]*0.621):null,wd:h.wind_direction_10m?.[idx]})}
-  days.push({dn,df,aH:d.temperature_2m_max?.[i]?Math.round(d.temperature_2m_max[i]):null,aL:d.temperature_2m_min?.[i]?Math.round(d.temperature_2m_min[i]):null,rain:Math.round(hrs.reduce((s,h)=>Math.max(s,h.rain||0),0)),pr:hrs.find(h=>h.h===12)?.pr,ws:d.wind_speed_10m_max?.[i]?Math.round(d.wind_speed_10m_max[i]*0.621):null,wd:degC(hrs.find(h=>h.h===12)?.wd),hrs})}return days}
-
-function degC(d){if(d==null)return"?";return["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(d/22.5)%16]}
-
-async function fetchLive(rId,bt){const rv=RIVERS[rId];const[stns,wx]=await Promise.all([fetchEA(rv.ea),fetchWx(bt.lat,bt.lng)]);let lL=null,lT=null,lF=null;if(stns){const nr=nearStn(stns,bt.lat,bt.lng);if(nr){const ms=nr.measures;const lm=ms.find(m=>(m.p||m.id||"").toLowerCase().includes("level"));const tm=ms.find(m=>(m.p||m.id||"").toLowerCase().includes("temp"));const fm=ms.find(m=>(m.p||m.id||"").toLowerCase().includes("flow"));const[lr,tr,fr]=await Promise.all([lm?fetchR(lm.id,45):null,tm?fetchR(tm.id,45):null,fm?fetchR(fm.id,45):null]);if(lr?.length)lL=lr[lr.length-1].v;if(tr?.length)lT=tr[tr.length-1].v;if(fr?.length)lF=fr[fr.length-1].v}}
-return{level:lL,temp:lT,flow:lF,weather:parseWx(wx),live:lL!==null||wx!==null}}
-
-/* ═══ FALLBACK SIM ═══ */
-function sR(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return(s-1)/2147483646}}
-function simD(r,b){const seed=(r+b).split("").reduce((a,c)=>a+c.charCodeAt(0),0);const rn=sR(seed);const now=new Date();const o=[];for(let i=45;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const dy=Math.floor((d-new Date(d.getFullYear(),0,0))/864e5);o.push({temp:+(7.5+7.5*Math.sin((dy-80)*Math.PI/183)+(rn()-0.5)*3).toFixed(1),level:+(0.42+0.18*Math.sin((dy-30)*Math.PI/183)+(rn()-0.4)*0.12).toFixed(3),dy})}o.forEach(d=>d.flow=+(d.level*2.6+0.3).toFixed(2));return o}
-function simWx(seed){const r=sR(seed+777);const now=new Date();return Array.from({length:7},(_,d)=>{const dt=new Date(now);dt.setDate(dt.getDate()+d);const aH=Math.round(16+d*0.6+(r()-0.3)*4),aL=Math.round(aH-7-r()*3);return{dn:d===0?"Today":d===1?"Tmrw":dt.toLocaleDateString("en-GB",{weekday:"short"}),df:dt.toLocaleDateString("en-GB",{day:"numeric",month:"short"}),aH,aL,pr:Math.round(1016+(r()-0.5)*16-d*1.2),rain:Math.round(Math.max(0,Math.min(95,10+d*8+(r()-0.5)*30))),ws:Math.round(5+r()*10),wd:["SW","S","SE","W","NW"][Math.floor(r()*5)],hrs:Array.from({length:18},(_,h)=>({h:h+5,airT:+(aL+(aH-aL)*Math.sin(h*Math.PI/18)).toFixed(1),rain:Math.round(r()*30),pr:Math.round(1016+(r()-0.5)*10),ws:Math.round(5+r()*8)}))}});}
-
-/* ═══ PREDICTION ═══ */
-function pred(wt,lv,dy){return H.map(sp=>{let sF=0;if(dy>=sp.s&&dy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sF=Math.max(0,1-((dy-m)/r)**2)}else if(dy>=sp.s-14&&dy<sp.s)sF=(dy-sp.s+14)/28;let tF=0;const tm=(sp.tMn+sp.tMx)/2,tr=(sp.tMx-sp.tMn)/2;if(wt>=sp.tMn&&wt<=sp.tMx)tF=Math.max(0,1-((wt-tm)/(tr*1.2))**2);else if(wt>=sp.tMn-2)tF=Math.max(0,(wt-sp.tMn+2)/4);const sc=Math.round(Math.max(0,Math.min(100,(sF*0.55+tF*0.35)*(lv>0.65?0.7:lv<0.3?0.85:1)*100)));return{...sp,score:sc,lb:sc>70?"Strong":sc>40?"Moderate":sc>15?"Sparse":"Unlikely"}}).sort((a,b)=>b.score-a.score)}
-
-function hInt(wt,dy,hr){let hi=0;H.forEach(sp=>{if(dy<sp.s-10||dy>sp.e+10)return;let sf=0;if(dy>=sp.s&&dy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((dy-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
-
-function genLR(wt,dy){const now=new Date();return Array.from({length:8},(_,w)=>{const s=new Date(now);s.setDate(s.getDate()+w*7);const e=new Date(s);e.setDate(e.getDate()+6);const md=dy+w*7+3,pt=+(wt+w*0.4+Math.sin((md-80)*Math.PI/183)*1.5).toFixed(1);let ds=0;if(md>=125&&md<=182)ds=Math.max(0,1-((md-153)/28)**2)*(pt>=12&&pt<=18?1:pt>=10?0.5:0.2);let oa=0;H.forEach(sp=>{if(md>=sp.s&&md<=sp.e)oa+=Math.max(0,1-((md-(sp.s+sp.e)/2)/((sp.e-sp.s)/2))**2)*(sp.t===1?3:sp.t===2?1.5:0.8)});return{l:w===0?"This week":w===1?"Next week":`${s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} - ${e.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`,pt,ds:+(ds*100).toFixed(0),oa:+Math.min(10,oa).toFixed(1),cf:w<2?"High":w<4?"Med":"Low"}})}
-
-function getRpts(r){const a={test:[{d:"May 8",bt:"Stockbridge",au:"River Keeper",src:"Field",tx:"Sustained danica from 12:30. Fish up everywhere. Spinners falling by 4:30. Best mayfly day yet.",tg:["danica","spinners"],v:true},{d:"May 7",bt:"Park Stream",au:"Beat Guide",src:"Guide",tx:"First danica midday. Two good fish on emergers. Water 13.8C. Park Stream fishes ahead of main river.",tg:["danica","emergers"],v:true},{d:"May 6",bt:"Leckford",au:"Estate Keeper",src:"Estate",tx:"Strong olives. Hawthorn about. Water climbing. Ranunculus thriving.",tg:["olives","hawthorn"],v:true},{d:"May 5",bt:"Stockbridge",au:"Test Valley FC",src:"Club",tx:"Iron blues and olives. Ranunculus excellent. Early danica seen.",tg:["iron blue","olives"],v:true}],itchen:[{d:"May 8",bt:"Abbotts Barton",au:"Winchester AC",src:"Club",tx:"Steady olives. Handful of early danica.",tg:["olives"],v:true}],kennet:[{d:"May 8",bt:"Ramsbury",au:"@kennet_fly",src:"Social",tx:"Olive hatch midday. Grayling on nymphs.",tg:["olives"],v:false}],anton:[{d:"May 7",bt:"Goodworth Clatford",au:"Guide",src:"Guide",tx:"Olives from 10am. Water 13.1C.",tg:["olives"],v:true}],avon:[{d:"May 7",bt:"Amesbury",au:"Salisbury AC",src:"Club",tx:"Big fish showing. Danica imminent.",tg:["big fish"],v:true}],wylye:[{d:"May 6",bt:"Heytesbury",au:"@wylye_ff",src:"Social",tx:"Gorgeous evening rise. Pale wateries.",tg:["evening rise"],v:false}]};return a[r]||[]}
-
-/* ═══ STYLES ═══ */
-const K={bg:"#0F0E0C",c1:"#181714",c2:"#201E1A",c3:"#2A2722",bd:"#332F29",tx:"#EDE5D5",txM:"#9B907F",txD:"#5A5448",ac:"#C4973A",acS:"#C4973A18",acB:"#C4973A38",gn:"#7A9E7E",rd:"#C17B6A",og:"#D4893A",bl:"#6B8DA6"};
-const hC=s=>s>70?K.ac:s>40?K.gn:s>15?K.txM:K.txD;
-const iC=v=>v>=7?"#C4973A":v>=5?"#A8832E":v>=3?"#7A9E7E":v>=1.5?"#3E5A40":v>0.3?"#252E26":K.c2;
-
-/* ═══ MAIN ═══ */
+/* ═══ MAIN APP ═══ */
 export default function App(){
-  const[riv,setRiv]=useState("test");
-  const[bIdx,setBIdx]=useState(5);
-  const[adv,setAdv]=useState(false);
-  const[nav,setNav]=useState("river");
+  const[nav,setNav]=useState("near"); // near|forecast
+  const[rv,setRv]=useState(null);
+  const[area,setArea]=useState(null);
   const[sub,setSub]=useState("forecast");
-  const[pick,setPick]=useState(false);
-  const[hDay,setHDay]=useState(0);
-  const[flyT,setFlyT]=useState("dry");
-  const[loading,setLoading]=useState(true);
-  const[live,setLive]=useState(null);
-  const[dSrc,setDSrc]=useState("loading");
-  const[lastUp,setLastUp]=useState(null);
-  const[userRpts,setUserRpts]=useState([]);
-  const[rptBeat,setRptBeat]=useState("");
-  const[rptText,setRptText]=useState("");
-  const[learnLvl,setLearnLvl]=useState(0);
-  const[planBeat,setPlanBeat]=useState("");
-  const[planDate,setPlanDate]=useState("");
-  const[plans,setPlans]=useState([]);
+  const[loc,setLoc]=useState(null);
+  const[ea,setEa]=useState({});
+  const[wx,setWx]=useState(null);
+  const[loading,setLoading]=useState(false);
+  const[adv,setAdv]=useState(false);
+  const[rgF,setRgF]=useState("all");
+  const[search,setSearch]=useState("");
+  const[reports,setReports]=useState([]);
+  const[showRpt,setShowRpt]=useState(false);
+  const[rptForm,setRptForm]=useState({name:"",text:"",flies:"",rating:3});
+  const timer=useRef(null);
 
-  const rv=RIVERS[riv],bt=rv.beats[bIdx]||rv.beats[0];
-  const seed=(riv+bt.id).split("").reduce((a,c)=>a+c.charCodeAt(0),0);
-  const simulated=useMemo(()=>simD(riv,bt.id),[riv,bt.id]);
-  const simWxD=useMemo(()=>simWx(seed),[seed]);
+  useEffect(()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(p=>setLoc({lat:p.coords.latitude,lng:p.coords.longitude}),()=>{},{enableHighAccuracy:false,timeout:8000});},[]);
 
-  const doFetch=useCallback(async()=>{setLoading(true);try{const d=await fetchLive(riv,bt);setLive(d);setDSrc(d.live?"live":"sim");setLastUp(new Date())}catch{setDSrc("sim")}setLoading(false)},[riv,bt]);
-  useEffect(()=>{doFetch()},[doFetch]);
-  useEffect(()=>{const i=setInterval(doFetch,9e5);return()=>clearInterval(i)},[doFetch]);
-  useEffect(()=>{setBIdx(0)},[riv]);
+  const rivers=useMemo(()=>{
+    let l=RV.map(r=>({...r,dist:loc?haversine(loc.lat,loc.lng,r.lat,r.lng):null}));
+    if(rgF!=="all")l=l.filter(r=>r.rg===rgF);
+    if(search){const s=search.toLowerCase();l=l.filter(r=>r.n.toLowerCase().includes(s)||r.a.some(a=>a.n.toLowerCase().includes(s))||REGS[r.rg]?.toLowerCase().includes(s));}
+    if(loc)l.sort((a,b)=>(a.dist||9999)-(b.dist||9999));else l.sort((a,b)=>a.n.localeCompare(b.n));
+    return l;
+  },[loc,rgF,search]);
 
-  const cT=live?.temp??simulated[simulated.length-1].temp;
-  const cL=live?.level??simulated[simulated.length-1].level;
-  const cF=live?.flow??simulated[simulated.length-1].flow;
-  const pT=simulated.length>1?simulated[simulated.length-2].temp:cT;
-  const dy=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5);
-  const wx=live?.weather||simWxD;
+  const selRiver=useCallback(async(r,a)=>{
+    setRv(r);setArea(a||r.a[0]);setSub("forecast");setNav("forecast");
+    setLoading(true);setWx(null);setEa({});
+    const tgt=a||r.a[0];
+    const[eaD,wxD]=await Promise.all([r.ea?fetchEA(r.ea):Promise.resolve({level:null,temp:null,trend:null}),fetchWx(tgt.la,tgt.lo)]);
+    setEa(eaD);setWx(wxD);setLoading(false);
+  },[]);
 
-  const spp=useMemo(()=>pred(cT,cL,dy),[cT,cL,dy]);
-  const lr=useMemo(()=>genLR(cT,dy),[cT,dy]);
-  const rpts=useMemo(()=>getRpts(riv),[riv]);
-  const dan=spp.find(s=>s.id==="danica");
-  const topH=spp[0];
-  const hIdx=Math.round(spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100);
-  const lv=cL>0.6?{t:"HIGH",c:K.rd}:cL>0.45?{t:"NORMAL",c:K.gn}:{t:"LOW",c:K.bl};
-  const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
+  useEffect(()=>{
+    if(timer.current)clearInterval(timer.current);
+    if(rv){timer.current=setInterval(()=>{const t=area||rv.a[0];if(rv.ea)fetchEA(rv.ea).then(d=>setEa(d));fetchWx(t.la,t.lo).then(d=>{if(d)setWx(d);});},900000);}
+    return()=>{if(timer.current)clearInterval(timer.current);};
+  },[rv,area]);
 
-  const hourlyD=useMemo(()=>{if(!wx)return[];return wx.map((d,i)=>({...d,hrs:(d.hrs||[]).map(h=>{const wt=+(cT+(((h.airT||15)-(d.aH+d.aL)/2)*0.15)).toFixed(1);return{...h,wt,hi:+hInt(wt,dy+i,h.h).toFixed(1)}})}));},[wx,cT,dy]);
+  const wTemp=ea?.temp??(wx?.current_weather?.temperature?Math.round(wx.current_weather.temperature*0.6+2):null);
+  const aTemp=wx?.current_weather?.temperature;
+  const wind=wx?.current_weather?.windspeed;
+  const wxC=wx?.current_weather?.weathercode;
 
-  const submitRpt=()=>{if(rptBeat&&rptText.length>10){setUserRpts(p=>[{d:new Date().toLocaleDateString("en-GB",{month:"short",day:"numeric"}),bt:rptBeat,tx:rptText,au:"You",src:"User",v:false,tg:[],id:Date.now()},...p]);setRptText("");setRptBeat("")}};
+  const hatches=useMemo(()=>SP.map(s=>({...s,score:hScore(s,wTemp)})).sort((a,b)=>b.score-a.score),[wTemp]);
+  const hatchIdx=useMemo(()=>{const top=hatches.slice(0,5);return top.length?Math.round(top.reduce((s,h)=>s+h.score,0)/top.length):0;},[hatches]);
+  const activeIds=useMemo(()=>new Set(hatches.filter(h=>h.score>20).map(h=>h.id)),[hatches]);
+  const danica=hatches.find(h=>h.id==="ed");
 
-  const Sec=({label:l,children:c})=><div style={{marginBottom:20}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.25em",color:K.txD,marginBottom:10}}>{l}</div>{c}</div>;
-  const Cd=({children:c,accent:a,style:s})=><div style={{background:a?K.acS:K.c1,borderRadius:10,border:`1px solid ${a?K.acB:K.bd}`,overflow:"hidden",...s}}>{c}</div>;
+  // Hourly heatmap
+  const heatmap=useMemo(()=>{
+    if(!wx?.hourly)return null;
+    const hrs=wx.hourly.temperature_2m,tms=wx.hourly.time;if(!hrs||!tms)return null;
+    const days=[];
+    for(let d=0;d<7;d++){
+      const dh=[];
+      for(let h=6;h<=20;h++){const i=d*24+h;if(i>=hrs.length)break;const at=hrs[i],ew=Math.round(at*0.6+2);
+        const sc=SP.reduce((s,sp)=>{const m=mScore(sp),t=tScore(sp,ew);let tw=1;if(h>=10&&h<=14)tw=1.2;if(h>=17&&h<=20)tw=1.3;if(h<8||h>19)tw=0.5;return s+m*t*tw;},0);
+        dh.push({h,score:Math.min(sc/4,1),airT:at,estW:ew});}
+      const dt=new Date(tms[d*24]);
+      days.push({date:dt,hours:dh,day:dt.toLocaleDateString('en-GB',{weekday:'short'}),dateStr:dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'})});
+    }
+    return days;
+  },[wx]);
 
-  const navItems=[{id:"river",l:"River",i:"◉"},{id:"forecast",l:"Forecast",i:"◔"},{id:"fly",l:"Fly Box",i:"◎"},{id:"onriver",l:"Live",i:"◈"},{id:"more",l:"More",i:"☰"}];
+  // Long range
+  const longRange=useMemo(()=>{
+    const now=new Date(),wks=[];
+    for(let w=0;w<8;w++){
+      const s=new Date(now);s.setDate(s.getDate()+w*7);const e=new Date(s);e.setDate(e.getDate()+6);
+      const mid=new Date(s);mid.setDate(mid.getDate()+3);const mo=mid.getMonth()+1;
+      const act=SP.filter(sp=>sp.months.includes(mo)),hl=act.length>0?act[0]:null;
+      wks.push({label:`${s.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${e.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}`,act,hl,int:act.length>4?"High":act.length>2?"Moderate":"Low"});
+    }return wks;
+  },[]);
+
+  const levelStatus=ea?.level!=null?(ea.level<0.3?"LOW":ea.level<0.6?"NORMAL":"HIGH"):"—";
 
   return(
-    <div style={{"--sf":"'Playfair Display',Georgia,serif","--sn":"'Barlow',sans-serif",fontFamily:"var(--sn)",background:K.bg,minHeight:"100vh",color:K.tx,WebkitFontSmoothing:"antialiased",maxWidth:480,margin:"0 auto",paddingBottom:70}}>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-      <style>{`*{box-sizing:border-box;margin:0}input,select,textarea{font-family:inherit;background:${K.c2};color:${K.tx};border:1px solid ${K.bd};border-radius:6px;padding:10px 12px;font-size:13px;width:100%}input:focus,select:focus,textarea:focus{outline:none;border-color:${K.ac}}::-webkit-scrollbar{height:4px}::-webkit-scrollbar-thumb{background:${K.bd};border-radius:2px}@keyframes fu{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}.fu{animation:fu .3s ease both}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}.pulse{animation:pulse 1.5s infinite}`}</style>
+  <div style={{fontFamily:ff,background:C.bg,color:C.tx,minHeight:"100vh",maxWidth:480,margin:"0 auto",paddingBottom:72,WebkitFontSmoothing:"antialiased",position:"relative"}}>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
-      {/* ══ HEADER ══ */}
-      <div style={{background:`linear-gradient(170deg,${K.bg},${K.c3} 60%,#161A14)`,padding:"22px 16px 16px",position:"relative"}}>
-        <div style={{position:"absolute",inset:0,opacity:0.02,backgroundImage:"repeating-conic-gradient(#EDE5D5 0% 25%,transparent 0% 50%)",backgroundSize:"3px 3px"}}/>
-        <div style={{position:"relative",zIndex:1}}>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
-            <Mark/>
-            <div style={{textAlign:"right"}}>
-              <div style={{fontSize:40,fontWeight:900,fontFamily:"var(--sf)",color:K.ac,lineHeight:1}}>{hIdx}</div>
-              <div style={{fontSize:7,color:K.txD,letterSpacing:"0.25em"}}>HATCH INDEX</div>
-            </div>
-          </div>
-
-          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:10}}>
-            <div className={loading?"pulse":""} style={{width:6,height:6,borderRadius:3,background:dSrc==="live"?K.gn:dSrc==="loading"?K.og:K.rd}}/>
-            <span style={{fontSize:8,color:K.txD,letterSpacing:"0.06em"}}>{loading?"FETCHING...":dSrc==="live"?`LIVE / ${lastUp?.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}`:"SIMULATED / Connects on deploy"}</span>
-          </div>
-
-          {dan&&<Cd accent style={{padding:"12px 14px",marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10}}>
-              <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.2em",color:K.ac}}>THE MAYFLY / E. DANICA</div><div style={{fontSize:12,color:K.txM,marginTop:4,lineHeight:1.5}}>{dan.score>70?"Full hatch. Get on the water.":dan.score>40?"Building. Daily emergence.":dan.score>15?"Early signs. Days away.":"Not yet. Patience."}</div></div>
-              <div style={{textAlign:"center"}}><div style={{fontSize:34,fontWeight:900,fontFamily:"var(--sf)",color:K.ac,lineHeight:1}}>{dan.score}</div><div style={{fontSize:8,color:K.ac,fontWeight:700}}>{dan.lb.toUpperCase()}</div></div>
-            </div>
-          </Cd>}
-
-          <button onClick={()=>setPick(!pick)} style={{width:"100%",background:K.c2,border:`1px solid ${K.bd}`,borderRadius:8,padding:"10px 14px",color:K.tx,fontSize:12,fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",justifyContent:"space-between"}}><span>{rv.n} / {bt.n}</span><span style={{color:K.txD}}>{pick?"−":"+"}</span></button>
-          {pick&&<div className="fu" style={{marginTop:8,background:K.c1,borderRadius:10,padding:12,border:`1px solid ${K.bd}`}}>
-            <div style={{display:"flex",gap:4,flexWrap:"wrap",marginBottom:8}}>{Object.entries(RIVERS).map(([k,r])=><button key={k} onClick={()=>setRiv(k)} style={{padding:"4px 10px",borderRadius:5,border:riv===k?`1px solid ${K.ac}`:`1px solid ${K.bd}`,background:riv===k?K.acS:"transparent",color:riv===k?K.ac:K.txM,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{r.n}</button>)}</div>
-            <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>{rv.beats.map((b,i)=><button key={b.id} onClick={()=>{setBIdx(i);setPick(false)}} style={{padding:"3px 8px",borderRadius:4,border:bIdx===i?`1px solid ${K.tx}`:`1px solid ${K.bd}`,background:bIdx===i?K.c3:"transparent",color:bIdx===i?K.tx:K.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>{b.n}</button>)}</div>
-          </div>}
-        </div>
+    {/* ═══ HEADER ═══ */}
+    <div style={{padding:"14px 16px 12px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${C.bd}`}}>
+      <div style={{display:"flex",alignItems:"center",gap:10,cursor:"pointer"}} onClick={()=>{setNav("near");setRv(null);}}>
+        <Mark s={30}/>
+        <span style={{fontSize:15,fontWeight:600,letterSpacing:"0.22em",color:C.fog}}>EPHEMERA</span>
       </div>
-
-      {/* ══ STATS ══ */}
-      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",borderBottom:`1px solid ${K.bd}`}}>
-        {[{l:"WATER",v:`${cT}°`,s:`${cT>pT?"▲":"▼"}${Math.abs(cT-pT).toFixed(1)}°`,c:cT>=12&&cT<=18?K.gn:K.bl},{l:"LEVEL",v:`${cL}m`,s:lv.t,c:lv.c},{l:"FLOW",v:cF||"--",s:"m³/s",c:K.txM}].map((s,i)=>
-          <div key={i} style={{padding:"12px 8px",textAlign:"center",borderRight:i<2?`1px solid ${K.bd}`:"",background:K.c1}}>
-            <div style={{fontSize:7,letterSpacing:"0.2em",color:K.txD}}>{s.l}</div>
-            <div style={{fontSize:20,fontWeight:700,fontFamily:"var(--sf)",color:s.c,lineHeight:1,marginTop:3}}>{s.v}</div>
-            <div style={{fontSize:9,color:s.c,fontWeight:600,marginTop:2}}>{s.s}</div>
-          </div>)}
-      </div>
-
-      {/* ══ CONTENT ══ */}
-      <div style={{padding:16}}>
-
-      {/* ── RIVER (main dashboard) ── */}
-      {nav==="river"&&<div className="fu">
-        <Sec label="SPECIES ACTIVITY"><Cd>{spp.filter(s=>adv||s.score>5).slice(0,adv?20:8).map(sp=>{const isM=sp.id==="danica";return(
-          <div key={sp.id} style={{padding:isM?"16px":"10px 16px",borderBottom:`1px solid ${K.bd}`,background:isM?K.acS:"transparent"}}>
-            <div style={{display:"flex",alignItems:"center",gap:10}}>
-              <span style={{fontSize:8,fontWeight:700,color:CC[sp.cat],minWidth:12}}>{CL[sp.cat]?.charAt(0)}</span>
-              <div style={{flex:1}}><div style={{display:"flex",alignItems:"baseline",gap:6}}><span style={{fontWeight:700,color:isM?K.ac:K.tx,fontSize:isM?15:12,fontFamily:"var(--sf)"}}>{sp.cm}</span>{isM&&<span style={{fontSize:8,fontWeight:700,color:K.ac,letterSpacing:"0.1em"}}>PEAK</span>}</div>
-                {adv&&<div style={{fontSize:9,color:K.txD,fontStyle:"italic"}}>{sp.nm} | {sp.sz} | Hook {sp.hk}</div>}
-                <div style={{height:isM?5:3,background:K.c2,borderRadius:3,marginTop:5,overflow:"hidden"}}><div style={{height:"100%",width:`${sp.score}%`,background:`linear-gradient(90deg,${hC(sp.score)}66,${hC(sp.score)})`,borderRadius:3,transition:"width .6s"}}/></div>
-              </div>
-              <div style={{textAlign:"right",minWidth:40}}><div style={{fontSize:isM?24:18,fontWeight:700,fontFamily:"var(--sf)",color:hC(sp.score),lineHeight:1}}>{sp.score}</div><div style={{fontSize:7,fontWeight:600,color:hC(sp.score),marginTop:1}}>{sp.lb}</div></div>
-            </div>
-          </div>)})}</Cd></Sec>
-
-        <Sec label="TODAY'S TOP FLIES"><Cd style={{padding:14}}>
-          {["dry","emerger","nymph"].map(cat=>{const rel=FL[cat].filter(f=>f.mt.some(m=>actIds.includes(m))).slice(0,2);if(!rel.length)return null;return<div key={cat} style={{marginBottom:10}}><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:cat==="dry"?K.ac:cat==="emerger"?K.gn:K.bl,marginBottom:4}}>{cat.toUpperCase()}</div>{rel.map(f=><div key={f.nm} style={{padding:"5px 0",borderBottom:`1px solid ${K.bd}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><span style={{fontSize:12,fontWeight:600}}>{f.nm}</span><span style={{fontSize:10,color:K.txD,marginLeft:6}}>#{f.sz}</span></div><div style={{display:"flex",gap:2}}>{Array.from({length:f.ef},(_,i)=><div key={i} style={{width:4,height:4,borderRadius:2,background:K.ac}}/>)}</div></div>)}</div>})}
-        </Cd></Sec>
-
-        <div style={{display:"flex",gap:4}}>
-          <button onClick={()=>setAdv(!adv)} style={{flex:1,padding:"10px",borderRadius:8,border:`1px solid ${adv?K.ac:K.bd}`,background:adv?K.acS:K.c1,color:adv?K.ac:K.txD,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{adv?"ADVANCED ON":"ADVANCED OFF"}</button>
-        </div>
+      {rv&&<div style={{textAlign:"right"}}>
+        <div style={{fontSize:28,fontWeight:700,color:scoreClr(hatchIdx),lineHeight:1}}>{hatchIdx}</div>
+        <div style={{fontSize:8,color:C.txD,letterSpacing:"0.1em",fontWeight:600}}>HATCH INDEX</div>
       </div>}
-
-      {/* ── FORECAST ── */}
-      {nav==="forecast"&&<div className="fu">
-        <div style={{display:"flex",gap:4,marginBottom:16}}>{[{id:"hourly",l:"HOURLY"},{id:"longrange",l:"LONG RANGE"},{id:"kit",l:"KIT & TIPS"}].map(t=><button key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,padding:"10px 6px",borderRadius:8,border:sub===t.id?`1px solid ${K.ac}`:`1px solid ${K.bd}`,background:sub===t.id?K.acS:K.c1,color:sub===t.id?K.ac:K.txD,fontSize:9,fontWeight:700,letterSpacing:"0.08em",cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>)}</div>
-
-        {sub==="hourly"&&(()=>{const day=hourlyD[hDay];if(!day)return<div style={{color:K.txM}}>Loading...</div>;const pk=day.hrs.reduce((a,b)=>(a.hi||0)>(b.hi||0)?a:b,day.hrs[0]);return<div>
-          <div style={{display:"flex",gap:4,marginBottom:12,overflowX:"auto",paddingBottom:4}}>{hourlyD.map((d,i)=><button key={i} onClick={()=>setHDay(i)} style={{padding:"6px 9px",borderRadius:6,border:hDay===i?`1px solid ${K.ac}`:`1px solid ${K.bd}`,background:hDay===i?K.acS:K.c1,color:hDay===i?K.ac:K.txM,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}><div>{d.dn}</div><div style={{fontSize:8,marginTop:1}}>{d.df}</div></button>)}</div>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:6,marginBottom:12}}>{[{l:"AIR",v:`${day.aH||"--"}°/${day.aL||"--"}°`},{l:"WIND",v:`${day.wd||"?"} ${day.ws||"--"}mph`},{l:"RAIN",v:`${day.rain||0}%`},{l:"PRESS",v:`${day.pr||"--"}mb`}].map((s,i)=><div key={i} style={{background:K.c1,borderRadius:6,border:`1px solid ${K.bd}`,padding:"8px 4px",textAlign:"center"}}><div style={{fontSize:7,letterSpacing:"0.1em",color:K.txD}}>{s.l}</div><div style={{fontSize:11,fontWeight:600,color:K.tx,marginTop:2}}>{s.v}</div></div>)}</div>
-          {pk&&<Cd accent style={{padding:"12px 14px",marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.2em",color:K.ac}}>PEAK WINDOW</div><div style={{fontSize:12,color:K.tx,marginTop:3}}>{pk.h}:00 / ~{pk.wt}°C / Intensity {(pk.hi||0).toFixed(1)}</div></div><div style={{fontSize:26,fontFamily:"var(--sf)",fontWeight:900,color:K.ac}}>{(pk.hi||0).toFixed(0)}</div></div></Cd>}
-          <Cd style={{padding:14}}><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:K.txD,marginBottom:8}}>HATCH INTENSITY BY HOUR</div><div style={{display:"flex",gap:2,flexWrap:"wrap"}}>{(day.hrs||[]).map(h=><div key={h.h} style={{textAlign:"center"}}><div style={{fontSize:7,color:K.txD,marginBottom:2}}>{h.h}</div><div style={{width:22,height:22,borderRadius:3,background:iC(h.hi||0),display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,color:(h.hi||0)>=3?K.bg:K.txD,fontWeight:(h.hi||0)>=5?700:400}}>{(h.hi||0)>=1?(h.hi||0).toFixed(0):""}</div></div>)}</div></Cd>
-        </div>})()}
-
-        {sub==="longrange"&&<div>
-          <Cd>{lr.map((w,i)=><div key={i} style={{padding:"12px 14px",borderBottom:`1px solid ${K.bd}`,display:"flex",alignItems:"center",gap:10}}>
-            <div style={{minWidth:75}}><div style={{fontSize:11,fontWeight:600,color:i===0?K.ac:K.tx}}>{w.l}</div><div style={{fontSize:8,color:w.cf==="High"?K.gn:w.cf==="Med"?K.og:K.txD,fontWeight:600,marginTop:2}}>{w.cf.toUpperCase()}</div></div>
-            <div style={{flex:1}}>
-              <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:3}}><span style={{fontSize:8,color:K.ac,fontWeight:600,minWidth:34}}>Danica</span><div style={{flex:1,height:5,background:K.c2,borderRadius:3,overflow:"hidden"}}><div style={{height:"100%",width:`${w.ds}%`,background:K.ac,borderRadius:3}}/></div><span style={{fontSize:10,fontWeight:700,color:K.ac,minWidth:24,textAlign:"right"}}>{w.ds}%</span></div>
-              <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:8,color:K.gn,fontWeight:600,minWidth:34}}>Overall</span><div style={{flex:1,height:3,background:K.c2,borderRadius:2,overflow:"hidden"}}><div style={{height:"100%",width:`${w.oa*10}%`,background:K.gn,borderRadius:2}}/></div><span style={{fontSize:9,fontWeight:600,color:K.gn,minWidth:24,textAlign:"right"}}>{w.oa}</span></div>
-            </div>
-            <div style={{fontSize:9,color:K.txD,minWidth:34,textAlign:"right"}}>~{w.pt}°C</div>
-          </div>)}</Cd>
-        </div>}
-
-        {sub==="kit"&&<div>
-          <Cd style={{padding:14}}>
-            <div style={{marginBottom:12}}><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:K.ac,marginBottom:4}}>TIPPET</div><div style={{fontSize:16,fontWeight:700,fontFamily:"var(--sf)"}}>{topH?.id==="danica"?"3X-4X (6-8lb)":topH?.cat==="o"&&(topH.sz||"").includes("6")?"6X-7X (2-3lb)":"5X (4lb)"}</div></div>
-            <div style={{marginBottom:12}}><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:K.ac,marginBottom:4}}>LEADER</div><div style={{fontSize:11,color:K.tx,lineHeight:1.6}}>{cT>15?"12-15ft tapered. Fluoro tippet. Longer in clear water.":cT>10?"9-12ft tapered. Nylon for dries, fluoro for nymphs.":"9ft tapered. Shorter fine in cooler water."}</div></div>
-            <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:K.ac,marginBottom:4}}>GUIDE TIPS</div>
-              {["Rub mud on the last 3ft of tippet. Critical in clear water.",cL<0.4?"Low water: stay low, longer casts.":cL>0.55?"Higher water: fish margins and slack.":"Levels good: classic positions, tail of pools.",cT>=12?"Water ideal for surface. Keep a dry ready.":"Cool water: slow deep nymphing.","Debarb hooks. Most beats require it.","Carry amadou or desiccant for dries."].map((t,i)=><div key={i} style={{padding:"6px 0",borderBottom:`1px solid ${K.bd}`,fontSize:11,color:K.txM,lineHeight:1.5,display:"flex",gap:8}}><span style={{color:K.ac,flexShrink:0}}>•</span>{t}</div>)}
-            </div>
-          </Cd>
-          {[{c:"Overcast & warm",t:"Best for danica. Big dries."},{c:"Bright sun",t:"Fish in shade. Long tippets."},{c:"Cold & blustery",t:"Iron blue day. Don't give up."},{c:"Falling pressure",t:"Triggers hatches."},{c:"After rain",t:"Nymphs early, dries as it clears."}].map((w,i)=><div key={i} style={{padding:"8px 0",borderBottom:`1px solid ${K.bd}`}}><span style={{fontSize:11,fontWeight:600,color:K.ac}}>{w.c}</span><span style={{fontSize:11,color:K.txM,marginLeft:8}}>{w.t}</span></div>)}
-        </div>}
-      </div>}
-
-      {/* ── FLY BOX ── */}
-      {nav==="fly"&&<div className="fu">
-        <div style={{background:K.rd+"18",border:`1px solid ${K.rd}44`,borderRadius:8,padding:"10px 12px",marginBottom:14}}>
-          <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:K.rd,marginBottom:3}}>⚠ CHECK BEAT REGULATIONS</div>
-          <div style={{fontSize:10,color:K.txM,lineHeight:1.5}}>Fly restrictions vary by beat. Some are upstream dry fly only. Always confirm with the beat keeper.</div>
-        </div>
-        <div style={{display:"flex",gap:4,marginBottom:14}}>{[{id:"dry",l:"DRIES",c:K.ac},{id:"emerger",l:"EMERGERS",c:K.gn},{id:"nymph",l:"NYMPHS",c:K.bl}].map(t=><button key={t.id} onClick={()=>setFlyT(t.id)} style={{flex:1,padding:"10px 6px",borderRadius:8,border:flyT===t.id?`1px solid ${t.c}`:`1px solid ${K.bd}`,background:flyT===t.id?t.c+"18":K.c1,color:flyT===t.id?t.c:K.txD,fontSize:9,fontWeight:700,letterSpacing:"0.08em",cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>)}</div>
-        <Cd>{FL[flyT].map((f,i)=>{const isM=f.mt.some(m=>actIds.includes(m));return<div key={i} style={{padding:"12px 14px",borderBottom:`1px solid ${K.bd}`,background:isM?K.acS:"transparent"}}>
-          <div style={{display:"flex",justifyContent:"space-between"}}><div><span style={{fontSize:13,fontWeight:700,color:isM?K.ac:K.tx,fontFamily:"var(--sf)"}}>{f.nm}</span>{isM&&<span style={{fontSize:7,fontWeight:700,color:K.ac,marginLeft:6,background:K.acB,padding:"1px 5px",borderRadius:3}}>MATCH</span>}</div><div style={{display:"flex",gap:2}}>{Array.from({length:f.ef},(_,j)=><div key={j} style={{width:4,height:4,borderRadius:2,background:isM?K.ac:K.txD}}/>)}</div></div>
-          <div style={{fontSize:10,color:K.txD,marginTop:3}}>Size {f.sz}</div>
-          {adv&&<div style={{fontSize:10,color:K.txM,marginTop:3}}>{f.nt}</div>}
-        </div>})}</Cd>
-      </div>}
-
-      {/* ── ON THE RIVER (Live) ── */}
-      {nav==="onriver"&&<div className="fu">
-        <div style={{display:"flex",gap:4,marginBottom:14}}>{[{id:"reports",l:"REPORTS"},{id:"webcams",l:"WEBCAMS"},{id:"submit",l:"SUBMIT"}].map(t=><button key={t.id} onClick={()=>setSub(t.id)} style={{flex:1,padding:"10px 6px",borderRadius:8,border:sub===t.id?`1px solid ${K.ac}`:`1px solid ${K.bd}`,background:sub===t.id?K.acS:K.c1,color:sub===t.id?K.ac:K.txD,fontSize:9,fontWeight:700,letterSpacing:"0.08em",cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>)}</div>
-
-        {sub==="reports"&&<div>
-          <Cd style={{padding:14,marginBottom:14}}>
-            <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.2em",color:K.ac,marginBottom:6}}>RIVER'S EYE VIEW</div>
-            <p style={{margin:0,fontSize:12,lineHeight:1.8,color:K.txM}}>{riv==="test"?`The Test is in superb form. Olives consistent, first danica emerging around Stockbridge and Mottisfont. Clarity exceptional. Emergers outperforming duns in carriers. The main event is building.`:`The ${rv.n} is in ${cL>0.5?"good heart":"fine form"}. Water at ${cT}°C. ${rv.desc}`}</p>
-          </Cd>
-          <Sec label="FIELD REPORTS"><Cd style={{padding:"4px 14px"}}>
-            {[...userRpts,...rpts].map((r,i)=>{const sc={Field:K.gn,Guide:K.bl,Club:"#5A7A5E",Estate:K.og,Social:K.txM,User:K.ac};return<div key={i} style={{padding:"12px 0",borderBottom:`1px solid ${K.bd}`}}>
-              <div style={{display:"flex",gap:5,alignItems:"center",marginBottom:5,flexWrap:"wrap"}}><span style={{fontSize:7,fontWeight:700,color:sc[r.src],border:`1px solid ${(sc[r.src]||K.txM)}33`,padding:"1px 5px",borderRadius:3}}>{r.src.toUpperCase()}</span><span style={{fontSize:11,fontWeight:600}}>{r.bt}</span><span style={{fontSize:9,color:K.txD}}>{r.d}</span><span style={{marginLeft:"auto",fontSize:7,color:r.v?K.gn:K.og,fontWeight:600}}>{r.v?"VERIFIED":"UNVERIFIED"}</span></div>
-              <p style={{margin:0,fontSize:11,lineHeight:1.6,color:K.txM}}>{r.tx}</p>
-            </div>})}
-          </Cd></Sec>
-        </div>}
-
-        {sub==="webcams"&&<div>
-          <Sec label="RIVER WEBCAMS">
-            {WEBCAMS.filter(w=>!riv||w.river===riv||!w.river).map((w,i)=><Cd key={i} style={{padding:14,marginBottom:10}}>
-              <div style={{fontSize:13,fontWeight:700,fontFamily:"var(--sf)",color:K.tx}}>{w.nm}</div>
-              <div style={{fontSize:10,color:K.txM,marginTop:4}}>{w.desc}</div>
-              <a href={w.url} target="_blank" rel="noopener noreferrer" style={{display:"inline-block",marginTop:8,padding:"8px 14px",background:K.ac,color:K.bg,borderRadius:6,fontSize:10,fontWeight:700,textDecoration:"none",letterSpacing:"0.08em"}}>VIEW LIVE CAM →</a>
-            </Cd>)}
-          </Sec>
-          <div style={{fontSize:10,color:K.txD,lineHeight:1.5}}>Webcams provided by Farson Digital Watercams. More cameras being added. Want your river cam listed? Contact us.</div>
-        </div>}
-
-        {sub==="submit"&&<div>
-          <Sec label="SUBMIT A RIVER REPORT"><Cd style={{padding:14}}>
-            <div style={{marginBottom:10}}><label style={{fontSize:9,color:K.txD,letterSpacing:"0.1em",display:"block",marginBottom:4}}>BEAT</label><select value={rptBeat} onChange={e=>setRptBeat(e.target.value)}><option value="">Select beat...</option>{rv.beats.map(b=><option key={b.id} value={b.n}>{b.n}</option>)}</select></div>
-            <div style={{marginBottom:10}}><label style={{fontSize:9,color:K.txD,letterSpacing:"0.1em",display:"block",marginBottom:4}}>YOUR REPORT</label><textarea rows={4} value={rptText} onChange={e=>setRptText(e.target.value)} placeholder="What's happening on the river? Hatches, conditions, fish activity..."/></div>
-            <button onClick={submitRpt} style={{width:"100%",padding:12,borderRadius:8,border:"none",background:K.ac,color:K.bg,fontSize:11,fontWeight:700,letterSpacing:"0.1em",cursor:"pointer",fontFamily:"inherit"}}>SUBMIT REPORT</button>
-            <div style={{fontSize:9,color:K.txD,marginTop:8,lineHeight:1.5}}>Reports appear as unverified. Verified status granted to recognised guides and keepers.</div>
-          </Cd></Sec>
-        </div>}
-      </div>}
-
-      {/* ── MORE ── */}
-      {nav==="more"&&<div className="fu">
-        <div style={{display:"flex",gap:4,marginBottom:14,flexWrap:"wrap"}}>{[{id:"learn",l:"LEARN"},{id:"guides",l:"GUIDES"},{id:"plan",l:"PLANNER"},{id:"local",l:"LOCAL"},{id:"legal",l:"LEGAL"}].map(t=><button key={t.id} onClick={()=>setSub(t.id)} style={{flex:"1 1 28%",padding:"10px 6px",borderRadius:8,border:sub===t.id?`1px solid ${K.ac}`:`1px solid ${K.bd}`,background:sub===t.id?K.acS:K.c1,color:sub===t.id?K.ac:K.txD,fontSize:9,fontWeight:700,letterSpacing:"0.08em",cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>)}</div>
-
-        {sub==="learn"&&<div>
-          <div style={{display:"flex",gap:4,marginBottom:14}}>{LEARN.map((l,i)=><button key={i} onClick={()=>setLearnLvl(i)} style={{flex:1,padding:"10px 6px",borderRadius:8,border:learnLvl===i?`1px solid ${l.clr}`:`1px solid ${K.bd}`,background:learnLvl===i?l.clr+"18":K.c1,color:learnLvl===i?l.clr:K.txD,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{l.lvl.toUpperCase()}</button>)}</div>
-          <Cd>{LEARN[learnLvl].items.map((it,i)=><div key={i} style={{padding:"14px 14px",borderBottom:`1px solid ${K.bd}`}}>
-            <div style={{fontSize:13,fontWeight:700,fontFamily:"var(--sf)",color:K.tx}}>{it.t}</div>
-            <div style={{fontSize:11,color:K.txM,marginTop:4,lineHeight:1.5}}>{it.d}</div>
-            <div style={{fontSize:9,color:K.ac,marginTop:6,fontWeight:600}}>Coming soon</div>
-          </div>)}</Cd>
-        </div>}
-
-        {sub==="guides"&&<div>
-          <Sec label="GUIDE DIRECTORY"><Cd>{GUIDES.map((g,i)=><div key={i} style={{padding:"14px 14px",borderBottom:`1px solid ${K.bd}`}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}><div><div style={{fontSize:14,fontWeight:700,fontFamily:"var(--sf)"}}>{g.nm}</div><div style={{fontSize:10,color:K.ac,fontWeight:600,marginTop:2}}>{g.type}</div></div>{g.verified&&<span style={{fontSize:7,fontWeight:700,color:K.gn,border:`1px solid ${K.gn}33`,padding:"2px 6px",borderRadius:3}}>VERIFIED</span>}</div>
-            <div style={{fontSize:10,color:K.txD,marginTop:3}}>Rivers: {g.river}</div>
-            <div style={{fontSize:11,color:K.txM,marginTop:4}}>{g.note}</div>
-          </div>)}</Cd></Sec>
-          <Cd style={{padding:14,marginTop:10}}>
-            <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:K.ac,marginBottom:6}}>LIST YOUR SERVICES</div>
-            <div style={{fontSize:11,color:K.txM,lineHeight:1.6,marginBottom:10}}>Are you a guide, casting coach, or fishing instructor? List your services on Ephemera and reach anglers planning their next day on the river.</div>
-            <button style={{width:"100%",padding:12,borderRadius:8,border:`1px solid ${K.ac}`,background:"transparent",color:K.ac,fontSize:11,fontWeight:700,letterSpacing:"0.1em",cursor:"pointer",fontFamily:"inherit"}}>APPLY TO LIST →</button>
-          </Cd>
-        </div>}
-
-        {sub==="plan"&&<div>
-          <Sec label="DAY PLANNER"><Cd style={{padding:14}}>
-            <div style={{marginBottom:10}}><label style={{fontSize:9,color:K.txD,letterSpacing:"0.1em",display:"block",marginBottom:4}}>BEAT</label><select value={planBeat} onChange={e=>setPlanBeat(e.target.value)}><option value="">Select...</option>{Object.entries(RIVERS).map(([k,r])=>r.beats.map(b=><option key={`${k}-${b.id}`} value={`${r.n} / ${b.n}`}>{r.n} - {b.n}</option>))}</select></div>
-            <div style={{marginBottom:10}}><label style={{fontSize:9,color:K.txD,letterSpacing:"0.1em",display:"block",marginBottom:4}}>DATE</label><input type="date" value={planDate} onChange={e=>setPlanDate(e.target.value)}/></div>
-            <button onClick={()=>{if(planBeat&&planDate){setPlans(p=>[...p,{b:planBeat,d:planDate,id:Date.now()}]);setPlanBeat("");setPlanDate("")}}} style={{width:"100%",padding:12,borderRadius:8,border:"none",background:K.ac,color:K.bg,fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>ADD TO PLAN</button>
-          </Cd></Sec>
-          {plans.length>0&&<Cd>{plans.map(p=><div key={p.id} style={{padding:"10px 14px",borderBottom:`1px solid ${K.bd}`,display:"flex",justifyContent:"space-between"}}><div><div style={{fontSize:12,fontWeight:600}}>{p.b}</div><div style={{fontSize:10,color:K.txD}}>{new Date(p.d).toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"})}</div></div><button onClick={()=>setPlans(x=>x.filter(z=>z.id!==p.id))} style={{background:"none",border:"none",color:K.rd,cursor:"pointer",fontSize:14}}>×</button></div>)}</Cd>}
-        </div>}
-
-        {sub==="local"&&<div>
-          {(()=>{const loc=LOCALS[riv]||LOCALS.test;return<>
-            <Sec label="TACKLE SHOPS"><Cd>{(loc.tackle||[]).map((l,i)=><div key={i} style={{padding:"12px 14px",borderBottom:`1px solid ${K.bd}`}}><div style={{fontSize:13,fontWeight:700,fontFamily:"var(--sf)"}}>{l.nm}</div><div style={{fontSize:10,color:K.txD,marginTop:2}}>{l.a}</div><div style={{fontSize:10,color:K.txM,marginTop:3}}>{l.n}</div></div>)}</Cd></Sec>
-            <Sec label="PUBS & CAFES"><Cd>{(loc.food||[]).map((l,i)=><div key={i} style={{padding:"12px 14px",borderBottom:`1px solid ${K.bd}`}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:13,fontWeight:700,fontFamily:"var(--sf)"}}>{l.nm}</span><span style={{fontSize:9,color:K.gn,fontWeight:600}}>{l.tp}</span></div><div style={{fontSize:10,color:K.txD,marginTop:2}}>{l.a}</div><div style={{fontSize:10,color:K.txM,marginTop:3}}>{l.n}</div></div>)}</Cd></Sec>
-          </>})()}
-        </div>}
-
-        {sub==="legal"&&<div>
-          <Cd style={{padding:14}}>
-            <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:K.ac,marginBottom:8}}>DISCLAIMER</div>
-            <div style={{fontSize:10,color:K.txM,lineHeight:1.7}}>
-              <p style={{marginBottom:10}}>Ephemera provides forecasts and predictions based on modelled data from publicly available sources including the Environment Agency Hydrology API and Open-Meteo weather services. All hatch predictions, species activity scores, and recommendations are indicative only and should not be relied upon as guaranteed outcomes.</p>
-              <p style={{marginBottom:10}}>River conditions can change rapidly. Always check local conditions on arrival and consult with beat keepers or fishery managers regarding current regulations, fly restrictions, and access arrangements before fishing.</p>
-              <p style={{marginBottom:10}}>Ephemera accepts no liability for any loss, damage, or disappointment arising from the use of this application or its forecasts. Fishing is undertaken at your own risk.</p>
-              <p style={{marginBottom:10}}>User-submitted reports are unverified unless marked otherwise and represent the personal observations of contributors. Ephemera does not guarantee the accuracy of user-submitted content.</p>
-              <p style={{marginBottom:10}}>River level and flow data is sourced from the Environment Agency under the Open Government Licence. Weather data is provided by Open-Meteo under CC BY 4.0. Attribution is given to both services.</p>
-              <p>© {new Date().getFullYear()} Ephemera. All rights reserved.</p>
-            </div>
-          </Cd>
-        </div>}
-      </div>}
-
-      </div>
-
-      {/* ══ FOOTER ══ */}
-      <div style={{textAlign:"center",padding:"24px 16px 20px",borderTop:`1px solid ${K.bd}`}}>
-        <EphemeraLogo s={130}/>
-        <div style={{fontSize:7,color:K.txD,marginTop:8,letterSpacing:"0.04em",lineHeight:1.7}}>
-          EA Hydrology API / Open-Meteo / Keeper logs / User reports<br/>
-          Forecasts are indicative. Always check local conditions.<br/>
-          {new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
-        </div>
-      </div>
-
-      {/* ══ BOTTOM NAV ══ */}
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:K.c1,borderTop:`1px solid ${K.bd}`,display:"flex",zIndex:100,backdropFilter:"blur(10px)"}}>
-        {navItems.map(n=><button key={n.id} onClick={()=>{setNav(n.id);if(n.id==="forecast")setSub("hourly");if(n.id==="onriver")setSub("reports");if(n.id==="more")setSub("learn")}} style={{flex:1,padding:"10px 0 8px",border:"none",background:"none",color:nav===n.id?K.ac:K.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
-          <div style={{fontSize:16,lineHeight:1}}>{n.i}</div>
-          <div style={{fontSize:8,fontWeight:600,marginTop:2,letterSpacing:"0.05em"}}>{n.l}</div>
-        </button>)}
-      </div>
     </div>
-  );
+
+    {/* ═══════════════════ NEAR ME VIEW ═══════════════════ */}
+    {nav==="near"&&<div style={{padding:"0 16px"}}>
+      {/* Hero */}
+      <div style={{textAlign:"center",padding:"20px 0 12px"}}>
+        <Mark s={42}/>
+        <div style={{fontSize:18,fontWeight:700,letterSpacing:"0.2em",color:C.fog,marginTop:8}}>EPHEMERA</div>
+        <div style={{fontSize:10,color:C.txM,marginTop:3}}>Timely Insight. Better Days.</div>
+        <div style={{fontSize:9,color:C.txD,marginTop:2}}>{RV.length} rivers · {RV.reduce((s,r)=>s+r.a.length,0)} areas · Live data</div>
+      </div>
+
+      {/* UK Map */}
+      <div style={{background:C.c1,borderRadius:10,border:`1px solid ${C.bd}`,padding:12,marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:700,color:C.txM,letterSpacing:"0.06em",marginBottom:6}}>UK TROUT RIVERS</div>
+        <UKMap rivers={RV} loc={loc} onSelect={r=>selRiver(r)}/>
+      </div>
+
+      {/* Search */}
+      <div style={{position:"relative",marginBottom:10}}>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search rivers, areas, regions..."
+          style={{width:"100%",boxSizing:"border-box",padding:"10px 14px 10px 30px",borderRadius:8,border:`1px solid ${C.bd}`,background:C.c1,color:C.tx,fontSize:12,fontFamily:ff,outline:"none"}}/>
+        <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",fontSize:13,color:C.txD}}>⌕</span>
+        {search&&<span style={{position:"absolute",right:10,top:"50%",transform:"translateY(-50%)",fontSize:11,color:C.txD,cursor:"pointer"}} onClick={()=>setSearch("")}>✕</span>}
+      </div>
+
+      {/* Region filter */}
+      <div style={{display:"flex",gap:5,overflowX:"auto",paddingBottom:8,WebkitOverflowScrolling:"touch"}}>
+        <button onClick={()=>setRgF("all")} style={{padding:"5px 10px",borderRadius:14,border:`1px solid ${rgF==="all"?C.rust:C.bd}`,background:rgF==="all"?C.rustDim:"transparent",color:rgF==="all"?C.rust:C.txD,fontSize:10,fontWeight:600,fontFamily:ff,cursor:"pointer",whiteSpace:"nowrap"}}>All</button>
+        {REG_ORDER.map(rg=><button key={rg} onClick={()=>setRgF(rg)} style={{padding:"5px 10px",borderRadius:14,border:`1px solid ${rgF===rg?C.rust:C.bd}`,background:rgF===rg?C.rustDim:"transparent",color:rgF===rg?C.rust:C.txD,fontSize:10,fontWeight:600,fontFamily:ff,cursor:"pointer",whiteSpace:"nowrap"}}>{REGS[rg].split(" ")[0]}</button>)}
+      </div>
+
+      <div style={{fontSize:9,color:C.txD,marginBottom:6}}>{rivers.length} river{rivers.length!==1?"s":""}{loc?" · nearest first":""}</div>
+
+      {/* River list */}
+      {rivers.map(r=>(
+        <div key={r.id} onClick={()=>selRiver(r)} style={{background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:12,marginBottom:6,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <span style={{fontSize:13,fontWeight:700,color:C.fog}}>{r.n}</span>
+              <span style={{fontSize:8,padding:"1px 5px",borderRadius:3,background:r.rt==="chalk"?C.rustDim:r.rt==="lime"?C.grnDim:C.warnDim,color:r.rt==="chalk"?C.rust:r.rt==="lime"?C.grn:C.txM,fontWeight:600}}>{RTYPES[r.rt]}</span>
+            </div>
+            <div style={{fontSize:9,color:C.txD,marginTop:2}}>{REGS[r.rg]} · {r.a.length} area{r.a.length!==1?"s":""}</div>
+          </div>
+          {r.dist!=null&&<div style={{textAlign:"right"}}><div style={{fontSize:14,fontWeight:700,color:C.rust}}>{fmtD(r.dist)}</div></div>}
+        </div>
+      ))}
+    </div>}
+
+    {/* ═══════════════════ FORECAST VIEW ═══════════════════ */}
+    {nav==="forecast"&&rv&&<div>
+      {/* Danica hero */}
+      {danica&&danica.score>0&&<div style={{margin:"12px 16px",padding:12,borderRadius:8,border:`1px solid ${C.rustGlow}`,background:C.rustDim}}>
+        <div style={{fontSize:10,fontWeight:700,color:C.rust,letterSpacing:"0.06em"}}>THE MAYFLY / E. DANICA</div>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
+          <div style={{fontSize:12,color:C.txM}}>{danica.score>=70?"Hatch underway. Get on the water.":danica.score>=40?"Building. Watch the water.":"Early signs. Days away."}</div>
+          <div style={{fontSize:28,fontWeight:700,color:C.rust}}>{danica.score}</div>
+        </div>
+      </div>}
+
+      {/* River / area selector */}
+      <div style={{margin:"0 16px 8px",padding:"10px 14px",borderRadius:8,border:`1px solid ${C.bd}`,background:C.c1,display:"flex",justifyContent:"space-between",alignItems:"center",cursor:"pointer"}}
+        onClick={()=>{/* could open area picker */}}>
+        <span style={{fontSize:13,fontWeight:600,color:C.fog}}>{rv.n}{area?` / ${area.n}`:""}</span>
+        <span style={{fontSize:12,color:C.txD}}>+</span>
+      </div>
+
+      {/* Area selector row */}
+      {rv.a.length>1&&<div style={{padding:"0 16px 8px",display:"flex",gap:5,overflowX:"auto"}}>
+        {rv.a.map(a=><button key={a.n} onClick={()=>{setArea(a);fetchWx(a.la,a.lo).then(d=>{if(d)setWx(d);});}}
+          style={{padding:"4px 9px",borderRadius:5,border:`1px solid ${area?.n===a.n?C.rust:C.bd}`,background:area?.n===a.n?C.rustDim:"transparent",color:area?.n===a.n?C.rust:C.txD,fontSize:9,fontWeight:500,fontFamily:ff,cursor:"pointer",whiteSpace:"nowrap"}}>{a.n}</button>)}
+      </div>}
+
+      {/* Stat strip */}
+      <div style={{display:"flex",padding:"10px 16px",background:C.c1,borderTop:`1px solid ${C.bd}`,borderBottom:`1px solid ${C.bd}`}}>
+        {[
+          {l:"WATER",v:wTemp!=null?`${typeof wTemp==='number'?wTemp.toFixed(1):wTemp}°C`:"—"},
+          {l:"LEVEL",v:ea?.level!=null?`${ea.level.toFixed(2)}m`:"—"},
+          {l:"STATUS",v:levelStatus},
+        ].map((s,i)=><div key={i} style={{flex:1,textAlign:"center"}}>
+          <div style={{fontSize:8,color:C.txD,letterSpacing:"0.06em",fontWeight:600}}>{s.l}</div>
+          <div style={{fontSize:16,fontWeight:700,color:C.fog,marginTop:2}}>{s.v}</div>
+        </div>)}
+      </div>
+
+      {/* Simulated / live indicator + map link */}
+      <div style={{display:"flex",justifyContent:"space-between",padding:"6px 16px",alignItems:"center"}}>
+        <div style={{display:"flex",alignItems:"center",gap:4}}>
+          <div style={{width:6,height:6,borderRadius:3,background:ea?.temp?C.grn:C.warn}}/>
+          <span style={{fontSize:9,color:C.txD}}>{ea?.temp?"LIVE":"SIMULATED"}</span>
+        </div>
+        {area&&<span style={{fontSize:10,color:C.rust,fontWeight:600,cursor:"pointer"}} onClick={()=>window.open(`https://www.google.com/maps/@${area.la},${area.lo},14z`,"_blank")}>VIEW ON MAP →</span>}
+      </div>
+
+      {loading&&<div style={{textAlign:"center",padding:20,color:C.txD,fontSize:11}}>Loading river data...</div>}
+
+      {/* Sub tabs */}
+      <div style={{display:"flex",gap:0,padding:"0 16px",borderBottom:`1px solid ${C.bd}`,overflowX:"auto"}}>
+        {["Forecast","Hourly","Long Range","Fly Box","Kit","Reports"].map(t=>{
+          const tid=t.toLowerCase().replace(/ /g,"_");
+          return<button key={tid} onClick={()=>setSub(tid)} style={{
+            padding:"8px 12px",border:"none",borderBottom:`2px solid ${sub===tid?C.rust:"transparent"}`,
+            background:"none",color:sub===tid?C.rust:C.txD,fontSize:11,fontWeight:sub===tid?600:400,
+            fontFamily:ff,cursor:"pointer",whiteSpace:"nowrap"
+          }}>{t}</button>;
+        })}
+      </div>
+
+      <div style={{padding:"0 16px 16px"}}>
+
+      {/* Advanced toggle */}
+      {(sub==="forecast"||sub==="hourly")&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 0"}}>
+        <span style={{fontSize:10,color:C.txD,letterSpacing:"0.06em",fontWeight:600}}>ADVANCED</span>
+        <div onClick={()=>setAdv(!adv)} style={{width:36,height:20,borderRadius:10,background:adv?C.rust:C.bd,cursor:"pointer",position:"relative",transition:"background 0.2s"}}>
+          <div style={{width:16,height:16,borderRadius:8,background:C.fog,position:"absolute",top:2,left:adv?18:2,transition:"left 0.2s"}}/>
+        </div>
+      </div>}
+
+      {/* ── FORECAST TAB ── */}
+      {sub==="forecast"&&<>
+        <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",marginBottom:10}}>SPECIES ACTIVITY</div>
+        {hatches.map(h=>(
+          <div key={h.id} style={{background:h.peak&&h.score>0?C.rustDim:C.c1,borderRadius:8,border:`1px solid ${h.peak&&h.score>0?C.rustGlow:C.bd}`,padding:"10px 12px",marginBottom:6}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+              <div style={{display:"flex",alignItems:"center",gap:6}}>
+                <div style={{width:6,height:6,borderRadius:3,background:h.clr}}/>
+                <span style={{fontSize:13,fontWeight:700,color:h.score>0?C.fog:C.txD}}>{h.n}</span>
+                {h.peak&&h.score>0&&<span style={{fontSize:8,fontWeight:700,color:C.rust,letterSpacing:"0.08em"}}>PEAK</span>}
+              </div>
+              <div style={{textAlign:"right"}}>
+                <div style={{fontSize:20,fontWeight:700,color:scoreClr(h.score)}}>{h.score}</div>
+                <div style={{fontSize:8,color:scoreClr(h.score),fontWeight:600}}>{scoreLbl(h.score)}</div>
+              </div>
+            </div>
+            {/* Progress bar */}
+            <div style={{height:3,background:C.bd,borderRadius:2,marginTop:6,overflow:"hidden"}}>
+              <div style={{height:"100%",width:`${h.score}%`,background:scoreClr(h.score),borderRadius:2,transition:"width 0.5s"}}/>
+            </div>
+            {adv&&<div style={{fontSize:9,color:C.txD,marginTop:6}}>
+              <span style={{fontStyle:"italic"}}>{h.latin}</span> · Hook {h.hook} · {h.note}
+            </div>}
+          </div>
+        ))}
+      </>}
+
+      {/* ── HOURLY TAB ── */}
+      {sub==="hourly"&&heatmap&&<>
+        <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",marginBottom:10,marginTop:10}}>7-DAY HATCH INTENSITY</div>
+        <div style={{background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:10,overflowX:"auto"}}>
+          <div style={{display:"grid",gridTemplateColumns:`50px repeat(${heatmap[0]?.hours.length||15},1fr)`,gap:1,minWidth:380}}>
+            <div/>
+            {heatmap[0]?.hours.map(h=><div key={h.h} style={{fontSize:7,color:C.txD,textAlign:"center"}}>{h.h}</div>)}
+            {heatmap.map(d=>(
+              <div key={d.dateStr} style={{display:"contents"}}>
+                <div style={{fontSize:9,color:C.txM,display:"flex",flexDirection:"column",justifyContent:"center"}}>
+                  <div style={{fontWeight:600}}>{d.day}</div>
+                  <div style={{fontSize:7,color:C.txD}}>{d.dateStr}</div>
+                </div>
+                {d.hours.map(h=>{
+                  const g=Math.round(60+h.score*140);const r=Math.round(40+h.score*155);const b=Math.round(50-h.score*30);
+                  return<div key={h.h} title={`${h.h}:00 — Air ${h.airT}°C, Water ~${h.estW}°C`}
+                    style={{background:`rgba(${r},${g},${b},${0.12+h.score*0.65})`,borderRadius:2,minHeight:16}}/>;
+                })}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 7-day weather */}
+        {wx?.daily&&<div style={{marginTop:12}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",marginBottom:8}}>7-DAY WEATHER</div>
+          <div style={{display:"flex",gap:2,background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:8,overflowX:"auto"}}>
+            {wx.daily.time.map((t,i)=>{const d=new Date(t);return<div key={i} style={{flex:1,textAlign:"center",minWidth:42,padding:"4px 2px",background:i===0?C.rustDim:"transparent",borderRadius:5}}>
+              <div style={{fontSize:8,color:i===0?C.rust:C.txD,fontWeight:i===0?600:400}}>{d.toLocaleDateString('en-GB',{weekday:'short'})}</div>
+              <div style={{fontSize:16,margin:"3px 0"}}>{wxI(wx.daily.weathercode[i])}</div>
+              <div style={{fontSize:10,fontWeight:600,color:C.fog}}>{Math.round(wx.daily.temperature_2m_max[i])}°</div>
+              <div style={{fontSize:9,color:C.txD}}>{Math.round(wx.daily.temperature_2m_min[i])}°</div>
+              {wx.daily.precipitation_sum[i]>0&&<div style={{fontSize:7,color:"#5A9BBF",marginTop:1}}>{wx.daily.precipitation_sum[i].toFixed(1)}mm</div>}
+            </div>;})}
+          </div>
+        </div>}
+      </>}
+
+      {/* ── LONG RANGE TAB ── */}
+      {sub==="long_range"&&<>
+        <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",margin:"10px 0"}}>8-WEEK OUTLOOK</div>
+        <div style={{background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:10}}>
+          {longRange.map((w,i)=>(
+            <div key={i} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 0",borderBottom:i<longRange.length-1?`1px solid ${C.bd}22`:"none"}}>
+              <div style={{fontSize:9,color:C.txM,width:100,flexShrink:0}}>{w.label}</div>
+              <div style={{flex:1}}>
+                <div style={{fontSize:10,fontWeight:600,color:w.hl?C.fog:C.txD}}>{w.hl?w.hl.n:"Low activity"}</div>
+                <div style={{fontSize:8,color:C.txD}}>{w.act.length} species</div>
+              </div>
+              <div style={{fontSize:9,fontWeight:600,color:w.int==="High"?C.grn:w.int==="Moderate"?C.warn:C.txD}}>{w.int}</div>
+            </div>
+          ))}
+        </div>
+      </>}
+
+      {/* ── FLY BOX TAB ── */}
+      {sub==="fly_box"&&<>
+        {["dry","emerger","nymph"].map(cat=>(
+          <div key={cat} style={{marginTop:10}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",marginBottom:6}}>{cat==="dry"?"DRIES":cat==="emerger"?"EMERGERS":"NYMPHS"}</div>
+            <div style={{background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:10}}>
+              {FLIES[cat].map((f,i)=>{const match=f.sp.some(s=>activeIds.has(s));return(
+                <div key={i} style={{padding:"6px 0",borderBottom:i<FLIES[cat].length-1?`1px solid ${C.bd}22`:"none",display:"flex",alignItems:"flex-start",gap:8}}>
+                  {match&&<span style={{fontSize:7,padding:"2px 5px",borderRadius:3,background:C.rustDim,color:C.rust,fontWeight:700,flexShrink:0,marginTop:2}}>MATCH</span>}
+                  <div style={{flex:1}}>
+                    <div style={{fontSize:12,fontWeight:600,color:match?C.fog:C.txM}}>{f.n}</div>
+                    <div style={{fontSize:9,color:C.txD}}>Hook {f.sz} · {f.note}</div>
+                  </div>
+                </div>
+              );})}
+            </div>
+          </div>
+        ))}
+      </>}
+
+      {/* ── KIT TAB ── */}
+      {sub==="kit"&&<>
+        <div style={{marginTop:10,background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:12}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",marginBottom:6}}>TIPPET & LEADER</div>
+          <div style={{fontSize:11,color:C.txM,lineHeight:1.5}}>
+            {rv.rt==="chalk"?"12-15ft tapered leader to 6X (0.12mm) or 7X (0.10mm) fluorocarbon. Degreased for nymphs. For mayfly, 5X (0.14mm).":
+             rv.rt==="lime"?"9-12ft tapered leader to 5X or 6X. Clear water demands fine tippet. Fluorocarbon for nymphs.":
+             rv.rt==="spate"?"9ft leader to 4X or 5X. Water colour allows heavier. 3X for streamers.":
+             "9-12ft leader to 5X. Adjust based on clarity. Go finer in low, clear conditions."}
+          </div>
+        </div>
+        <div style={{marginTop:8,background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:12}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",marginBottom:6}}>GUIDE TIPS</div>
+          <div style={{fontSize:11,color:C.txM,lineHeight:1.6}}>
+            {rv.rt==="chalk"&&"Approach from downstream. Keep low. Spot fish before casting. Fish the edges first. Mud on the leader kills flash. In bright sun, wait for cloud before presenting."}
+            {rv.rt==="lime"&&"Clear water means caution. Look for fish in pool tails and along weed edges. Rising fish are priority targets. Degreased tippet sinks the fly tip."}
+            {rv.rt==="spate"&&"Read the water. Pocket water behind boulders, seams between fast and slow. After rain, give 24-48hrs to drop and clear. Best fishing on the drop."}
+            {rv.rt==="free"&&"Varied water calls for varied tactics. Don't ignore fast shallow runs — big fish hold there. Cover water systematically."}
+          </div>
+        </div>
+        <div style={{marginTop:8,background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:12}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em",marginBottom:6}}>RIVER TYPE: {RTYPES[rv.rt]?.toUpperCase()}</div>
+          <div style={{fontSize:11,color:C.txM,lineHeight:1.5}}>{rv.d}</div>
+        </div>
+        {/* Regulation warning */}
+        <div style={{marginTop:8,background:C.warnDim,borderRadius:8,border:`1px solid rgba(212,168,67,0.3)`,padding:12}}>
+          <div style={{fontSize:10,fontWeight:700,color:C.warn,marginBottom:4}}>⚠ CHECK REGULATIONS</div>
+          <div style={{fontSize:10,color:C.txM,lineHeight:1.5}}>Most UK rivers require an EA rod licence and permission from the riparian owner or club.{rv.rt==="chalk"?" Chalkstream beats are typically private — day ticket or syndicate.":""}{rv.rg==="scot"?" Scotland has different access rights but you still need a permit.":""} Always confirm season dates and rules before fishing.</div>
+        </div>
+      </>}
+
+      {/* ── REPORTS TAB ── */}
+      {sub==="reports"&&<>
+        <div style={{marginTop:10,background:C.c1,borderRadius:8,border:`1px solid ${C.bd}`,padding:12}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+            <div style={{fontSize:10,fontWeight:700,color:C.txD,letterSpacing:"0.08em"}}>RIVER REPORTS</div>
+            <button onClick={()=>setShowRpt(!showRpt)} style={{fontSize:9,padding:"3px 8px",borderRadius:4,border:`1px solid ${C.rust}`,background:C.rustDim,color:C.rust,fontWeight:600,cursor:"pointer",fontFamily:ff}}>{showRpt?"Cancel":"+ Report"}</button>
+          </div>
+          {showRpt&&<div style={{padding:8,background:C.c2,borderRadius:6,marginBottom:8}}>
+            <input placeholder="Name" value={rptForm.name} onChange={e=>setRptForm({...rptForm,name:e.target.value})} style={{width:"100%",boxSizing:"border-box",padding:7,marginBottom:5,borderRadius:4,border:`1px solid ${C.bd}`,background:C.c1,color:C.tx,fontSize:11,fontFamily:ff}}/>
+            <textarea placeholder="How was the fishing?" value={rptForm.text} onChange={e=>setRptForm({...rptForm,text:e.target.value})} rows={2} style={{width:"100%",boxSizing:"border-box",padding:7,marginBottom:5,borderRadius:4,border:`1px solid ${C.bd}`,background:C.c1,color:C.tx,fontSize:11,fontFamily:ff,resize:"vertical"}}/>
+            <input placeholder="Flies that worked" value={rptForm.flies} onChange={e=>setRptForm({...rptForm,flies:e.target.value})} style={{width:"100%",boxSizing:"border-box",padding:7,marginBottom:5,borderRadius:4,border:`1px solid ${C.bd}`,background:C.c1,color:C.tx,fontSize:11,fontFamily:ff}}/>
+            <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:6}}>
+              <span style={{fontSize:9,color:C.txM}}>Rating:</span>
+              {[1,2,3,4,5].map(r=><span key={r} onClick={()=>setRptForm({...rptForm,rating:r})} style={{cursor:"pointer",fontSize:14,color:r<=rptForm.rating?C.rust:C.txD}}>★</span>)}
+            </div>
+            <button onClick={()=>{if(rptForm.name&&rptForm.text){setReports([{...rptForm,date:new Date().toISOString(),river:rv.n,area:area?.n},...reports]);setRptForm({name:"",text:"",flies:"",rating:3});setShowRpt(false);}}} style={{width:"100%",padding:8,borderRadius:5,border:"none",background:C.rust,color:"#fff",fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:ff}}>Submit</button>
+          </div>}
+          {reports.filter(r=>r.river===rv.n).length===0&&!showRpt&&<div style={{fontSize:10,color:C.txD,textAlign:"center",padding:12}}>No reports yet. Be the first.</div>}
+          {reports.filter(r=>r.river===rv.n).map((r,i)=>(
+            <div key={i} style={{padding:"6px 0",borderBottom:`1px solid ${C.bd}22`}}>
+              <div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,fontWeight:600,color:C.fog}}>{r.name}</span><span style={{fontSize:8,color:C.txD}}>{new Date(r.date).toLocaleDateString('en-GB')}</span></div>
+              {r.area&&<div style={{fontSize:8,color:C.txD}}>{r.area}</div>}
+              <div style={{fontSize:9,color:C.rust}}>{"★".repeat(r.rating)}{"☆".repeat(5-r.rating)}</div>
+              <div style={{fontSize:10,color:C.txM,marginTop:3,lineHeight:1.4}}>{r.text}</div>
+              {r.flies&&<div style={{fontSize:9,color:C.txD,marginTop:2}}>Flies: {r.flies}</div>}
+            </div>
+          ))}
+        </div>
+      </>}
+
+      </div>
+
+      {/* Legal footer */}
+      <div style={{padding:"12px 16px",borderTop:`1px solid ${C.bd}`}}>
+        <div style={{fontSize:7,color:C.txD,lineHeight:1.6,textAlign:"center"}}>
+          Forecasts are indicative. Always check local conditions and regulations. EA data under Open Government Licence. Weather from Open-Meteo. © {new Date().getFullYear()} Ephemera Ltd.
+        </div>
+      </div>
+    </div>}
+
+    {/* ═══ BOTTOM NAV ═══ */}
+    <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:C.c1,borderTop:`1px solid ${C.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom,0px)"}}>
+      {[{id:"near",l:"Near Me",ic:"◎"},{id:"forecast",l:"Forecast",ic:"◉"},{id:"flybox",l:"Fly Box",ic:"◈"},{id:"rpts",l:"Reports",ic:"◇"}].map(n=>(
+        <button key={n.id} onClick={()=>{
+          if(n.id==="near"){setNav("near");setRv(null);}
+          if(n.id==="forecast"){if(!rv)setNav("near");else{setNav("forecast");setSub("forecast");}}
+          if(n.id==="flybox"){if(!rv)setNav("near");else{setNav("forecast");setSub("fly_box");}}
+          if(n.id==="rpts"){if(!rv)setNav("near");else{setNav("forecast");setSub("reports");}}
+        }} style={{flex:1,padding:"10px 0 8px",border:"none",background:"none",color:(nav==="near"&&n.id==="near")||(nav==="forecast"&&n.id==="forecast"&&sub==="forecast")||(nav==="forecast"&&n.id==="flybox"&&sub==="fly_box")||(nav==="forecast"&&n.id==="rpts"&&sub==="reports")?C.rust:C.txD,cursor:"pointer",fontFamily:ff,textAlign:"center"}}>
+          <div style={{fontSize:16,lineHeight:1}}>{n.ic}</div>
+          <div style={{fontSize:8,fontWeight:600,marginTop:2}}>{n.l}</div>
+        </button>
+      ))}
+    </div>
+  </div>);
 }
