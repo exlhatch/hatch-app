@@ -122,6 +122,9 @@ function pred(wt){return H.map(sp=>{let sF=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(s
 function hInt(wt,hr){let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;let sf=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((DOY-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
 const hC=s=>s>70?D.rust:s>40?D.gn:s>15?D.txM:D.txD;
 const iC=v=>v>=6?D.rust:v>=4?"#A85C2E":v>=2?D.gn:v>=1?"#3E5A40":"#1E2E26";
+const hrScore=(hi,wind,cloud,press,rq,bq)=>{let s=0;s+=Math.min(30,hi*3);if(cloud>70)s+=10;else if(cloud>40)s+=7;else s+=3;if(wind>=3&&wind<=10)s+=12;else if(wind<3)s+=8;else if(wind<=14)s+=6;else if(wind<=18)s+=3;else s+=0;if(press<1010)s+=8;else if(press<1018)s+=5;else s+=2;const avgQ=((rq||6)+(bq||rq||6))/2;s+=Math.round(avgQ*1.2);return Math.round(Math.min(100,Math.max(0,s)))};
+const hrLb=s=>s>=75?"Excellent":s>=55?"Good":s>=35?"Fair":"Poor";
+const hrClr=s=>s>=75?D.rust:s>=55?D.gn:s>=35?D.txM:D.txD;
 const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]};
 function dayRating(hi,lo,rain,windMax,hatchScore,riverQ){
   let s=0;
@@ -186,7 +189,7 @@ function genLR(wt){const now=new Date();return Array.from({length:8},(_,w)=>{con
 
 /* ── APP ── */
 export default function App(){
-  const[riv,setRiv]=useState("test");const[beat,setBeat]=useState("Stockbridge");const[tab,setTab]=useState("guide");const[pick,setPick]=useState(false);const[hDay,setHDay]=useState(0);const[live,setLive]=useState({});const[loading,setLoading]=useState(true);const[dSrc,setDSrc]=useState("loading");const[light,setLight]=useState(false);const[scenario,setScenario]=useState(null);const[method,setMethod]=useState("dry");const[flyT,setFlyT]=useState("dry");const[openFly,setOpenFly]=useState(null);
+  const[riv,setRiv]=useState("test");const[beat,setBeat]=useState("Stockbridge");const[tab,setTab]=useState("guide");const[pick,setPick]=useState(false);const[hDay,setHDay]=useState(0);const[gDay,setGDay]=useState(0);const[live,setLive]=useState({});const[loading,setLoading]=useState(true);const[dSrc,setDSrc]=useState("loading");const[light,setLight]=useState(false);const[scenario,setScenario]=useState(null);const[method,setMethod]=useState("dry");const[flyT,setFlyT]=useState("dry");const[openFly,setOpenFly]=useState(null);
   const[sessions,setSessions]=useState([]);const[showForm,setShowForm]=useState(false);
   const[fName,setFName]=useState("");const[fBeat,setFBeat]=useState("");const[fFish,setFish]=useState("");const[fBig,setFBig]=useState("");const[fFly,setFFly]=useState("");const[fHatch,setFHatch]=useState("");const[fNotes,setFNotes]=useState("");const[fRating,setFRating]=useState("");
   const P=light?L:D;const rv=RV.find(r=>r.id===riv);
@@ -213,15 +216,15 @@ export default function App(){
   const spp=useMemo(()=>pred(cT),[cT]);const topH=spp[0];const dan=spp.find(s=>s.id==="danica");const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
   const cond=useMemo(()=>{const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;return condScore(cW,cP,cC,cT,hIdx,rv.q,rv.bq?.[beat])},[cW,cP,cC,cT,spp,rv,beat]);const rig=buildRig(cT,cW,cC,method,topH);const ds=danSt(cT);const lr=useMemo(()=>genLR(cT),[cT]);
   const rpts=RPT[riv]||[];const srcC={Keeper:D.gn,Guide:D.txD,Club:"#5A7A5E",Social:D.txM};
-  const wxDays=useMemo(()=>{const wx=live.wx;if(!wx?.hourly||!wx?.daily)return[];try{return Array.from({length:Math.min(7,wx.daily.time?.length||0)},(_,d)=>{const dt=new Date(wx.daily.time[d]);const hrs=[];for(let hr=5;hr<=22;hr++){const idx=d*24+hr;if(idx>=(wx.hourly.time?.length||0))break;const air=wx.hourly.temperature_2m?.[idx]||15;const bA=((wx.daily.temperature_2m_max?.[d]||15)+(wx.daily.temperature_2m_min?.[d]||8))/2;const wt=+(cT+(air-bA)*0.15).toFixed(1);hrs.push({h:hr,wt,air:Math.round(air),hi:+hInt(wt,hr).toFixed(1),rain:wx.hourly.precipitation_probability?.[idx]||0,mm:wx.hourly.precipitation?.[idx]||0,pr:wx.hourly.pressure_msl?.[idx]?Math.round(wx.hourly.pressure_msl[idx]):null,ws:wx.hourly.wind_speed_10m?.[idx]?Math.round(wx.hourly.wind_speed_10m[idx]*0.621):null,wd:wx.hourly.wind_direction_10m?.[idx]||0,cl:wx.hourly.cloud_cover?.[idx]??50,hum:wx.hourly.relative_humidity_2m?.[idx]||65})}return{dn:d===0?"Today":d===1?"Tmrw":dt.toLocaleDateString("en-GB",{weekday:"short"}),df:dt.toLocaleDateString("en-GB",{day:"numeric",month:"short"}),aH:wx.daily.temperature_2m_max?.[d]?Math.round(wx.daily.temperature_2m_max[d]):null,aL:wx.daily.temperature_2m_min?.[d]?Math.round(wx.daily.temperature_2m_min[d]):null,rain:wx.daily.precipitation_sum?.[d]??null,windMax:wx.daily.wind_speed_10m_max?.[d]?Math.round(wx.daily.wind_speed_10m_max[d]*0.621):null,uv:wx.daily.uv_index_max?.[d]??null,sunrise:wx.daily.sunrise?.[d]?wx.daily.sunrise[d].slice(11,16):null,sunset:wx.daily.sunset?.[d]?wx.daily.sunset[d].slice(11,16):null,hrs}})}catch{return[]}},[live.wx,cT]);
+  const wxDays=useMemo(()=>{const wx=live.wx;if(!wx?.hourly||!wx?.daily)return[];try{return Array.from({length:Math.min(7,wx.daily.time?.length||0)},(_,d)=>{const dt=new Date(wx.daily.time[d]);const hrs=[];for(let hr=7;hr<=21;hr++){const idx=d*24+hr;if(idx>=(wx.hourly.time?.length||0))break;const air=wx.hourly.temperature_2m?.[idx]||15;const bA=((wx.daily.temperature_2m_max?.[d]||15)+(wx.daily.temperature_2m_min?.[d]||8))/2;const wt=+(cT+(air-bA)*0.15).toFixed(1);hrs.push({h:hr,wt,air:Math.round(air),hi:+hInt(wt,hr).toFixed(1),rain:wx.hourly.precipitation_probability?.[idx]||0,mm:wx.hourly.precipitation?.[idx]||0,pr:wx.hourly.pressure_msl?.[idx]?Math.round(wx.hourly.pressure_msl[idx]):null,ws:wx.hourly.wind_speed_10m?.[idx]?Math.round(wx.hourly.wind_speed_10m[idx]*0.621):null,wd:wx.hourly.wind_direction_10m?.[idx]||0,cl:wx.hourly.cloud_cover?.[idx]??50,hum:wx.hourly.relative_humidity_2m?.[idx]||65})}return{dn:d===0?"Today":d===1?"Tmrw":dt.toLocaleDateString("en-GB",{weekday:"short"}),df:dt.toLocaleDateString("en-GB",{day:"numeric",month:"short"}),aH:wx.daily.temperature_2m_max?.[d]?Math.round(wx.daily.temperature_2m_max[d]):null,aL:wx.daily.temperature_2m_min?.[d]?Math.round(wx.daily.temperature_2m_min[d]):null,rain:wx.daily.precipitation_sum?.[d]??null,windMax:wx.daily.wind_speed_10m_max?.[d]?Math.round(wx.daily.wind_speed_10m_max[d]*0.621):null,uv:wx.daily.uv_index_max?.[d]??null,sunrise:wx.daily.sunrise?.[d]?wx.daily.sunrise[d].slice(11,16):null,sunset:wx.daily.sunset?.[d]?wx.daily.sunset[d].slice(11,16):null,hrs}})}catch{return[]}},[live.wx,cT]);
 
   const Cd=({children:c,accent:a,style:s})=><div style={{background:a?P.rustS:P.c1,borderRadius:10,border:`1px solid ${a?P.rustB:P.bd}`,overflow:"hidden",...s}}>{c}</div>;
   const Lb=({children:c})=><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD,marginBottom:8,marginTop:4}}>{c}</div>;
 
   return(
-    <div style={{fontFamily:"'Barlow',sans-serif",background:P.bg,minHeight:"100vh",color:P.tx,WebkitFontSmoothing:"antialiased",maxWidth:480,margin:"0 auto",paddingBottom:62}}>
+    <div style={{fontFamily:"'Barlow',sans-serif",background:P.bg,minHeight:"100vh",color:P.tx,WebkitFontSmoothing:"antialiased",maxWidth:480,margin:"0 auto",paddingBottom:"calc(68px + env(safe-area-inset-bottom, 0px))"}}>
       <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-      <style>{`*{box-sizing:border-box;margin:0}input,textarea,select{font-family:inherit;-webkit-appearance:none;appearance:none}input:focus,textarea:focus,select:focus{outline:none}::-webkit-scrollbar{height:4px}::-webkit-scrollbar-thumb{background:${P.bd};border-radius:2px}`}</style>
+      <style>{`*{box-sizing:border-box;margin:0}html{-webkit-text-size-adjust:100%}input,textarea,select{font-family:inherit;-webkit-appearance:none;appearance:none}input:focus,textarea:focus,select:focus{outline:none}::-webkit-scrollbar{height:4px}::-webkit-scrollbar-thumb{background:${P.bd};border-radius:2px}`}</style>
 
       {/* HEADER */}
       <div style={{background:P.c1,padding:"14px 14px 10px",borderBottom:`1px solid ${P.bd}`}}>
@@ -249,7 +252,7 @@ export default function App(){
 
       {/* TABS */}
       <div style={{display:"flex",background:P.c1,borderBottom:`1px solid ${P.bd}`,overflowX:"auto"}}>
-        {[{id:"guide",l:"Guide"},{id:"diagnose",l:"Diagnose"},{id:"hatches",l:"Hatches"},{id:"fly",l:"Fly Box"},{id:"hourly",l:"Hourly"},{id:"outlook",l:"Outlook"},{id:"reports",l:"Reports"}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"10px 10px 8px",border:"none",borderBottom:tab===t.id?`2px solid ${P.rust}`:"2px solid transparent",background:"none",color:tab===t.id?P.rust:P.txD,fontWeight:600,fontSize:9,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginBottom:-1}}>{t.l}</button>)}
+        {[{id:"guide",l:"Guide"},{id:"hatches",l:"Hatches"},{id:"fly",l:"Fly Box"},{id:"hourly",l:"Hourly"},{id:"outlook",l:"Outlook"},{id:"reports",l:"Reports"},{id:"diagnose",l:"Diagnose"}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"10px 10px 8px",border:"none",borderBottom:tab===t.id?`2px solid ${P.rust}`:"2px solid transparent",background:"none",color:tab===t.id?P.rust:P.txD,fontWeight:600,fontSize:9,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginBottom:-1}}>{t.l}</button>)}
       </div>
 
       <div style={{padding:14}}>
@@ -282,29 +285,52 @@ export default function App(){
             </div>
           </Cd>
 
-          {/* 7-day overview */}
-          {wxDays.length>0&&<Cd style={{marginBottom:12,padding:"0"}}>
-            <div style={{padding:"10px 12px 6px"}}><Lb>7-DAY FORECAST</Lb></div>
+          {/* Today's hourly rating */}
+          {wxDays.length>0&&wxDays[0]&&<Cd style={{marginBottom:12,padding:14}}>
+            <Lb>TODAY'S RATING BY HOUR</Lb>
+            <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
+              {wxDays[0].hrs.map(h=>{const sc=hrScore(h.hi||0,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:22}}>
+                <div style={{fontSize:7,color:P.txD}}>{h.h}</div>
+                <div style={{width:22,height:22,borderRadius:4,background:hrClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
+              </div>})}
+            </div>
+            {(()=>{const best=wxDays[0].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[0].hrs[0]);const bsc=hrScore(best.hi||0,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);return<div style={{marginTop:8,fontSize:10,color:P.txM}}>Peak: <span style={{fontWeight:700,color:hrClr(bsc)}}>{best.h}:00 — {bsc}% {hrLb(bsc)}</span></div>})()}
+          </Cd>}
+
+          {/* 7-day overview — tap a day to see hourly breakdown */}
+          {wxDays.length>0&&<Cd style={{marginBottom:12,padding:0}}>
+            <div style={{padding:"10px 12px 6px"}}><Lb>7-DAY FORECAST — tap a day</Lb></div>
             <div style={{overflowX:"auto"}}>
               <div style={{display:"flex",minWidth:wxDays.length*72}}>
                 {wxDays.map((d,i)=>{
-                  // Project hatch score for this day
-                  const futDoy=DOY+i;const projT=+(cT+(i*0.15)).toFixed(1);
+                  const futDoy=DOY+i;
                   const projHatch=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);
                   const sc=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax,projHatch,rv.q);
                   const lb=sc>=90?"Exceptional":sc>=75?"Excellent":sc>=55?"Good":sc>=35?"Fair":"Poor";
                   const clr=sc>=75?P.rust:sc>=55?P.gn:sc>=35?P.txM:P.txD;
-                  return<div key={i} style={{flex:1,padding:"6px 6px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:"transparent"}}>
+                  return<div key={i} onClick={()=>setGDay(gDay===i?-1:i)} style={{flex:1,padding:"6px 6px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:gDay===i?P.c2:"transparent",cursor:"pointer"}}>
                   <div style={{fontSize:10,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div>
                   <div style={{fontSize:8,color:P.txD}}>{d.df}</div>
-                  <div style={{fontSize:9,fontWeight:700,color:clr,marginTop:4,padding:"2px 0",borderRadius:3}}>{sc} — {lb}</div>
-                  <div style={{fontSize:14,fontWeight:700,color:P.tx,marginTop:3}}>{d.aH||"--"}°</div>
-                  <div style={{fontSize:10,color:P.txD}}>{d.aL||"--"}°</div>
-                  {d.rain!==null&&<div style={{fontSize:8,color:d.rain>2?P.txD:P.gn,marginTop:2}}>{d.rain>0?`${d.rain}mm`:"Dry"}</div>}
-                  {d.windMax&&<div style={{fontSize:8,color:d.windMax>15?P.rust:P.txD,marginTop:1}}>{d.windMax}mph</div>}
+                  <div style={{fontSize:9,fontWeight:700,color:clr,marginTop:4}}>{sc}</div>
+                  <div style={{fontSize:7,color:clr}}>{lb}</div>
+                  <div style={{fontSize:12,fontWeight:700,color:P.tx,marginTop:2}}>{d.aH||"--"}°</div>
+                  <div style={{fontSize:9,color:P.txD}}>{d.aL||"--"}°</div>
+                  {d.rain!==null&&<div style={{fontSize:7,color:d.rain>2?P.txD:P.gn,marginTop:2}}>{d.rain>0?`${d.rain}mm`:"Dry"}</div>}
                 </div>})}
               </div>
             </div>
+            {/* Expanded hourly breakdown for selected day */}
+            {gDay>=0&&wxDays[gDay]&&<div style={{padding:"10px 12px",borderTop:`1px solid ${P.bd}`}}>
+              <div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em",marginBottom:6}}>{wxDays[gDay].dn.toUpperCase()} HOURLY BREAKDOWN</div>
+              <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
+                {wxDays[gDay].hrs.map(h=>{const sc=hrScore(h.hi||0,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:26}}>
+                  <div style={{fontSize:7,color:P.txD}}>{h.h}</div>
+                  <div style={{width:24,height:24,borderRadius:4,background:hrClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
+                  <div style={{fontSize:6,color:P.txD,marginTop:1}}>{h.air}°</div>
+                </div>})}
+              </div>
+              {(()=>{const best=wxDays[gDay].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[gDay].hrs[0]);const bsc=hrScore(best.hi||0,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);return<div style={{marginTop:6,fontSize:10,color:P.txM}}>Best window: <span style={{fontWeight:700,color:hrClr(bsc)}}>{best.h}:00 — {bsc}% {hrLb(bsc)}</span> / Wind {best.ws||"--"}mph / Cloud {best.cl||"--"}%</div>})()}
+            </div>}
           </Cd>}
 
           {/* Beat rules + method */}
@@ -349,8 +375,7 @@ export default function App(){
                 </div>
               </div>
             </div>
-            {isOpen&&<div style={{padding:"12px 12px 16px",background:P.c2,borderBottom:`1px solid ${P.bd}`}}>
-              <div style={{marginBottom:10,padding:"8px",background:P.c3,borderRadius:6}}><FlyIllustration type={f.img} P={P}/></div>
+            {isOpen&&<div style={{padding:"12px",background:P.c2,borderBottom:`1px solid ${P.bd}`}}>
               <div style={{fontSize:11,color:P.txM,lineHeight:1.7}}>{f.nt}</div>
             </div>}
           </div>})}</Cd>
@@ -486,8 +511,8 @@ export default function App(){
 
       <div style={{textAlign:"center",padding:"14px",borderTop:`1px solid ${P.bd}`}}><Wing s={24} c={P.txD} r/><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginTop:4}}>EPHEMERA / Timely insight. Better days.</div><div style={{fontSize:7,color:P.txD,marginTop:3}}>{new Date().toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}</div></div>
 
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100}}>
-        {[{id:"guide",l:"Guide",i:"◉"},{id:"diagnose",l:"Diagnose",i:"⊕"},{id:"hatches",l:"Hatches",i:"◎"},{id:"fly",l:"Flies",i:"◈"},{id:"hourly",l:"Hourly",i:"◔"},{id:"outlook",l:"Outlook",i:"◑"},{id:"reports",l:"Reports",i:"◇"}].map(n=><button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"9px 0 6px",border:"none",background:"none",color:tab===n.id?P.rust:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:13,lineHeight:1}}>{n.i}</div><div style={{fontSize:7,fontWeight:600,marginTop:2}}>{n.l}</div></button>)}
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>
+        {[{id:"guide",l:"Guide",i:"◉"},{id:"hatches",l:"Hatches",i:"◎"},{id:"fly",l:"Flies",i:"◈"},{id:"hourly",l:"Hourly",i:"◔"},{id:"outlook",l:"Outlook",i:"◑"},{id:"reports",l:"Reports",i:"◇"},{id:"diagnose",l:"Diagnose",i:"⊕"}].map(n=><button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"9px 0 6px",border:"none",background:"none",color:tab===n.id?P.rust:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:13,lineHeight:1}}>{n.i}</div><div style={{fontSize:7,fontWeight:600,marginTop:2}}>{n.l}</div></button>)}
       </div>
     </div>
   );
