@@ -203,7 +203,8 @@ function genLR(wt){const now=new Date();return Array.from({length:8},(_,w)=>{con
 
 /* ── APP ── */
 export default function App(){
-  const[riv,setRiv]=useState("test");const[beat,setBeat]=useState("Stockbridge");const[tab,setTab]=useState("guide");const[pick,setPick]=useState(false);const[hDay,setHDay]=useState(0);const[gDay,setGDay]=useState(0);const[live,setLive]=useState({});const[loading,setLoading]=useState(true);const[dSrc,setDSrc]=useState("loading");const[light,setLight]=useState(false);const[scenario,setScenario]=useState(null);const[method,setMethod]=useState("dry");const[flyT,setFlyT]=useState("dry");const[openFly,setOpenFly]=useState(null);
+  const[riv,setRiv]=useState("test");const[beat,setBeat]=useState("Stockbridge");const[tab,setTab]=useState("guide");const[pick,setPick]=useState(false);const[hDay,setHDay]=useState(0);const[gDay,setGDay]=useState(-1);const[live,setLive]=useState({});const[loading,setLoading]=useState(true);const[dSrc,setDSrc]=useState("loading");const[light,setLight]=useState(false);const[scenario,setScenario]=useState(null);const[method,setMethod]=useState("dry");const[flyT,setFlyT]=useState("dry");const[openFly,setOpenFly]=useState(null);
+  const[ex,setEx]=useState({});const toggle=k=>setEx(p=>({...p,[k]:!p[k]}));
   const[sessions,setSessions]=useState([]);const[showForm,setShowForm]=useState(false);
   const[fName,setFName]=useState("");const[fBeat,setFBeat]=useState("");const[fFish,setFish]=useState("");const[fBig,setFBig]=useState("");const[fFly,setFFly]=useState("");const[fHatch,setFHatch]=useState("");const[fNotes,setFNotes]=useState("");const[fRating,setFRating]=useState("");
   const P=light?L:D;const rv=RV.find(r=>r.id===riv);
@@ -273,118 +274,103 @@ export default function App(){
 
         {/* GUIDE */}
         {tab==="guide"&&<div>
-          {/* HATCH OF THE DAY — top of page */}
-          {topH&&topH.score>5&&<Cd accent style={{padding:14,marginBottom:12}}>
+          {/* HATCH OF THE DAY — always visible */}
+          {topH&&topH.score>5&&<Cd accent style={{padding:14,marginBottom:10}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.15em",color:P.rust}}>HATCH OF THE DAY</div><div style={{fontSize:18,fontWeight:700,color:hC(topH.score),marginTop:4}}>{topH.cm}</div><div style={{fontSize:10,color:P.txD,marginTop:2}}>Hook {topH.hk} / {topH.sz}</div>
-                <div style={{fontSize:10,color:P.rust,fontWeight:600,marginTop:4}}>Try: {FLYMAP[topH.id]||"Match the hatch"}</div>
+              <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.15em",color:P.rust}}>HATCH OF THE DAY</div><div style={{fontSize:18,fontWeight:700,color:hC(topH.score),marginTop:4}}>{topH.cm}</div>
+                <div style={{fontSize:10,color:P.rust,fontWeight:600,marginTop:3}}>Try: {FLYMAP[topH.id]||"Match the hatch"}</div>
+                {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{fontSize:9,color:P.txD,marginTop:4}}>{spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>s.cm).join(", ")} also active</div>}
               </div>
-              <div style={{textAlign:"center"}}><div style={{fontSize:30,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{topH.score}</div><div style={{fontSize:8,color:hC(topH.score),marginTop:2}}>{topH.lb}</div></div>
+              <div style={{textAlign:"center"}}><div style={{fontSize:32,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{topH.score}</div><div style={{fontSize:8,color:hC(topH.score),marginTop:2}}>{topH.lb}</div></div>
             </div>
-            {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).length>0&&<div style={{marginTop:8,borderTop:`1px solid ${P.bd}`,paddingTop:6}}>
-              <div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>ALSO ACTIVE</div>
-              {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=><div key={s.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0"}}><span style={{fontSize:10,color:P.txM}}>{s.cm}</span><span style={{fontSize:10,fontWeight:700,color:hC(s.score)}}>{s.score}%</span></div>)}
-            </div>}
           </Cd>}
 
-          {/* Weather NOW */}
-          <Cd style={{padding:14,marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
-              <div><Lb>WEATHER NOW</Lb><div style={{fontSize:28,fontWeight:700,color:P.tx,lineHeight:1}}>{cAir}°C</div><div style={{fontSize:10,color:P.txD,marginTop:2}}>{todayHi!==null?`High ${todayHi}° / Low ${todayLo}°`:"--"}</div></div>
-              <div style={{textAlign:"right"}}><div style={{fontSize:13,fontWeight:700,color:cC>70?P.gn:cC>40?P.txM:P.rust}}>{cC>70?"Overcast":cC>40?"Partly cloudy":"Clear"}</div><div style={{fontSize:10,color:P.txD,marginTop:2}}>{cC}% cloud</div></div>
-            </div>
+          {/* CONDITIONS — always visible summary */}
+          <div onClick={()=>toggle("wx")} style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:2,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontSize:11,fontWeight:700,color:P.tx}}>{cAir}°C / {cC>70?"Overcast":cC>40?"Cloud":cC>20?"Pt Cloud":"Clear"} / {cW}mph {windDir(cWD)}</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>{cond.desc}</div></div>
+            <div style={{textAlign:"center",flexShrink:0,marginLeft:10}}><div style={{fontSize:22,fontWeight:700,color:cond.clr,lineHeight:1}}>{cond.pct}</div><div style={{fontSize:7,color:cond.clr}}>{cond.label}</div></div>
+          </div>
+          {/* Weather detail — expandable */}
+          {ex.wx&&<Cd style={{padding:14,marginBottom:0,borderTopLeftRadius:0,borderTopRightRadius:0}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr 1fr",gap:5}}>
-              {[
-                {l:"WIND",v:`${cW}mph ${windDir(cWD)}`,c:cW>15?P.rust:P.txM},
-                {l:"PRESSURE",v:`${cP}mb`,c:cP<1008?P.gn:cP>1020?P.rust:P.txM},
-                {l:"HUMIDITY",v:`${cHum}%`,c:P.txM},
-                {l:"RAIN",v:cRain>0?`${cRain}mm`:"Dry",c:cRain>0?P.txD:P.gn},
-              ].map((s,i)=><div key={i} style={{padding:"6px 4px",background:P.c2,borderRadius:5,textAlign:"center"}}><div style={{fontSize:6,letterSpacing:"0.1em",color:P.txD}}>{s.l}</div><div style={{fontSize:11,fontWeight:600,color:s.c,marginTop:2}}>{s.v}</div></div>)}
+              {[{l:"WIND",v:`${cW}mph ${windDir(cWD)}`,c:cW>15?P.rust:P.txM},{l:"PRESSURE",v:`${cP}mb`,c:cP<1008?P.gn:cP>1020?P.rust:P.txM},{l:"HUMIDITY",v:`${cHum}%`,c:P.txM},{l:"RAIN",v:cRain>0?`${cRain}mm`:"Dry",c:cRain>0?P.txD:P.gn}].map((s,i)=>
+                <div key={i} style={{padding:"5px 4px",background:P.c2,borderRadius:4,textAlign:"center"}}><div style={{fontSize:6,letterSpacing:"0.1em",color:P.txD}}>{s.l}</div><div style={{fontSize:10,fontWeight:600,color:s.c,marginTop:2}}>{s.v}</div></div>)}
             </div>
-            {(todaySunrise||todayUV!==null)&&<div style={{display:"flex",gap:12,marginTop:8,fontSize:10,color:P.txD}}>
-              {todaySunrise&&<span>☀ {todaySunrise}</span>}
-              {todaySunset&&<span>☽ {todaySunset}</span>}
-              {todayUV!==null&&<span>UV {todayUV}</span>}
-              {todayRain!==null&&todayRain>0&&<span>{todayRain}mm today</span>}
-            </div>}
-            <div style={{marginTop:10,padding:"10px",background:P.c2,borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div style={{flex:1}}><div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em"}}>FISHING CONDITIONS</div><div style={{fontSize:11,color:P.txM,marginTop:3,lineHeight:1.5}}>{cond.desc}</div></div>
-              <div style={{textAlign:"center",flexShrink:0,marginLeft:12}}><div style={{fontSize:28,fontWeight:700,color:cond.clr,lineHeight:1}}>{cond.pct}</div><div style={{fontSize:8,fontWeight:700,color:cond.clr}}>{cond.label}</div></div>
+            <div style={{display:"flex",gap:12,marginTop:8,fontSize:9,color:P.txD}}>
+              {todaySunrise&&<span>☀ {todaySunrise}</span>}{todaySunset&&<span>☽ {todaySunset}</span>}
+              {todayUV!==null&&<span>UV {todayUV}</span>}{todayHi!==null&&<span>High {todayHi}° / Low {todayLo}°</span>}
             </div>
-          </Cd>
-
-          {/* Today's hourly rating */}
-          {wxDays.length>0&&wxDays[0]&&<Cd style={{marginBottom:12,padding:14}}>
-            <Lb>TODAY'S RATING BY HOUR</Lb>
-            <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
-              {wxDays[0].hrs.map(h=>{const sc=hrScore(h.hi||0,h.wt||14,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:22}}>
-                <div style={{fontSize:7,color:P.txD}}>{h.h}</div>
-                <div style={{width:22,height:22,borderRadius:4,background:scClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
-              </div>})}
-            </div>
-            {(()=>{const best=wxDays[0].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.wt||14,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.wt||14,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[0].hrs[0]);const bsc=hrScore(best.hi||0,best.wt||14,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);return<div style={{marginTop:8,fontSize:10,color:P.txM}}>Peak: <span style={{fontWeight:700,color:scClr(bsc)}}>{best.h}:00 — {bsc}% {scLb(bsc)}</span></div>})()}
           </Cd>}
+          <div style={{height:10}}/>
 
-          {/* 7-day overview — tap a day to see hourly breakdown */}
-          {wxDays.length>0&&<Cd style={{marginBottom:12,padding:0}}>
-            <div style={{padding:"10px 12px 6px"}}><Lb>7-DAY FORECAST — tap a day</Lb></div>
-            <div style={{overflowX:"auto"}}>
-              <div style={{display:"flex",minWidth:wxDays.length*72}}>
-                {wxDays.map((d,i)=>{
-                  const futDoy=DOY+i;
-                  const projHatch=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);
-                  const sc=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax,projHatch,rv.q);
-                  const lb=sc>=90?"Exceptional":sc>=75?"Excellent":sc>=55?"Good":sc>=35?"Fair":"Poor";
-                  const clr=sc>=75?P.rust:sc>=55?P.gn:sc>=35?P.txM:P.txD;
-                  return<div key={i} onClick={()=>setGDay(gDay===i?-1:i)} style={{flex:1,padding:"6px 6px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:gDay===i?P.c2:"transparent",cursor:"pointer"}}>
-                  <div style={{fontSize:10,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div>
-                  <div style={{fontSize:8,color:P.txD}}>{d.df}</div>
-                  <div style={{fontSize:9,fontWeight:700,color:clr,marginTop:4}}>{sc}</div>
-                  <div style={{fontSize:7,color:clr}}>{lb}</div>
-                  <div style={{fontSize:12,fontWeight:700,color:P.tx,marginTop:2}}>{d.aH||"--"}°</div>
-                  <div style={{fontSize:9,color:P.txD}}>{d.aL||"--"}°</div>
-                  {d.rain!==null&&<div style={{fontSize:7,color:d.rain>2?P.txD:P.gn,marginTop:2}}>{d.rain>0?`${d.rain}mm`:"Dry"}</div>}
-                </div>})}
-              </div>
-            </div>
-            {/* Expanded hourly breakdown for selected day */}
-            {gDay>=0&&wxDays[gDay]&&<div style={{padding:"10px 12px",borderTop:`1px solid ${P.bd}`}}>
-              <div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em",marginBottom:6}}>{wxDays[gDay].dn.toUpperCase()} HOURLY BREAKDOWN</div>
+          {/* TODAY'S HOURLY — expandable */}
+          {wxDays.length>0&&wxDays[0]&&<div>
+            {(()=>{const best=wxDays[0].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.wt||14,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.wt||14,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[0].hrs[0]);const bsc=hrScore(best.hi||0,best.wt||14,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);
+              return<div onClick={()=>toggle("hr")} style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:2,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>TODAY'S BEST WINDOW</div><div style={{fontSize:13,fontWeight:700,color:scClr(bsc),marginTop:3}}>{best.h}:00 — {bsc}% {scLb(bsc)}</div></div>
+                <span style={{color:P.txD,fontSize:12}}>{ex.hr?"−":"+"}</span>
+              </div>})()}
+            {ex.hr&&<Cd style={{padding:12,marginBottom:0,borderTopLeftRadius:0,borderTopRightRadius:0}}>
               <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
-                {wxDays[gDay].hrs.map(h=>{const sc=hrScore(h.hi||0,h.wt||14,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:26}}>
+                {wxDays[0].hrs.map(h=>{const sc=hrScore(h.hi||0,h.wt||14,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:22}}>
                   <div style={{fontSize:7,color:P.txD}}>{h.h}</div>
-                  <div style={{width:24,height:24,borderRadius:4,background:scClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
-                  <div style={{fontSize:6,color:P.txD,marginTop:1}}>{h.air}°</div>
+                  <div style={{width:22,height:22,borderRadius:4,background:scClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
                 </div>})}
               </div>
-              {(()=>{const best=wxDays[gDay].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.wt||14,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.wt||14,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[gDay].hrs[0]);const bsc=hrScore(best.hi||0,best.wt||14,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);
-                const bestHatches=hatchesAtHour(best.wt||14,best.h);
-                return<div>
-                  <div style={{marginTop:8,fontSize:10,color:P.txM}}>Best window: <span style={{fontWeight:700,color:scClr(bsc)}}>{best.h}:00 — {bsc}% {scLb(bsc)}</span> / Wind {best.ws||"--"}mph / Cloud {best.cl||"--"}%</div>
-                  {bestHatches.length>0&&<div style={{marginTop:8,borderTop:`1px solid ${P.bd}`,paddingTop:6}}>
-                    <div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>LIKELY HATCHES AT {best.h}:00</div>
-                    {bestHatches.map(h=><div key={h.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:`1px solid ${P.bd}`}}>
-                      <div><span style={{fontSize:11,fontWeight:600,color:P.tx}}>{h.cm}</span><span style={{fontSize:9,color:P.txD,marginLeft:6}}>Hook {h.hk}</span></div>
-                      <span style={{fontSize:9,fontWeight:600,color:P.rust}}>{FLYMAP[h.id]||""}</span>
-                    </div>)}
-                  </div>}
-                </div>})()}
-            </div>}
-          </Cd>}
+              {(()=>{const best=wxDays[0].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.wt||14,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.wt||14,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[0].hrs[0]);const bh=hatchesAtHour(best.wt||14,best.h);
+                return bh.length>0?<div style={{marginTop:8,borderTop:`1px solid ${P.bd}`,paddingTop:6}}><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:3}}>AT {best.h}:00</div>{bh.map(h=><div key={h.id} style={{display:"flex",justifyContent:"space-between",padding:"2px 0"}}><span style={{fontSize:10,color:P.tx}}>{h.cm}</span><span style={{fontSize:9,color:P.rust}}>{FLYMAP[h.id]||""}</span></div>)}</div>:null})()}
+            </Cd>}
+            <div style={{height:10}}/>
+          </div>}
 
-          {/* Beat rules + method */}
-          <Lb>BEAT RULES</Lb>
-          <div style={{display:"flex",gap:3,marginBottom:12,overflowX:"auto",paddingBottom:4}}>{METHODS.map(m=><button key={m.id} onClick={()=>setMethod(m.id)} style={{padding:"7px 10px",borderRadius:7,border:method===m.id?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:method===m.id?P.rustS:P.c1,color:method===m.id?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{m.l}</button>)}</div>
-          <Cd accent style={{padding:14,marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:6}}>
-              <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.15em",color:P.rust}}>RECOMMENDED</div><div style={{fontSize:16,fontWeight:700,color:P.tx,marginTop:3}}>{rig.a}</div></div>
-              <div style={{textAlign:"center",flexShrink:0}}><div style={{fontSize:20,fontWeight:700,color:P.rust,lineHeight:1}}>{rig.c}%</div><div style={{fontSize:7,color:P.txD}}>CONF</div></div>
+          {/* 7-DAY FORECAST — expandable */}
+          {wxDays.length>0&&<div>
+            <div onClick={()=>toggle("7d")} style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:2,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>7-DAY FORECAST</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Tap to see daily ratings and hourly breakdowns</div></div>
+              <span style={{color:P.txD,fontSize:12}}>{ex["7d"]?"−":"+"}</span>
             </div>
+            {ex["7d"]&&<Cd style={{padding:0,marginBottom:0,borderTopLeftRadius:0,borderTopRightRadius:0}}>
+              <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*72}}>
+                {wxDays.map((d,i)=>{const futDoy=DOY+i;const projHatch=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);const sc=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax,projHatch,rv.q);const clr=scClr(sc);
+                  return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"8px 4px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:gDay===i?P.c2:"transparent",cursor:"pointer"}}>
+                    <div style={{fontSize:9,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div>
+                    <div style={{fontSize:12,fontWeight:700,color:clr,marginTop:3}}>{sc}</div>
+                    <div style={{fontSize:7,color:clr}}>{scLb(sc)}</div>
+                    <div style={{fontSize:11,fontWeight:700,color:P.tx,marginTop:2}}>{d.aH||"--"}°</div>
+                    <div style={{fontSize:8,color:P.txD}}>{d.aL||"--"}°</div>
+                    {d.rain!==null&&d.rain>0&&<div style={{fontSize:7,color:P.txD,marginTop:1}}>{d.rain}mm</div>}
+                  </div>})}
+              </div></div>
+              {gDay>=0&&wxDays[gDay]&&<div style={{padding:"10px 12px",borderTop:`1px solid ${P.bd}`}}>
+                <div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em",marginBottom:6}}>{wxDays[gDay].dn.toUpperCase()} — HOURLY</div>
+                <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>{wxDays[gDay].hrs.map(h=>{const sc=hrScore(h.hi||0,h.wt||14,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:24}}><div style={{fontSize:7,color:P.txD}}>{h.h}</div><div style={{width:22,height:22,borderRadius:4,background:scClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div></div>})}</div>
+                {(()=>{const best=wxDays[gDay].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.wt||14,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.wt||14,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[gDay].hrs[0]);const bsc=hrScore(best.hi||0,best.wt||14,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);const bh=hatchesAtHour(best.wt||14,best.h);
+                  return<div style={{marginTop:6}}><div style={{fontSize:10,color:P.txM}}>Best: <span style={{fontWeight:700,color:scClr(bsc)}}>{best.h}:00 — {bsc}%</span> / {best.ws||"--"}mph / {best.cl||"--"}% cloud</div>
+                    {bh.length>0&&<div style={{marginTop:4}}>{bh.map(h=><span key={h.id} style={{fontSize:9,color:P.rust,marginRight:8}}>{h.cm} → {FLYMAP[h.id]||""}</span>)}</div>}
+                  </div>})()}
+              </div>}
+            </Cd>}
+            <div style={{height:10}}/>
+          </div>}
+
+          {/* RIG RECOMMENDATION — expandable */}
+          <div onClick={()=>toggle("rig")} style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:2,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>RECOMMENDED APPROACH</div><div style={{fontSize:13,fontWeight:700,color:P.tx,marginTop:3}}>{rig.a}</div></div>
+            <div style={{display:"flex",alignItems:"center",gap:8}}><div style={{textAlign:"center"}}><div style={{fontSize:18,fontWeight:700,color:P.rust,lineHeight:1}}>{rig.c}%</div></div><span style={{color:P.txD,fontSize:12}}>{ex.rig?"−":"+"}</span></div>
+          </div>
+          {ex.rig&&<Cd accent style={{padding:14,marginBottom:0,borderTopLeftRadius:0,borderTopRightRadius:0}}>
+            <div style={{display:"flex",gap:3,marginBottom:10,overflowX:"auto"}}>{METHODS.map(m=><button key={m.id} onClick={e=>{e.stopPropagation();setMethod(m.id)}} style={{padding:"6px 10px",borderRadius:6,border:method===m.id?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:method===m.id?P.rustS:"transparent",color:method===m.id?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0,whiteSpace:"nowrap"}}>{m.l}</button>)}</div>
             <div style={{fontSize:10,color:P.txM,lineHeight:1.5,fontStyle:"italic",marginBottom:8}}>{rig.why}</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>{[{l:"Rod",v:rig.rod},{l:"Leader",v:rig.ldr},{l:"Tippet",v:rig.tip},{l:"Fly",v:rig.fly}].map((r,i)=><div key={i} style={{padding:"5px 7px",background:P.c2,borderRadius:4}}><div style={{fontSize:6,color:P.txD,letterSpacing:"0.1em"}}>{r.l.toUpperCase()}</div><div style={{fontSize:10,fontWeight:600,color:i===3?P.rust:P.tx,marginTop:2}}>{r.v}</div></div>)}</div>
             <div style={{marginTop:6,padding:"6px 7px",background:P.c2,borderRadius:4}}><div style={{fontSize:6,color:P.txD,letterSpacing:"0.1em"}}>GUIDE TIP</div><div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.5}}>{rig.guide}</div></div>
-          </Cd>
-          {dan&&<Cd style={{padding:14}}><div style={{display:"flex",justifyContent:"space-between"}}><div><Lb>MAYFLY TRACKER</Lb><div style={{fontSize:13,fontWeight:700,color:ds.c}}>{ds.s}</div><div style={{fontSize:9,color:P.txD,marginTop:3}}>Avg start: May 18-22 / Peak: Jun 1-7</div></div><div style={{fontSize:20,fontWeight:700,color:P.rust}}>{dan.score}%</div></div></Cd>}
+          </Cd>}
+          <div style={{height:10}}/>
+
+          {/* MAYFLY TRACKER — expandable */}
+          {dan&&<div onClick={()=>toggle("may")} style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"12px 14px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+            <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>MAYFLY TRACKER</div><div style={{fontSize:13,fontWeight:700,color:ds.c,marginTop:3}}>{ds.s}</div>{ex.may&&<div style={{fontSize:9,color:P.txD,marginTop:3}}>Avg start: May 18-22 / Peak: Jun 1-7 / Duration: 3-4 weeks</div>}</div>
+            <div style={{fontSize:20,fontWeight:700,color:P.rust}}>{dan.score}%</div>
+          </div>}
         </div>}
 
         {/* DIAGNOSE */}
