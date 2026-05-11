@@ -122,9 +122,53 @@ function hInt(wt,hr){let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;
 const hC=s=>s>70?D.rust:s>40?D.gn:s>15?D.txM:D.txD;
 const iC=v=>v>=6?D.rust:v>=4?"#A85C2E":v>=2?D.gn:v>=1?"#3E5A40":"#1E2E26";
 const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]};
-function dayRating(hi,lo,rain,windMax){let s=0;const avg=(hi+lo)/2;if(avg>=12&&avg<=20)s+=3;else if(avg>=8)s+=2;else s+=1;if(rain<2)s+=3;else if(rain<8)s+=2;else s+=1;if(!windMax||windMax<10)s+=3;else if(windMax<18)s+=2;else s+=1;const pct=Math.round(s/9*100);return{lb:pct>=78?"Excellent":pct>=55?"Good":pct>=33?"Fair":"Poor",clr:pct>=78?D.rust:pct>=55?D.gn:pct>=33?D.txM:D.txD}}
+function dayRating(hi,lo,rain,windMax,hatchScore){
+  let s=0;
+  // Hatch activity (40% of score) - this is the biggest driver
+  const hs=hatchScore||0;
+  s+=hs*0.4;
+  // Temperature (20%) - ideal air 12-20°C for insect activity
+  const avg=(hi+lo)/2;
+  if(avg>=13&&avg<=19)s+=20;else if(avg>=10&&avg<=22)s+=14;else if(avg>=7)s+=8;else s+=3;
+  // Rain (15%) - light drizzle great for hatches, heavy rain bad
+  if(rain>=0.5&&rain<=4)s+=15;else if(rain<0.5)s+=11;else if(rain<=10)s+=8;else s+=3;
+  // Wind (15%) - moderate breeze ideal, calm tricky, strong hard
+  const w=windMax||8;
+  if(w>=4&&w<=12)s+=15;else if(w<4)s+=10;else if(w<=18)s+=7;else s+=3;
+  // Cloud (10%) - overcast best for hatches
+  // Can't get cloud per day easily, so skip or use a proxy
+  s+=8; // default moderate
+  return Math.round(Math.min(100,Math.max(0,s)));
+}
+function condScore(wind,press,cloud,waterT,hatchIdx){
+  // Comprehensive fishing conditions score
+  // 90-100: Peak day. Mayfly hatch, overcast, warm water, fish freely rising. Multiple catches likely.
+  // 70-89: Good day. Strong hatches, decent conditions. Fish should rise.
+  // 50-69: Fair day. Some activity. Need to work for it.
+  // 30-49: Tough. Sparse hatches, challenging conditions. Nymphing day.
+  // 0-29: Very tough. Minimal hatches, fish unlikely to rise.
+  let s=0;
+  // Hatch activity (35% weight) — the single biggest factor
+  s+=Math.min(35,hatchIdx*0.35);
+  // Water temp (20%) — 12-18°C is the sweet spot for surface
+  if(waterT>=13&&waterT<=17)s+=20;else if(waterT>=11&&waterT<=19)s+=15;else if(waterT>=9&&waterT<=21)s+=10;else if(waterT>=7)s+=5;else s+=2;
+  // Cloud cover (15%) — overcast = excellent for hatches
+  if(cloud>70)s+=15;else if(cloud>50)s+=12;else if(cloud>30)s+=8;else s+=4;
+  // Pressure (15%) — falling/low = feeding triggers
+  if(press<1008)s+=15;else if(press<1015)s+=12;else if(press<1022)s+=9;else s+=4;
+  // Wind (15%) — light breeze ideal
+  if(wind>=3&&wind<=10)s+=15;else if(wind<3)s+=10;else if(wind<=16)s+=8;else s+=3;
+  const pct=Math.round(Math.min(100,Math.max(0,s)));
+  const label=pct>=90?"Exceptional":pct>=75?"Excellent":pct>=55?"Good":pct>=35?"Fair":"Poor";
+  const clr=pct>=75?D.rust:pct>=55?D.gn:pct>=35?D.txM:D.txD;
+  const desc=pct>=90?"Fish freely rising. Multiple catches likely. A day to remember."
+    :pct>=75?"Strong hatches. Fish should be active on the surface. Good sport expected."
+    :pct>=55?"Some activity. Fish rising in windows. Work the hatches and stay patient."
+    :pct>=35?"Tough conditions. Sparse hatches. Nymphing likely the best approach."
+    :"Minimal hatch activity. Fish unlikely to rise. Patience and deep nymphing required.";
+  return{label,pct,clr,desc};
+}
 function danSt(wt){const as=139;if(DOY>172)return{s:"Season ended",c:D.txD};if(DOY>as+14&&wt>=12)return{s:"On the water",c:D.rust};if(DOY>as&&wt>=12)return{s:"Underway",c:D.rust};if(DOY>as-7&&wt>=11)return{s:"On time",c:D.gn};if(DOY>as-7)return{s:"Late — cool water",c:D.txD};if(DOY>as-14&&wt>=13)return{s:"Early — warm spring",c:D.rust};if(DOY>as-14)return{s:"Days away",c:D.txM};return{s:"Not yet",c:D.txD}}
-function condR(w,p,cl){let s=0,x=0;if(p>1020){s+=1;x+=3}else if(p<1008){s+=3;x+=3}else{s+=2;x+=3}if(cl>70){s+=3;x+=3}else if(cl>40){s+=2;x+=3}else{s+=1;x+=3}if(w>15){s+=1;x+=3}else if(w<8){s+=2;x+=3}else{s+=3;x+=3}const pct=Math.round(s/x*100);return{label:pct>=75?"Excellent":pct>=50?"Good":pct>=30?"Fair":"Poor",pct,clr:pct>=75?D.rust:pct>=50?D.gn:pct>=30?D.txM:D.txD}}
 function genLR(wt){const now=new Date();return Array.from({length:8},(_,w)=>{const s=new Date(now);s.setDate(s.getDate()+w*7);const e=new Date(s);e.setDate(e.getDate()+6);const md=DOY+w*7+3,pt=+(wt+w*0.4+Math.sin((md-80)*Math.PI/183)*1.5).toFixed(1);let ds=0;if(md>=125&&md<=182)ds=Math.max(0,1-((md-153)/28)**2)*(pt>=12&&pt<=18?1:pt>=10?0.5:0.2);let oa=0;H.forEach(sp=>{if(md>=sp.s&&md<=sp.e)oa+=Math.max(0,1-((md-(sp.s+sp.e)/2)/((sp.e-sp.s)/2))**2)*(sp.t===1?3:sp.t===2?1.5:0.8)});return{l:w===0?"This week":w===1?"Next week":`${s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${e.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`,pt,ds:+(ds*100).toFixed(0),oa:+Math.min(10,oa).toFixed(1),cf:w<2?"High":w<4?"Med":"Low"}})}
 
 /* ── APP ── */
@@ -152,7 +196,7 @@ export default function App(){
   const todaySunrise=live.wx?.daily?.sunrise?.[0]?live.wx.daily.sunrise[0].slice(11,16):null;
   const todaySunset=live.wx?.daily?.sunset?.[0]?live.wx.daily.sunset[0].slice(11,16):null;
   const spp=useMemo(()=>pred(cT),[cT]);const topH=spp[0];const dan=spp.find(s=>s.id==="danica");const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
-  const cond=condR(cW,cP,cC);const rig=buildRig(cT,cW,cC,method,topH);const ds=danSt(cT);const lr=useMemo(()=>genLR(cT),[cT]);
+  const cond=useMemo(()=>{const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;return condScore(cW,cP,cC,cT,hIdx)},[cW,cP,cC,cT,spp]);const rig=buildRig(cT,cW,cC,method,topH);const ds=danSt(cT);const lr=useMemo(()=>genLR(cT),[cT]);
   const rpts=RPT[riv]||[];const srcC={Keeper:D.gn,Guide:D.txD,Club:"#5A7A5E",Social:D.txM};
   const wxDays=useMemo(()=>{const wx=live.wx;if(!wx?.hourly||!wx?.daily)return[];try{return Array.from({length:Math.min(7,wx.daily.time?.length||0)},(_,d)=>{const dt=new Date(wx.daily.time[d]);const hrs=[];for(let hr=5;hr<=22;hr++){const idx=d*24+hr;if(idx>=(wx.hourly.time?.length||0))break;const air=wx.hourly.temperature_2m?.[idx]||15;const bA=((wx.daily.temperature_2m_max?.[d]||15)+(wx.daily.temperature_2m_min?.[d]||8))/2;const wt=+(cT+(air-bA)*0.15).toFixed(1);hrs.push({h:hr,wt,air:Math.round(air),hi:+hInt(wt,hr).toFixed(1),rain:wx.hourly.precipitation_probability?.[idx]||0,mm:wx.hourly.precipitation?.[idx]||0,pr:wx.hourly.pressure_msl?.[idx]?Math.round(wx.hourly.pressure_msl[idx]):null,ws:wx.hourly.wind_speed_10m?.[idx]?Math.round(wx.hourly.wind_speed_10m[idx]*0.621):null,wd:wx.hourly.wind_direction_10m?.[idx]||0,cl:wx.hourly.cloud_cover?.[idx]??50,hum:wx.hourly.relative_humidity_2m?.[idx]||65})}return{dn:d===0?"Today":d===1?"Tmrw":dt.toLocaleDateString("en-GB",{weekday:"short"}),df:dt.toLocaleDateString("en-GB",{day:"numeric",month:"short"}),aH:wx.daily.temperature_2m_max?.[d]?Math.round(wx.daily.temperature_2m_max[d]):null,aL:wx.daily.temperature_2m_min?.[d]?Math.round(wx.daily.temperature_2m_min[d]):null,rain:wx.daily.precipitation_sum?.[d]??null,windMax:wx.daily.wind_speed_10m_max?.[d]?Math.round(wx.daily.wind_speed_10m_max[d]*0.621):null,uv:wx.daily.uv_index_max?.[d]??null,sunrise:wx.daily.sunrise?.[d]?wx.daily.sunrise[d].slice(11,16):null,sunset:wx.daily.sunset?.[d]?wx.daily.sunset[d].slice(11,16):null,hrs}})}catch{return[]}},[live.wx,cT]);
 
@@ -217,6 +261,10 @@ export default function App(){
               {todayUV!==null&&<span>UV {todayUV}</span>}
               {todayRain!==null&&todayRain>0&&<span>{todayRain}mm today</span>}
             </div>}
+            <div style={{marginTop:10,padding:"10px",background:P.c2,borderRadius:6,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div style={{flex:1}}><div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em"}}>FISHING CONDITIONS</div><div style={{fontSize:11,color:P.txM,marginTop:3,lineHeight:1.5}}>{cond.desc}</div></div>
+              <div style={{textAlign:"center",flexShrink:0,marginLeft:12}}><div style={{fontSize:28,fontWeight:700,color:cond.clr,lineHeight:1}}>{cond.pct}</div><div style={{fontSize:8,fontWeight:700,color:cond.clr}}>{cond.label}</div></div>
+            </div>
           </Cd>
 
           {/* 7-day overview */}
@@ -224,10 +272,17 @@ export default function App(){
             <div style={{padding:"10px 12px 6px"}}><Lb>7-DAY FORECAST</Lb></div>
             <div style={{overflowX:"auto"}}>
               <div style={{display:"flex",minWidth:wxDays.length*72}}>
-                {wxDays.map((d,i)=>{const dr=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax);return<div key={i} style={{flex:1,padding:"6px 6px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:dr.lb==="Excellent"?P.rustS:"transparent"}}>
+                {wxDays.map((d,i)=>{
+                  // Project hatch score for this day
+                  const futDoy=DOY+i;const projT=+(cT+(i*0.15)).toFixed(1);
+                  const projHatch=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);
+                  const sc=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax,projHatch);
+                  const lb=sc>=90?"Exceptional":sc>=75?"Excellent":sc>=55?"Good":sc>=35?"Fair":"Poor";
+                  const clr=sc>=75?P.rust:sc>=55?P.gn:sc>=35?P.txM:P.txD;
+                  return<div key={i} style={{flex:1,padding:"6px 6px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:"transparent"}}>
                   <div style={{fontSize:10,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div>
                   <div style={{fontSize:8,color:P.txD}}>{d.df}</div>
-                  <div style={{fontSize:9,fontWeight:700,color:dr.clr,marginTop:4,padding:"2px 0",borderRadius:3}}>{dr.lb}</div>
+                  <div style={{fontSize:9,fontWeight:700,color:clr,marginTop:4,padding:"2px 0",borderRadius:3}}>{sc} — {lb}</div>
                   <div style={{fontSize:14,fontWeight:700,color:P.tx,marginTop:3}}>{d.aH||"--"}°</div>
                   <div style={{fontSize:10,color:P.txD}}>{d.aL||"--"}°</div>
                   {d.rain!==null&&<div style={{fontSize:8,color:d.rain>2?P.txD:P.gn,marginTop:2}}>{d.rain>0?`${d.rain}mm`:"Dry"}</div>}
