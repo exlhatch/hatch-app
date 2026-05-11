@@ -139,7 +139,7 @@ function dayRating(hi,lo,rain,windMax,hatchScore,riverQ){
   // Cloud (10%)
   s+=7; // moderate default (can't get per-day cloud easily)
   // River quality (15%)
-  const rq=riverQ||6;
+  const rq=riverQ||5;
   s+=Math.round(rq*1.5);
   return Math.round(Math.min(100,Math.max(0,s)));
 }
@@ -166,10 +166,11 @@ function condScore(wind,press,cloud,waterT,hatchIdx,riverQ,beatQ){
   else if(wind<=18)s+=5;         // strong: hard to cast, harder to present
   else if(wind<=22)s+=2;         // very strong: really tough day
   else s+=0;                     // gale: go to the pub
-  // River & beat quality (15%) — prestige/fishery quality
-  // World-class beat on the Test (10/10) adds ~15. Urban stream (4/4) adds ~6.
-  const rq=riverQ||6;const bq=beatQ||rq;const avgQ=(rq+bq)/2;
-  s+=Math.round(avgQ*1.5); // 10=+15, 7=+10.5, 5=+7.5, 3=+4.5
+  // River & beat quality (18%) — prestige, fish density, habitat quality
+  // World-class beat (10/10) adds up to 18. Urban stream (4/4) adds ~7.
+  // This means switching Test/Stockbridge to Wandle/Carshalton drops score ~11pts
+  const rq=riverQ||5;const bq=beatQ||rq;const avgQ=(rq+bq)/2;
+  s+=Math.round(avgQ*1.8); // 10=+18, 7=+12.6, 5=+9, 3=+5.4
   const pct=Math.round(Math.min(100,Math.max(0,s)));
   const label=pct>=90?"Exceptional":pct>=75?"Excellent":pct>=55?"Good":pct>=35?"Fair":"Poor";
   const clr=pct>=75?D.rust:pct>=55?D.gn:pct>=35?D.txM:D.txD;
@@ -193,13 +194,15 @@ export default function App(){
   const doFetch=useCallback(async()=>{setLoading(true);try{const[ea,wx]=await Promise.all([fetchEA(rv.ea),fetchWx(rv.lat,rv.lng)]);setLive({ea,wx});setDSrc(ea?.level?"live":"sim")}catch{setDSrc("sim")}setLoading(false)},[rv]);
   useEffect(()=>{doFetch().catch(()=>{})},[doFetch]);useEffect(()=>{const i=setInterval(()=>doFetch().catch(()=>{}),9e5);return()=>clearInterval(i)},[doFetch]);useEffect(()=>{setBeat(rv.b[0]||"")},[riv]);
 
-  const cT=live.ea?.temp||simT(rv.lat);const cL=live.ea?.level||0.45;
-  const cW=live.wx?.current?.wind_speed_10m?Math.round(live.wx.current.wind_speed_10m*0.621):8;
-  const cP=live.wx?.current?.pressure_msl?Math.round(live.wx.current.pressure_msl):1016;
-  const cC=live.wx?.current?.cloud_cover??50;
-  const cWD=live.wx?.current?.wind_direction_10m||180;
-  const cHum=live.wx?.current?.relative_humidity_2m||65;
-  const cAir=live.wx?.current?.temperature_2m?Math.round(live.wx.current.temperature_2m):14;
+  // Simulated weather varies per river (live data from Open-Meteo will be river-specific on deployment)
+  const rSeed=rv.id.split("").reduce((a,c,i)=>a+c.charCodeAt(0)*(i+1),0);
+  const cT=live.ea?.temp||simT(rv.lat);const cL=live.ea?.level||(0.35+((rSeed%20)/100));
+  const cW=live.wx?.current?.wind_speed_10m?Math.round(live.wx.current.wind_speed_10m*0.621):(4+(rSeed%12));
+  const cP=live.wx?.current?.pressure_msl?Math.round(live.wx.current.pressure_msl):(1008+(rSeed%18));
+  const cC=live.wx?.current?.cloud_cover??(30+(rSeed%50));
+  const cWD=live.wx?.current?.wind_direction_10m||(rSeed%360);
+  const cHum=live.wx?.current?.relative_humidity_2m??(55+(rSeed%30));
+  const cAir=live.wx?.current?.temperature_2m?Math.round(live.wx.current.temperature_2m):(11+(rSeed%8));
   const cRain=live.wx?.current?.precipitation||0;
   const todayHi=live.wx?.daily?.temperature_2m_max?.[0]?Math.round(live.wx.daily.temperature_2m_max[0]):null;
   const todayLo=live.wx?.daily?.temperature_2m_min?.[0]?Math.round(live.wx.daily.temperature_2m_min[0]):null;
