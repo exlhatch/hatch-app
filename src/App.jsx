@@ -40,7 +40,7 @@ const RV=[
   {id:"piddle",n:"River Piddle",ea:"Piddle",lat:50.73,lng:-2.21,b:["Puddletown"]},
   {id:"frome",n:"Frome (Dorset)",ea:"Frome",lat:50.71,lng:-2.44,b:["Dorchester"]},
   {id:"mimram",n:"River Mimram",ea:"Mimram",lat:51.80,lng:-0.22,b:["Welwyn"]},
-  {id:"chess",n:"River Chess",ea:"Chess",lat:51.65,lng:-0.60,b:["Chesham","Latimer"]},
+  {id:"chess",n:"River Chess",ea:"Chess",lat:51.65,lng:-0.60,b:["Chesham","Latimer","Nr. Sarratt","Rickmansworth"]},
   {id:"darent",n:"River Darent",ea:"Darent",lat:51.37,lng:0.18,b:["Shoreham","Eynsford"]},
   {id:"wandle",n:"River Wandle",ea:"Wandle",lat:51.42,lng:-0.17,b:["Carshalton"]},
 ];
@@ -83,15 +83,16 @@ const FLIES={
 };
 
 /* ── METHOD RIGS ── */
-const METHODS=[{id:"dry",l:"Dry Fly Only"},{id:"drynymph",l:"Dry & Nymph"},{id:"klink",l:"Klink & Dink"},{id:"any",l:"Any Method"}];
+const METHODS=[{id:"dry",l:"Dry Fly Only"},{id:"drynymph",l:"Dry & Nymph"},{id:"any",l:"Any Method"}];
 function buildRig(wt,wind,cloud,method,topH){
   const warm=wt>=12,oc=cloud>60,br=cloud<40,wd=wind>12;
   const fly=topH?`Match the ${topH.cm} — ${topH.hk}`:"Match the hatch";
   if(method==="dry"){if(warm&&oc)return{a:"Upstream dry to risers",rod:"9ft 4wt",ldr:wt>13?"12-15ft degreased":"9-12ft tapered",tip:"5X-6X nylon",fly,guide:"Wait for a rise. Position below. One accurate cast. No false casting over the fish.",c:85,why:"Overcast + warm = classic dry fly."};if(wd)return{a:"Terrestrial on the lee bank",rod:"9ft 5wt",ldr:"9ft tapered",tip:"4X-5X nylon",fly:"Hawthorn #12 or Black Gnat #14",guide:"Wind blows terrestrials onto water. Fish sheltered bank. Shorter casts.",c:75,why:"Wind ripple gives cover."};return{a:"Upstream dry — fine and far",rod:"9ft 4wt",ldr:"14-16ft, mud on last 3ft",tip:"6X nylon",fly:"Small pattern — CDC or Last Hope #18",guide:"Bright or calm — go fine. Long leaders. Wait for evening if it's tough.",c:65,why:"Tough conditions demand stealth."};}
   if(method==="drynymph"){if(warm&&oc)return{a:"Start dry. Nymph as backup.",rod:"9ft 4-5wt",ldr:"12ft tapered",tip:"5X nylon / 5X fluoro",fly:`Dry: ${fly}. Nymph: PTN #16`,guide:"Dries first in warm overcast. Switch to upstream nymph if quiet.",c:82,why:"Dual approach."};return{a:"Upstream nymph, dry ready",rod:"9-10ft 4-5wt",ldr:"10-12ft",tip:"5X fluoro",fly:"PTN #16 or Killer Bug. Dry: Klinkhamer.",guide:"Dead drift nymph along bottom. Watch leader for takes. Switch to dry if rises appear.",c:78,why:"Cool or bright — nymph covers water."};}
-  if(method==="klink"){return{a:"Klinkhamer + PTN dropper",rod:"9ft 5wt",ldr:"9-12ft tapered",tip:"5X nylon to Klink, 18in 5X fluoro dropper",fly:"Klinkhamer #14 point. PTN #16 dropper.",guide:"Klink acts as indicator and fly. If it goes under, strike. Adjust dropper length for depth.",c:80,why:"Covers two zones. Nymph catches, dry indicates."};}
-  if(warm&&oc)return{a:"Dry fly — perfect conditions",rod:"9ft 4-5wt",ldr:"12ft",tip:"5X nylon",fly,guide:"Don't go subsurface too early. These are prime dry fly conditions.",c:85,why:"Best conditions for dries."};
-  return{a:"Euro nymph or heavy nymph rig",rod:"10ft 3-4wt",ldr:"20ft straight fluoro",tip:"5X-6X fluoro",fly:"Jig nymph #14 point, PTN #16 dropper",guide:"Short line, high rod. Work seams and gravel. Most efficient cold-water method.",c:78,why:"Cool water. Fish on bottom."};
+  // Any method
+  if(warm&&oc)return{a:"Dry fly — conditions are perfect",rod:"9ft 4-5wt",ldr:"12ft",tip:"5X nylon",fly,guide:"Don't go subsurface too early. These are prime dry fly conditions. If quiet, try a Klinkhamer with PTN dropper — covers both zones.",c:85,why:"Best conditions for dries. Dropper rig as backup."};
+  if(warm&&!oc)return{a:"Klinkhamer + nymph dropper",rod:"9ft 5wt",ldr:"9-12ft tapered",tip:"5X nylon to Klink, 18in 5X fluoro dropper",fly:"Klinkhamer #14 point. PTN #16 on 18in dropper.",guide:"Klink acts as indicator and fly. If it goes under, strike. Adjust dropper length for depth. Covers surface and subsurface simultaneously.",c:80,why:"Bright/mixed. Dropper rig covers two zones at once."};
+  return{a:"Euro nymph or heavy nymph rig",rod:"10ft 3-4wt",ldr:"20ft straight fluoro",tip:"5X-6X fluoro",fly:"Jig nymph #14 point, PTN #16 dropper. Or Klinkhamer + PTN dropper if rises appear.",guide:"Short line, high rod. Work seams and gravel runs. Switch to dry dropper if you see surface activity.",c:78,why:"Cool water. Subsurface first, stay versatile."};
 }
 
 /* ── SCENARIOS ── */
@@ -120,6 +121,8 @@ function pred(wt){return H.map(sp=>{let sF=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(s
 function hInt(wt,hr){let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;let sf=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((DOY-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
 const hC=s=>s>70?D.rust:s>40?D.gn:s>15?D.txM:D.txD;
 const iC=v=>v>=6?D.rust:v>=4?"#A85C2E":v>=2?D.gn:v>=1?"#3E5A40":"#1E2E26";
+const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]};
+function dayRating(hi,lo,rain,windMax){let s=0;const avg=(hi+lo)/2;if(avg>=12&&avg<=20)s+=3;else if(avg>=8)s+=2;else s+=1;if(rain<2)s+=3;else if(rain<8)s+=2;else s+=1;if(!windMax||windMax<10)s+=3;else if(windMax<18)s+=2;else s+=1;const pct=Math.round(s/9*100);return{lb:pct>=78?"Excellent":pct>=55?"Good":pct>=33?"Fair":"Poor",clr:pct>=78?D.rust:pct>=55?D.gn:pct>=33?D.txM:D.txD}}
 function danSt(wt){const as=139;if(DOY>172)return{s:"Season ended",c:D.txD};if(DOY>as+14&&wt>=12)return{s:"On the water",c:D.rust};if(DOY>as&&wt>=12)return{s:"Underway",c:D.rust};if(DOY>as-7&&wt>=11)return{s:"On time",c:D.gn};if(DOY>as-7)return{s:"Late — cool water",c:D.txD};if(DOY>as-14&&wt>=13)return{s:"Early — warm spring",c:D.rust};if(DOY>as-14)return{s:"Days away",c:D.txM};return{s:"Not yet",c:D.txD}}
 function condR(w,p,cl){let s=0,x=0;if(p>1020){s+=1;x+=3}else if(p<1008){s+=3;x+=3}else{s+=2;x+=3}if(cl>70){s+=3;x+=3}else if(cl>40){s+=2;x+=3}else{s+=1;x+=3}if(w>15){s+=1;x+=3}else if(w<8){s+=2;x+=3}else{s+=3;x+=3}const pct=Math.round(s/x*100);return{label:pct>=75?"Excellent":pct>=50?"Good":pct>=30?"Fair":"Poor",pct,clr:pct>=75?D.rust:pct>=50?D.gn:pct>=30?D.txM:D.txD}}
 function genLR(wt){const now=new Date();return Array.from({length:8},(_,w)=>{const s=new Date(now);s.setDate(s.getDate()+w*7);const e=new Date(s);e.setDate(e.getDate()+6);const md=DOY+w*7+3,pt=+(wt+w*0.4+Math.sin((md-80)*Math.PI/183)*1.5).toFixed(1);let ds=0;if(md>=125&&md<=182)ds=Math.max(0,1-((md-153)/28)**2)*(pt>=12&&pt<=18?1:pt>=10?0.5:0.2);let oa=0;H.forEach(sp=>{if(md>=sp.s&&md<=sp.e)oa+=Math.max(0,1-((md-(sp.s+sp.e)/2)/((sp.e-sp.s)/2))**2)*(sp.t===1?3:sp.t===2?1.5:0.8)});return{l:w===0?"This week":w===1?"Next week":`${s.toLocaleDateString("en-GB",{day:"numeric",month:"short"})} – ${e.toLocaleDateString("en-GB",{day:"numeric",month:"short"})}`,pt,ds:+(ds*100).toFixed(0),oa:+Math.min(10,oa).toFixed(1),cf:w<2?"High":w<4?"Med":"Low"}})}
@@ -128,7 +131,7 @@ function genLR(wt){const now=new Date();return Array.from({length:8},(_,w)=>{con
 export default function App(){
   const[riv,setRiv]=useState("test");const[beat,setBeat]=useState("Stockbridge");const[tab,setTab]=useState("guide");const[pick,setPick]=useState(false);const[hDay,setHDay]=useState(0);const[live,setLive]=useState({});const[loading,setLoading]=useState(true);const[dSrc,setDSrc]=useState("loading");const[light,setLight]=useState(false);const[scenario,setScenario]=useState(null);const[method,setMethod]=useState("dry");const[flyT,setFlyT]=useState("dry");const[openFly,setOpenFly]=useState(null);
   const[sessions,setSessions]=useState([]);const[showForm,setShowForm]=useState(false);
-  const[fBeat,setFBeat]=useState("");const[fFish,setFish]=useState("");const[fBig,setFBig]=useState("");const[fFly,setFFly]=useState("");const[fHatch,setFHatch]=useState("");const[fNotes,setFNotes]=useState("");const[fRating,setFRating]=useState("");
+  const[fName,setFName]=useState("");const[fBeat,setFBeat]=useState("");const[fFish,setFish]=useState("");const[fBig,setFBig]=useState("");const[fFly,setFFly]=useState("");const[fHatch,setFHatch]=useState("");const[fNotes,setFNotes]=useState("");const[fRating,setFRating]=useState("");
   const P=light?L:D;const rv=RV.find(r=>r.id===riv);
 
   const doFetch=useCallback(async()=>{setLoading(true);try{const[ea,wx]=await Promise.all([fetchEA(rv.ea),fetchWx(rv.lat,rv.lng)]);setLive({ea,wx});setDSrc(ea?.level?"live":"sim")}catch{setDSrc("sim")}setLoading(false)},[rv]);
@@ -148,7 +151,6 @@ export default function App(){
   const todayUV=live.wx?.daily?.uv_index_max?.[0]??null;
   const todaySunrise=live.wx?.daily?.sunrise?.[0]?live.wx.daily.sunrise[0].slice(11,16):null;
   const todaySunset=live.wx?.daily?.sunset?.[0]?live.wx.daily.sunset[0].slice(11,16):null;
-  const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]}
   const spp=useMemo(()=>pred(cT),[cT]);const topH=spp[0];const dan=spp.find(s=>s.id==="danica");const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
   const cond=condR(cW,cP,cC);const rig=buildRig(cT,cW,cC,method,topH);const ds=danSt(cT);const lr=useMemo(()=>genLR(cT),[cT]);
   const rpts=RPT[riv]||[];const srcC={Keeper:D.gn,Guide:D.txD,Club:"#5A7A5E",Social:D.txM};
@@ -160,7 +162,7 @@ export default function App(){
   return(
     <div style={{fontFamily:"'Barlow',sans-serif",background:P.bg,minHeight:"100vh",color:P.tx,WebkitFontSmoothing:"antialiased",maxWidth:480,margin:"0 auto",paddingBottom:62}}>
       <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-      <style>{`*{box-sizing:border-box;margin:0}::-webkit-scrollbar{height:4px}::-webkit-scrollbar-thumb{background:${P.bd};border-radius:2px}`}</style>
+      <style>{`*{box-sizing:border-box;margin:0}input,textarea,select{font-family:inherit;-webkit-appearance:none;appearance:none}input:focus,textarea:focus,select:focus{outline:none}::-webkit-scrollbar{height:4px}::-webkit-scrollbar-thumb{background:${P.bd};border-radius:2px}`}</style>
 
       {/* HEADER */}
       <div style={{background:P.c1,padding:"14px 14px 10px",borderBottom:`1px solid ${P.bd}`}}>
@@ -221,15 +223,16 @@ export default function App(){
           {wxDays.length>0&&<Cd style={{marginBottom:12,padding:"0"}}>
             <div style={{padding:"10px 12px 6px"}}><Lb>7-DAY FORECAST</Lb></div>
             <div style={{overflowX:"auto"}}>
-              <div style={{display:"flex",minWidth:wxDays.length*70}}>
-                {wxDays.map((d,i)=><div key={i} style={{flex:1,padding:"6px 8px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:""}}>
+              <div style={{display:"flex",minWidth:wxDays.length*72}}>
+                {wxDays.map((d,i)=>{const dr=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax);return<div key={i} style={{flex:1,padding:"6px 6px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:dr.lb==="Excellent"?P.rustS:"transparent"}}>
                   <div style={{fontSize:10,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div>
                   <div style={{fontSize:8,color:P.txD}}>{d.df}</div>
-                  <div style={{fontSize:14,fontWeight:700,color:P.tx,marginTop:4}}>{d.aH||"--"}°</div>
+                  <div style={{fontSize:9,fontWeight:700,color:dr.clr,marginTop:4,padding:"2px 0",borderRadius:3}}>{dr.lb}</div>
+                  <div style={{fontSize:14,fontWeight:700,color:P.tx,marginTop:3}}>{d.aH||"--"}°</div>
                   <div style={{fontSize:10,color:P.txD}}>{d.aL||"--"}°</div>
                   {d.rain!==null&&<div style={{fontSize:8,color:d.rain>2?P.txD:P.gn,marginTop:2}}>{d.rain>0?`${d.rain}mm`:"Dry"}</div>}
                   {d.windMax&&<div style={{fontSize:8,color:d.windMax>15?P.rust:P.txD,marginTop:1}}>{d.windMax}mph</div>}
-                </div>)}
+                </div>})}
               </div>
             </div>
           </Cd>}
@@ -343,24 +346,27 @@ export default function App(){
             <button onClick={()=>setShowForm(!showForm)} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{showForm?"CANCEL":"+ LOG SESSION"}</button>
           </div>
 
-          {showForm&&<Cd style={{padding:14,marginBottom:14}}>
+          {showForm&&<div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:14,marginBottom:14}}>
             <div style={{display:"grid",gap:8}}>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+                <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>YOUR NAME</div><input value={fName} onChange={e=>setFName(e.target.value)} placeholder="e.g. Josh" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
+                <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>FISH CAUGHT</div><input value={fFish} onChange={e=>setFish(e.target.value)} placeholder="0" type="number" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
+              </div>
               <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>BEAT</div>
                 <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{rv.b.map(b=><button key={b} onClick={()=>setFBeat(b)} style={{padding:"4px 8px",borderRadius:4,border:fBeat===b?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fBeat===b?P.rustS:"transparent",color:fBeat===b?P.rust:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
-                <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>FISH CAUGHT</div><input value={fFish} onChange={e=>setFish(e.target.value)} placeholder="0" type="number" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
-                <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>BIGGEST FISH</div><input value={fBig} onChange={e=>setFBig(e.target.value)} placeholder='e.g. 2lb 4oz' style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
+                <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>BIGGEST FISH</div><input value={fBig} onChange={e=>setFBig(e.target.value)} placeholder="e.g. 2lb 4oz" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
+                <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>BEST FLY</div><input value={fFly} onChange={e=>setFFly(e.target.value)} placeholder="e.g. CDC #16" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
               </div>
-              <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>BEST FLY</div><input value={fFly} onChange={e=>setFFly(e.target.value)} placeholder="e.g. CDC Shuttlecock #16" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
               <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>HATCHES SEEN</div><input value={fHatch} onChange={e=>setFHatch(e.target.value)} placeholder="e.g. LDO, Iron Blues, Hawthorn" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
               <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>RATING</div>
                 <div style={{display:"flex",gap:4}}>{["Poor","Fair","Good","Excellent"].map(r=><button key={r} onClick={()=>setFRating(r)} style={{flex:1,padding:"7px 4px",borderRadius:5,border:fRating===r?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fRating===r?P.rustS:"transparent",color:fRating===r?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{r}</button>)}</div>
               </div>
               <div><div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>NOTES</div><textarea value={fNotes} onChange={e=>setFNotes(e.target.value)} placeholder="What happened on the river? Conditions, refusals, tips for others..." rows={3} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%",resize:"none",lineHeight:1.5}}/></div>
-              <button onClick={()=>{if(fBeat&&(fNotes||fFish)){const now=new Date();setSessions(p=>[{d:now.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})+` ${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`,bt:fBeat,fish:fFish||"0",big:fBig,fly:fFly,hatch:fHatch,rating:fRating,notes:fNotes,river:rv.n},...p]);setFBeat("");setFish("");setFBig("");setFFly("");setFHatch("");setFNotes("");setFRating("");setShowForm(false)}}} style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:P.rust,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.05em"}}>SUBMIT SESSION LOG</button>
+              <button onClick={()=>{if(fBeat&&(fNotes||fFish)){const now=new Date();setSessions(p=>[{d:now.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})+` ${now.getHours()}:${String(now.getMinutes()).padStart(2,"0")}`,name:fName||"Anon",bt:fBeat,fish:fFish||"0",big:fBig,fly:fFly,hatch:fHatch,rating:fRating,notes:fNotes,river:rv.n},...p]);setFName("");setFBeat("");setFish("");setFBig("");setFFly("");setFHatch("");setFNotes("");setFRating("");setShowForm(false)}}} style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:P.rust,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.05em"}}>SUBMIT SESSION LOG</button>
             </div>
-          </Cd>}
+          </div>}
 
           {/* User sessions */}
           {sessions.filter(s=>s.river===rv.n).length>0&&<div style={{marginBottom:14}}>
@@ -370,6 +376,7 @@ export default function App(){
                 <div><span style={{fontSize:7,fontWeight:700,color:P.rust,border:`1px solid ${P.rustB}`,padding:"1px 5px",borderRadius:3}}>SESSION</span><span style={{fontSize:11,fontWeight:600,marginLeft:6}}>{s.bt}</span><span style={{fontSize:9,color:P.txD,marginLeft:6}}>{s.d}</span></div>
                 {s.rating&&<span style={{fontSize:8,fontWeight:700,color:s.rating==="Excellent"?P.rust:s.rating==="Good"?P.gn:P.txM}}>{s.rating.toUpperCase()}</span>}
               </div>
+              {s.name&&<div style={{fontSize:9,color:P.txM,marginBottom:4}}>By {s.name}</div>}
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:6}}>
                 <div style={{background:P.c2,borderRadius:4,padding:"4px 6px"}}><div style={{fontSize:7,color:P.txD}}>CAUGHT</div><div style={{fontSize:14,fontWeight:700,color:P.tx}}>{s.fish}</div></div>
                 {s.big&&<div style={{background:P.c2,borderRadius:4,padding:"4px 6px"}}><div style={{fontSize:7,color:P.txD}}>BIGGEST</div><div style={{fontSize:11,fontWeight:600,color:P.tx}}>{s.big}</div></div>}
