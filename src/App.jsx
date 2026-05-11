@@ -122,9 +122,23 @@ function pred(wt){return H.map(sp=>{let sF=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(s
 function hInt(wt,hr){let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;let sf=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((DOY-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
 const hC=s=>s>70?D.rust:s>40?D.gn:s>15?D.txM:D.txD;
 const iC=v=>v>=6?D.rust:v>=4?"#A85C2E":v>=2?D.gn:v>=1?"#3E5A40":"#1E2E26";
-const hrScore=(hi,wind,cloud,press,rq,bq)=>{let s=0;s+=Math.min(30,hi*3);if(cloud>70)s+=10;else if(cloud>40)s+=7;else s+=3;if(wind>=3&&wind<=10)s+=12;else if(wind<3)s+=8;else if(wind<=14)s+=6;else if(wind<=18)s+=3;else s+=0;if(press<1010)s+=8;else if(press<1018)s+=5;else s+=2;const avgQ=((rq||6)+(bq||rq||6))/2;s+=Math.round(avgQ*1.2);return Math.round(Math.min(100,Math.max(0,s)))};
-const hrLb=s=>s>=75?"Excellent":s>=55?"Good":s>=35?"Fair":"Poor";
-const hrClr=s=>s>=75?D.rust:s>=55?D.gn:s>=35?D.txM:D.txD;
+// Hourly score uses SAME formula as condScore so numbers correspond
+const hrScore=(hi,wt,wind,cloud,press,rq,bq)=>{
+  let s=0;const hIdx=Math.min(100,hi*10);
+  s+=Math.min(30,hIdx*0.30); // hatch 30%
+  if(wt>=13&&wt<=17)s+=18;else if(wt>=11&&wt<=19)s+=13;else if(wt>=9)s+=8;else s+=4; // water 18%
+  if(cloud>70)s+=12;else if(cloud>50)s+=9;else if(cloud>30)s+=6;else s+=3; // cloud 12%
+  if(press<1008)s+=10;else if(press<1015)s+=8;else if(press<1022)s+=6;else s+=3; // press 10%
+  if(wind>=3&&wind<=10)s+=15;else if(wind<3)s+=10;else if(wind<=14)s+=9;else if(wind<=18)s+=5;else if(wind<=22)s+=2;else s+=0; // wind 15%
+  const avgQ=((rq||5)+(bq||rq||5))/2;s+=Math.round(avgQ*1.8); // quality 18%
+  return Math.round(Math.min(100,Math.max(0,s)));
+};
+const scLb=s=>s>=90?"Exceptional":s>=75?"Excellent":s>=55?"Good":s>=35?"Fair":"Poor";
+const scClr=s=>s>=75?D.rust:s>=55?D.gn:s>=35?D.txM:D.txD;
+// Active hatches for a given hour + water temp
+function hatchesAtHour(wt,hr){return H.filter(sp=>{if(DOY<sp.s-7||DOY>sp.e+7)return false;if(!sp.pk.includes(hr)&&!sp.pk.includes(hr-1)&&!sp.pk.includes(hr+1))return false;if(wt<sp.tMn-2||wt>sp.tMx+2)return false;return true}).sort((a,b)=>b.t-a.t).slice(0,3)}
+// Best fly for a hatch
+const FLYMAP={danica:"Grey Wulff #12",ldo:"Kite's Imperial #16",mo:"Adams #16",bwo:"Sherry Spinner #14",ib:"Iron Blue Dun #18",pw:"Last Hope #18",gran:"Grannom Pupa #14",sedge:"Elk Hair Caddis #14",haw:"Hawthorn #12",bg:"Black Gnat #16",smut:"Griffith's Gnat #22",caen:"Last Hope #20"};
 const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]};
 function dayRating(hi,lo,rain,windMax,hatchScore,riverQ){
   let s=0;
@@ -259,6 +273,20 @@ export default function App(){
 
         {/* GUIDE */}
         {tab==="guide"&&<div>
+          {/* HATCH OF THE DAY — top of page */}
+          {topH&&topH.score>5&&<Cd accent style={{padding:14,marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.15em",color:P.rust}}>HATCH OF THE DAY</div><div style={{fontSize:18,fontWeight:700,color:hC(topH.score),marginTop:4}}>{topH.cm}</div><div style={{fontSize:10,color:P.txD,marginTop:2}}>Hook {topH.hk} / {topH.sz}</div>
+                <div style={{fontSize:10,color:P.rust,fontWeight:600,marginTop:4}}>Try: {FLYMAP[topH.id]||"Match the hatch"}</div>
+              </div>
+              <div style={{textAlign:"center"}}><div style={{fontSize:30,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{topH.score}</div><div style={{fontSize:8,color:hC(topH.score),marginTop:2}}>{topH.lb}</div></div>
+            </div>
+            {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).length>0&&<div style={{marginTop:8,borderTop:`1px solid ${P.bd}`,paddingTop:6}}>
+              <div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>ALSO ACTIVE</div>
+              {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=><div key={s.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0"}}><span style={{fontSize:10,color:P.txM}}>{s.cm}</span><span style={{fontSize:10,fontWeight:700,color:hC(s.score)}}>{s.score}%</span></div>)}
+            </div>}
+          </Cd>}
+
           {/* Weather NOW */}
           <Cd style={{padding:14,marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
@@ -289,12 +317,12 @@ export default function App(){
           {wxDays.length>0&&wxDays[0]&&<Cd style={{marginBottom:12,padding:14}}>
             <Lb>TODAY'S RATING BY HOUR</Lb>
             <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
-              {wxDays[0].hrs.map(h=>{const sc=hrScore(h.hi||0,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:22}}>
+              {wxDays[0].hrs.map(h=>{const sc=hrScore(h.hi||0,h.wt||14,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:22}}>
                 <div style={{fontSize:7,color:P.txD}}>{h.h}</div>
-                <div style={{width:22,height:22,borderRadius:4,background:hrClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
+                <div style={{width:22,height:22,borderRadius:4,background:scClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:8,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
               </div>})}
             </div>
-            {(()=>{const best=wxDays[0].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[0].hrs[0]);const bsc=hrScore(best.hi||0,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);return<div style={{marginTop:8,fontSize:10,color:P.txM}}>Peak: <span style={{fontWeight:700,color:hrClr(bsc)}}>{best.h}:00 — {bsc}% {hrLb(bsc)}</span></div>})()}
+            {(()=>{const best=wxDays[0].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.wt||14,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.wt||14,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[0].hrs[0]);const bsc=hrScore(best.hi||0,best.wt||14,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);return<div style={{marginTop:8,fontSize:10,color:P.txM}}>Peak: <span style={{fontWeight:700,color:scClr(bsc)}}>{best.h}:00 — {bsc}% {scLb(bsc)}</span></div>})()}
           </Cd>}
 
           {/* 7-day overview — tap a day to see hourly breakdown */}
@@ -323,13 +351,24 @@ export default function App(){
             {gDay>=0&&wxDays[gDay]&&<div style={{padding:"10px 12px",borderTop:`1px solid ${P.bd}`}}>
               <div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em",marginBottom:6}}>{wxDays[gDay].dn.toUpperCase()} HOURLY BREAKDOWN</div>
               <div style={{display:"flex",gap:2,flexWrap:"wrap"}}>
-                {wxDays[gDay].hrs.map(h=>{const sc=hrScore(h.hi||0,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:26}}>
+                {wxDays[gDay].hrs.map(h=>{const sc=hrScore(h.hi||0,h.wt||14,h.ws||8,h.cl||50,h.pr||1016,rv.q,rv.bq?.[beat]);return<div key={h.h} style={{textAlign:"center",flex:"1 0 auto",minWidth:26}}>
                   <div style={{fontSize:7,color:P.txD}}>{h.h}</div>
-                  <div style={{width:24,height:24,borderRadius:4,background:hrClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
+                  <div style={{width:24,height:24,borderRadius:4,background:scClr(sc),opacity:sc>=35?1:0.4,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:sc>=55?700:400,color:sc>=55?"#fff":P.txD,margin:"2px auto"}}>{sc>=35?sc:""}</div>
                   <div style={{fontSize:6,color:P.txD,marginTop:1}}>{h.air}°</div>
                 </div>})}
               </div>
-              {(()=>{const best=wxDays[gDay].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[gDay].hrs[0]);const bsc=hrScore(best.hi||0,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);return<div style={{marginTop:6,fontSize:10,color:P.txM}}>Best window: <span style={{fontWeight:700,color:hrClr(bsc)}}>{best.h}:00 — {bsc}% {hrLb(bsc)}</span> / Wind {best.ws||"--"}mph / Cloud {best.cl||"--"}%</div>})()}
+              {(()=>{const best=wxDays[gDay].hrs.reduce((a,b)=>{const sa=hrScore(a.hi||0,a.wt||14,a.ws||8,a.cl||50,a.pr||1016,rv.q,rv.bq?.[beat]);const sb=hrScore(b.hi||0,b.wt||14,b.ws||8,b.cl||50,b.pr||1016,rv.q,rv.bq?.[beat]);return sa>sb?a:b},wxDays[gDay].hrs[0]);const bsc=hrScore(best.hi||0,best.wt||14,best.ws||8,best.cl||50,best.pr||1016,rv.q,rv.bq?.[beat]);
+                const bestHatches=hatchesAtHour(best.wt||14,best.h);
+                return<div>
+                  <div style={{marginTop:8,fontSize:10,color:P.txM}}>Best window: <span style={{fontWeight:700,color:scClr(bsc)}}>{best.h}:00 — {bsc}% {scLb(bsc)}</span> / Wind {best.ws||"--"}mph / Cloud {best.cl||"--"}%</div>
+                  {bestHatches.length>0&&<div style={{marginTop:8,borderTop:`1px solid ${P.bd}`,paddingTop:6}}>
+                    <div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>LIKELY HATCHES AT {best.h}:00</div>
+                    {bestHatches.map(h=><div key={h.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:`1px solid ${P.bd}`}}>
+                      <div><span style={{fontSize:11,fontWeight:600,color:P.tx}}>{h.cm}</span><span style={{fontSize:9,color:P.txD,marginLeft:6}}>Hook {h.hk}</span></div>
+                      <span style={{fontSize:9,fontWeight:600,color:P.rust}}>{FLYMAP[h.id]||""}</span>
+                    </div>)}
+                  </div>}
+                </div>})()}
             </div>}
           </Cd>}
 
@@ -345,9 +384,6 @@ export default function App(){
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>{[{l:"Rod",v:rig.rod},{l:"Leader",v:rig.ldr},{l:"Tippet",v:rig.tip},{l:"Fly",v:rig.fly}].map((r,i)=><div key={i} style={{padding:"5px 7px",background:P.c2,borderRadius:4}}><div style={{fontSize:6,color:P.txD,letterSpacing:"0.1em"}}>{r.l.toUpperCase()}</div><div style={{fontSize:10,fontWeight:600,color:i===3?P.rust:P.tx,marginTop:2}}>{r.v}</div></div>)}</div>
             <div style={{marginTop:6,padding:"6px 7px",background:P.c2,borderRadius:4}}><div style={{fontSize:6,color:P.txD,letterSpacing:"0.1em"}}>GUIDE TIP</div><div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.5}}>{rig.guide}</div></div>
           </Cd>
-          {topH&&topH.score>5&&<Cd style={{padding:14,marginBottom:12}}><div style={{display:"flex",justifyContent:"space-between"}}><div><Lb>HATCH OF THE DAY</Lb><div style={{fontSize:15,fontWeight:700,color:hC(topH.score)}}>{topH.cm}</div><div style={{fontSize:10,color:P.txD}}>Hook {topH.hk}</div></div><div style={{fontSize:22,fontWeight:700,color:hC(topH.score)}}>{topH.score}</div></div>
-            {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=><div key={s.id} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",marginTop:4}}><span style={{fontSize:10,color:P.txM}}>{s.cm}</span><span style={{fontSize:10,fontWeight:700,color:hC(s.score)}}>{s.score}%</span></div>)}
-          </Cd>}
           {dan&&<Cd style={{padding:14}}><div style={{display:"flex",justifyContent:"space-between"}}><div><Lb>MAYFLY TRACKER</Lb><div style={{fontSize:13,fontWeight:700,color:ds.c}}>{ds.s}</div><div style={{fontSize:9,color:P.txD,marginTop:3}}>Avg start: May 18-22 / Peak: Jun 1-7</div></div><div style={{fontSize:20,fontWeight:700,color:P.rust}}>{dan.score}%</div></div></Cd>}
         </div>}
 
