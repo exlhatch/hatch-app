@@ -26,23 +26,24 @@ function FlyIllustration({type,P}){
   return flies[type]||null;
 }
 
-/* ── DATA (same as previous build) ── */
+/* ── DATA ── */
+// q = river quality 1-10 (10=world class). bq = beat quality overrides
 const RV=[
-  {id:"test",n:"River Test",ea:"Test",lat:51.09,lng:-1.49,b:["Broadlands","Nursling","Timsbury","Mottisfont","Horsebridge","Park Stream","Stockbridge","Leckford","Longparish","Whitchurch","Laverstoke"]},
-  {id:"itchen",n:"River Itchen",ea:"Itchen",lat:51.06,lng:-1.30,b:["Itchen Abbas","Martyr Worthy","Easton","Abbotts Barton","Twyford"]},
-  {id:"kennet",n:"River Kennet",ea:"Kennet",lat:51.42,lng:-1.52,b:["Marlborough","Ramsbury","Littlecote","Hungerford","Kintbury"]},
-  {id:"lambourn",n:"River Lambourn",ea:"Lambourn",lat:51.50,lng:-1.53,b:["Upper Lambourn","Great Shefford"]},
-  {id:"anton",n:"River Anton",ea:"Anton",lat:51.19,lng:-1.50,b:["Goodworth Clatford","Anton Lakes"]},
-  {id:"avon",n:"Hampshire Avon",ea:"Avon Hampshire",lat:51.17,lng:-1.78,b:["Upavon","Netheravon","Amesbury","Salisbury"]},
-  {id:"wylye",n:"River Wylye",ea:"Wylye",lat:51.17,lng:-2.06,b:["Heytesbury","Codford"]},
-  {id:"nadder",n:"River Nadder",ea:"Nadder",lat:51.08,lng:-1.98,b:["Tisbury","Wilton"]},
-  {id:"meon",n:"River Meon",ea:"Meon",lat:50.94,lng:-1.14,b:["East Meon","Droxford"]},
-  {id:"piddle",n:"River Piddle",ea:"Piddle",lat:50.73,lng:-2.21,b:["Puddletown"]},
-  {id:"frome",n:"Frome (Dorset)",ea:"Frome",lat:50.71,lng:-2.44,b:["Dorchester"]},
-  {id:"mimram",n:"River Mimram",ea:"Mimram",lat:51.80,lng:-0.22,b:["Welwyn"]},
-  {id:"chess",n:"River Chess",ea:"Chess",lat:51.65,lng:-0.60,b:["Chesham","Latimer","Nr. Sarratt","Rickmansworth"]},
-  {id:"darent",n:"River Darent",ea:"Darent",lat:51.37,lng:0.18,b:["Shoreham","Eynsford"]},
-  {id:"wandle",n:"River Wandle",ea:"Wandle",lat:51.42,lng:-0.17,b:["Carshalton"]},
+  {id:"test",n:"River Test",ea:"Test",lat:51.09,lng:-1.49,q:10,b:["Broadlands","Nursling","Timsbury","Mottisfont","Horsebridge","Park Stream","Stockbridge","Leckford","Longparish","Whitchurch","Laverstoke"],bq:{Stockbridge:10,Leckford:9,"Park Stream":9,Mottisfont:9,Horsebridge:8,Longparish:8,Whitchurch:7,Laverstoke:7,Timsbury:7,Broadlands:7,Nursling:6}},
+  {id:"itchen",n:"River Itchen",ea:"Itchen",lat:51.06,lng:-1.30,q:10,b:["Itchen Abbas","Martyr Worthy","Easton","Abbotts Barton","Twyford"],bq:{"Abbotts Barton":10,"Martyr Worthy":9,"Itchen Abbas":9,Easton:8,Twyford:7}},
+  {id:"kennet",n:"River Kennet",ea:"Kennet",lat:51.42,lng:-1.52,q:8,b:["Marlborough","Ramsbury","Littlecote","Hungerford","Kintbury"],bq:{Ramsbury:9,Littlecote:8,Hungerford:7,Kintbury:7,Marlborough:6}},
+  {id:"lambourn",n:"River Lambourn",ea:"Lambourn",lat:51.50,lng:-1.53,q:8,b:["Upper Lambourn","Great Shefford"],bq:{"Upper Lambourn":8,"Great Shefford":7}},
+  {id:"anton",n:"River Anton",ea:"Anton",lat:51.19,lng:-1.50,q:7,b:["Goodworth Clatford","Anton Lakes"],bq:{"Goodworth Clatford":7,"Anton Lakes":6}},
+  {id:"avon",n:"Hampshire Avon",ea:"Avon Hampshire",lat:51.17,lng:-1.78,q:9,b:["Upavon","Netheravon","Amesbury","Salisbury"],bq:{Amesbury:8,Netheravon:8,Upavon:7,Salisbury:7}},
+  {id:"wylye",n:"River Wylye",ea:"Wylye",lat:51.17,lng:-2.06,q:8,b:["Heytesbury","Codford"],bq:{Heytesbury:8,Codford:7}},
+  {id:"nadder",n:"River Nadder",ea:"Nadder",lat:51.08,lng:-1.98,q:7,b:["Tisbury","Wilton"],bq:{Tisbury:7,Wilton:6}},
+  {id:"meon",n:"River Meon",ea:"Meon",lat:50.94,lng:-1.14,q:7,b:["East Meon","Droxford"],bq:{"East Meon":7,Droxford:6}},
+  {id:"piddle",n:"River Piddle",ea:"Piddle",lat:50.73,lng:-2.21,q:7,b:["Puddletown"],bq:{Puddletown:7}},
+  {id:"frome",n:"Frome (Dorset)",ea:"Frome",lat:50.71,lng:-2.44,q:7,b:["Dorchester"],bq:{Dorchester:6}},
+  {id:"mimram",n:"River Mimram",ea:"Mimram",lat:51.80,lng:-0.22,q:5,b:["Welwyn"],bq:{Welwyn:5}},
+  {id:"chess",n:"River Chess",ea:"Chess",lat:51.65,lng:-0.60,q:6,b:["Chesham","Latimer","Nr. Sarratt","Rickmansworth"],bq:{Latimer:7,"Nr. Sarratt":6,Chesham:5,Rickmansworth:5}},
+  {id:"darent",n:"River Darent",ea:"Darent",lat:51.37,lng:0.18,q:5,b:["Shoreham","Eynsford"],bq:{Shoreham:6,Eynsford:5}},
+  {id:"wandle",n:"River Wandle",ea:"Wandle",lat:51.42,lng:-0.17,q:4,b:["Carshalton"],bq:{Carshalton:4}},
 ];
 
 const H=[
@@ -122,50 +123,61 @@ function hInt(wt,hr){let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;
 const hC=s=>s>70?D.rust:s>40?D.gn:s>15?D.txM:D.txD;
 const iC=v=>v>=6?D.rust:v>=4?"#A85C2E":v>=2?D.gn:v>=1?"#3E5A40":"#1E2E26";
 const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]};
-function dayRating(hi,lo,rain,windMax,hatchScore){
+function dayRating(hi,lo,rain,windMax,hatchScore,riverQ){
   let s=0;
-  // Hatch activity (40% of score) - this is the biggest driver
+  // Hatch activity (35%)
   const hs=hatchScore||0;
-  s+=hs*0.4;
-  // Temperature (20%) - ideal air 12-20°C for insect activity
+  s+=Math.min(35,hs*0.35);
+  // Temperature (15%) - ideal 13-19°C
   const avg=(hi+lo)/2;
-  if(avg>=13&&avg<=19)s+=20;else if(avg>=10&&avg<=22)s+=14;else if(avg>=7)s+=8;else s+=3;
-  // Rain (15%) - light drizzle great for hatches, heavy rain bad
-  if(rain>=0.5&&rain<=4)s+=15;else if(rain<0.5)s+=11;else if(rain<=10)s+=8;else s+=3;
-  // Wind (15%) - moderate breeze ideal, calm tricky, strong hard
+  if(avg>=13&&avg<=19)s+=15;else if(avg>=10&&avg<=22)s+=10;else if(avg>=7)s+=6;else s+=2;
+  // Rain (10%) - light drizzle great, heavy bad
+  if(rain>=0.5&&rain<=4)s+=10;else if(rain<0.5)s+=7;else if(rain<=10)s+=5;else s+=2;
+  // Wind (15%) - strong wind really hurts
   const w=windMax||8;
-  if(w>=4&&w<=12)s+=15;else if(w<4)s+=10;else if(w<=18)s+=7;else s+=3;
-  // Cloud (10%) - overcast best for hatches
-  // Can't get cloud per day easily, so skip or use a proxy
-  s+=8; // default moderate
+  if(w>=3&&w<=10)s+=15;else if(w<3)s+=10;else if(w<=14)s+=8;else if(w<=18)s+=4;else if(w<=22)s+=1;else s+=0;
+  // Cloud (10%)
+  s+=7; // moderate default (can't get per-day cloud easily)
+  // River quality (15%)
+  const rq=riverQ||6;
+  s+=Math.round(rq*1.5);
   return Math.round(Math.min(100,Math.max(0,s)));
 }
-function condScore(wind,press,cloud,waterT,hatchIdx){
+function condScore(wind,press,cloud,waterT,hatchIdx,riverQ,beatQ){
   // Comprehensive fishing conditions score
-  // 90-100: Peak day. Mayfly hatch, overcast, warm water, fish freely rising. Multiple catches likely.
-  // 70-89: Good day. Strong hatches, decent conditions. Fish should rise.
-  // 50-69: Fair day. Some activity. Need to work for it.
-  // 30-49: Tough. Sparse hatches, challenging conditions. Nymphing day.
-  // 0-29: Very tough. Minimal hatches, fish unlikely to rise.
+  // 90-100: Peak. Mayfly, overcast, warm, world-class beat. Fish freely rising. Multiple catches.
+  // 70-89: Excellent. Strong hatches, good conditions, quality water.
+  // 50-69: Good. Some activity. Fish rising in windows. Need to work for it.
+  // 30-49: Fair. Sparse hatches, challenging conditions. Nymphing day.
+  // 0-29: Poor. Minimal hatches, fish unlikely to rise.
   let s=0;
-  // Hatch activity (35% weight) — the single biggest factor
-  s+=Math.min(35,hatchIdx*0.35);
-  // Water temp (20%) — 12-18°C is the sweet spot for surface
-  if(waterT>=13&&waterT<=17)s+=20;else if(waterT>=11&&waterT<=19)s+=15;else if(waterT>=9&&waterT<=21)s+=10;else if(waterT>=7)s+=5;else s+=2;
-  // Cloud cover (15%) — overcast = excellent for hatches
-  if(cloud>70)s+=15;else if(cloud>50)s+=12;else if(cloud>30)s+=8;else s+=4;
-  // Pressure (15%) — falling/low = feeding triggers
-  if(press<1008)s+=15;else if(press<1015)s+=12;else if(press<1022)s+=9;else s+=4;
-  // Wind (15%) — light breeze ideal
-  if(wind>=3&&wind<=10)s+=15;else if(wind<3)s+=10;else if(wind<=16)s+=8;else s+=3;
+  // Hatch activity (30%) — biggest natural factor
+  s+=Math.min(30,hatchIdx*0.30);
+  // Water temp (18%) — 13-17°C sweet spot for surface feeding
+  if(waterT>=13&&waterT<=17)s+=18;else if(waterT>=11&&waterT<=19)s+=13;else if(waterT>=9&&waterT<=21)s+=8;else if(waterT>=7)s+=4;else s+=1;
+  // Cloud cover (12%) — overcast = hatches
+  if(cloud>70)s+=12;else if(cloud>50)s+=9;else if(cloud>30)s+=6;else s+=3;
+  // Pressure (10%) — falling/low = feeding trigger
+  if(press<1008)s+=10;else if(press<1015)s+=8;else if(press<1022)s+=6;else s+=3;
+  // Wind (15%) — critical factor. Strong wind hammers the score
+  if(wind>=3&&wind<=10)s+=15;   // ideal: light breeze, ripple helps
+  else if(wind<3)s+=10;          // dead calm: tricky but fishable
+  else if(wind<=14)s+=9;         // moderate: manageable with effort
+  else if(wind<=18)s+=5;         // strong: hard to cast, harder to present
+  else if(wind<=22)s+=2;         // very strong: really tough day
+  else s+=0;                     // gale: go to the pub
+  // River & beat quality (15%) — prestige/fishery quality
+  // World-class beat on the Test (10/10) adds ~15. Urban stream (4/4) adds ~6.
+  const rq=riverQ||6;const bq=beatQ||rq;const avgQ=(rq+bq)/2;
+  s+=Math.round(avgQ*1.5); // 10=+15, 7=+10.5, 5=+7.5, 3=+4.5
   const pct=Math.round(Math.min(100,Math.max(0,s)));
   const label=pct>=90?"Exceptional":pct>=75?"Excellent":pct>=55?"Good":pct>=35?"Fair":"Poor";
   const clr=pct>=75?D.rust:pct>=55?D.gn:pct>=35?D.txM:D.txD;
   const desc=pct>=90?"Fish freely rising. Multiple catches likely. A day to remember."
-    :pct>=75?"Strong hatches. Fish should be active on the surface. Good sport expected."
-    :pct>=55?"Some activity. Fish rising in windows. Work the hatches and stay patient."
+    :pct>=75?"Strong hatches expected. Fish active on the surface. Good sport ahead."
+    :pct>=55?"Some activity. Fish rising in windows. Work the hatches, stay patient."
     :pct>=35?"Tough conditions. Sparse hatches. Nymphing likely the best approach."
-    :"Minimal hatch activity. Fish unlikely to rise. Patience and deep nymphing required.";
+    :"Minimal hatch activity. Fish unlikely to rise. Deep nymphing or wait for conditions to change.";
   return{label,pct,clr,desc};
 }
 function danSt(wt){const as=139;if(DOY>172)return{s:"Season ended",c:D.txD};if(DOY>as+14&&wt>=12)return{s:"On the water",c:D.rust};if(DOY>as&&wt>=12)return{s:"Underway",c:D.rust};if(DOY>as-7&&wt>=11)return{s:"On time",c:D.gn};if(DOY>as-7)return{s:"Late — cool water",c:D.txD};if(DOY>as-14&&wt>=13)return{s:"Early — warm spring",c:D.rust};if(DOY>as-14)return{s:"Days away",c:D.txM};return{s:"Not yet",c:D.txD}}
@@ -196,7 +208,7 @@ export default function App(){
   const todaySunrise=live.wx?.daily?.sunrise?.[0]?live.wx.daily.sunrise[0].slice(11,16):null;
   const todaySunset=live.wx?.daily?.sunset?.[0]?live.wx.daily.sunset[0].slice(11,16):null;
   const spp=useMemo(()=>pred(cT),[cT]);const topH=spp[0];const dan=spp.find(s=>s.id==="danica");const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
-  const cond=useMemo(()=>{const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;return condScore(cW,cP,cC,cT,hIdx)},[cW,cP,cC,cT,spp]);const rig=buildRig(cT,cW,cC,method,topH);const ds=danSt(cT);const lr=useMemo(()=>genLR(cT),[cT]);
+  const cond=useMemo(()=>{const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;return condScore(cW,cP,cC,cT,hIdx,rv.q,rv.bq?.[beat])},[cW,cP,cC,cT,spp,rv,beat]);const rig=buildRig(cT,cW,cC,method,topH);const ds=danSt(cT);const lr=useMemo(()=>genLR(cT),[cT]);
   const rpts=RPT[riv]||[];const srcC={Keeper:D.gn,Guide:D.txD,Club:"#5A7A5E",Social:D.txM};
   const wxDays=useMemo(()=>{const wx=live.wx;if(!wx?.hourly||!wx?.daily)return[];try{return Array.from({length:Math.min(7,wx.daily.time?.length||0)},(_,d)=>{const dt=new Date(wx.daily.time[d]);const hrs=[];for(let hr=5;hr<=22;hr++){const idx=d*24+hr;if(idx>=(wx.hourly.time?.length||0))break;const air=wx.hourly.temperature_2m?.[idx]||15;const bA=((wx.daily.temperature_2m_max?.[d]||15)+(wx.daily.temperature_2m_min?.[d]||8))/2;const wt=+(cT+(air-bA)*0.15).toFixed(1);hrs.push({h:hr,wt,air:Math.round(air),hi:+hInt(wt,hr).toFixed(1),rain:wx.hourly.precipitation_probability?.[idx]||0,mm:wx.hourly.precipitation?.[idx]||0,pr:wx.hourly.pressure_msl?.[idx]?Math.round(wx.hourly.pressure_msl[idx]):null,ws:wx.hourly.wind_speed_10m?.[idx]?Math.round(wx.hourly.wind_speed_10m[idx]*0.621):null,wd:wx.hourly.wind_direction_10m?.[idx]||0,cl:wx.hourly.cloud_cover?.[idx]??50,hum:wx.hourly.relative_humidity_2m?.[idx]||65})}return{dn:d===0?"Today":d===1?"Tmrw":dt.toLocaleDateString("en-GB",{weekday:"short"}),df:dt.toLocaleDateString("en-GB",{day:"numeric",month:"short"}),aH:wx.daily.temperature_2m_max?.[d]?Math.round(wx.daily.temperature_2m_max[d]):null,aL:wx.daily.temperature_2m_min?.[d]?Math.round(wx.daily.temperature_2m_min[d]):null,rain:wx.daily.precipitation_sum?.[d]??null,windMax:wx.daily.wind_speed_10m_max?.[d]?Math.round(wx.daily.wind_speed_10m_max[d]*0.621):null,uv:wx.daily.uv_index_max?.[d]??null,sunrise:wx.daily.sunrise?.[d]?wx.daily.sunrise[d].slice(11,16):null,sunset:wx.daily.sunset?.[d]?wx.daily.sunset[d].slice(11,16):null,hrs}})}catch{return[]}},[live.wx,cT]);
 
@@ -276,7 +288,7 @@ export default function App(){
                   // Project hatch score for this day
                   const futDoy=DOY+i;const projT=+(cT+(i*0.15)).toFixed(1);
                   const projHatch=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);
-                  const sc=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax,projHatch);
+                  const sc=dayRating(d.aH||14,d.aL||8,d.rain||0,d.windMax,projHatch,rv.q);
                   const lb=sc>=90?"Exceptional":sc>=75?"Excellent":sc>=55?"Good":sc>=35?"Fair":"Poor";
                   const clr=sc>=75?P.rust:sc>=55?P.gn:sc>=35?P.txM:P.txD;
                   return<div key={i} style={{flex:1,padding:"6px 6px 10px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:"transparent"}}>
