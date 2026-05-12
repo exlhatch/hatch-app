@@ -2,8 +2,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 
 /* ═══ EPHEMERA — A calm expert beside you ═══ */
 
-const Logo=({s=24})=><svg width={s} height={s} viewBox="0 0 394 404" fill="none"><path fill="currentColor" d="M107.572 22.362C125.145 22.121 142.148 22.308 158.832 22.306L267.446 22.31C276.357 22.295 288.05 21.863 296.527 23.834C312.479 27.543 323.689 33.75 335.237 45.127C350.069 59.737 358.359 78.982 358.403 99.808L358.507 268.721C358.504 280.878 359.126 291.633 356.502 303.554C353.417 317.735 346.35 330.742 336.13 341.046C321.026 356.444 302.176 364.074 280.758 364.265L124.018 364.31C112.813 364.32 100.538 364.854 89.619 362.272C55.313 354.16 29.766 322.879 29.309 287.5C29.135 274.098 29.269 260.842 29.258 247.516L29.185 122.705C29.177 110.758 28.321 97.224 30.863 85.618C39.118 47.927 69.663 23.587 107.572 22.362Z"/><path fill="#F1F0EE" d="M268.25 71.759C270.779 71.555 272.636 90.057 272.778 92.808C275.158 138.928 260.802 193.884 219.151 219.374C195.752 233.694 165.102 238.523 138.449 231.979C135.847 231.356 132.432 230.558 130.221 229.14C130.54 221.382 138.102 203.655 142.072 196.04C164.098 153.796 202.026 114.913 240.649 87.315C247.764 82.23 260.325 74.504 268.25 71.759Z"/><path fill="currentColor" d="M265.644 77.977C266.564 78.911 266.793 81.653 266.944 82.832C268.325 93.55 268.628 104.378 267.85 115.156C261.34 118.59 254.743 121.193 248.274 124.991C212.081 146.238 179.673 173.637 151.639 204.808C147.604 209.294 143.117 213.709 139.278 218.354C138.214 218.247 140.094 213.636 141.071 211.096C145.29 200.127 151.881 188.911 158.184 178.979C187.902 139.316 213.933 113.244 242.229 92.386C248.979 87.411 258.093 81.344 265.644 77.977Z"/><path fill="currentColor" d="M145.453 218.504C171.395 187.723 201.568 160.773 235.072 138.458C245.033 131.932 256.065 125.297 266.974 120.476C265.656 134.944 263.344 146.152 258.322 159.826C257.433 162.247 256.365 166.652 254.141 167.912C250.957 169.717 246.918 171.145 243.477 172.445L207.834 187.373C187.976 196.411 169.104 208.713 149.548 218.237C147.435 219.308 144.282 220.895 142.067 221.696L145.453 218.504Z"/><path fill="currentColor" d="M251.29 174.31L251.628 174.988C245.612 186.715 237.344 197.992 227.301 206.598C208.325 222.861 180.792 231.493 155.908 229.385C151.86 229.042 147.88 228.74 143.852 228.465C142.605 228.474 142.085 228.023 142.242 227.551C143.209 226.693 146.565 225.039 147.935 224.292C152.488 221.799 157.054 219.329 161.632 216.882C173.169 210.695 184.816 204.028 196.393 198.044C208.041 192.057 219.937 186.561 232.047 181.573C236.109 179.89 247.215 175.337 251.29 174.31Z"/><path fill="#F1F0EE" d="M197.861 251.113C202.818 250.983 313.785 253.489 313.735 254.827C313.066 255.437 312.316 255.786 311.403 255.839C295.886 256.742 279.948 257.137 264.435 257.043C238.534 256.651 212.629 256.563 186.725 256.779C158.796 257.546 130.849 257.451 102.926 256.496C78.621 255.69 71.571 255.704 70.809 254.677C70.713 253.945 70.873 253.048 71.613 252.563C114.86 250.867 156.562 252.385 197.861 251.113Z"/><path fill="#F1F0EE" d="M244.601 273.12C249.511 273.091 278.029 273.325 280.547 275.314C280.48 276.643 279.156 277.45 244.723 278.523C218.305 278.463 190.668 279.219 172.756 279.643C154.838 279.646 136.926 279.226 128.037 278.955C110.467 278.274 100.876 277.159 100.519 275.609C100.938 275.08 104.025 273.124 162.554 273.758C189.904 273.818 217.254 273.605 244.601 273.12Z"/><path fill="#F1F0EE" d="M192.722 294.863C245.228 294.556 247.085 296.58 246.808 298.545C244.323 299.324 229.617 299.197 226.234 299.315C199.358 299.52 186.109 299.949 135.351 300.595C131.865 298.47 131.529 296.45 131.767 296.254C133.608 294.739 173.342 295.317 177.813 295.273C182.784 295.184 187.754 295.048 192.722 294.863Z"/><path fill="#F1F0EE" d="M176.619 313.107C185.071 313.11 188.75 313.219 213.194 314.573C213.15 316.373 213.133 317.234 205.999 317.465C190.837 318.04 177.008 318.747 165.466 316.946C164.936 315.287 165.365 314.685 167.831 313.529C173.794 313.273 176.619 313.107 176.619 313.107Z"/></svg>;
-const Wordmark=({w=120})=><svg width={w} height={w*168/1054} viewBox="0 0 1054 168" fill="none"><path fill="currentColor" d="M43.2 40.278C63.602 40.604 73.341 40.752 101.646 41.005C102.539 42.011 102.198 43.398 102.199 45.058C100.819 46.442 80.429 45.382 76.818 45.318C64.536 45.356 59.673 45.341 59.559 56.695C59.565 68.05 59.691 79.404 92.223 80.012C92.451 81.655 92.33 82.253 92.075 83.9C63.793 84.409 59.642 84.441 59.505 96.658C59.521 108.876 59.69 121.093 86.46 120.918C101.578 119.003 104.271 122.934 104.099 124.763C103.187 125.713 97.909 126.589 79.903 126.188L43.353 126.189C43.505 98.111 43.751 68.276 43.2 40.278Z"/><path fill="currentColor" d="M161.122 40.9L180.915 41.122C212.129 39.457 223.289 50.004 231.936 58.176C231.209 73.83 222.896 81.999 214.899 89.858C205.303 90.811 194.666 90.846 177.295 90.833C176.914 102.495 177.024 114.485 177.005 126.178L161.13 126.228L161.122 40.9Z"/><path fill="currentColor" d="M283.169 40.319C299.505 40.548 299.606 79.387 315.733 79.582C331.861 79.584 347.987 79.393 348.249 66.283C348.111 53.401 348.245 40.318 364.59 40.362C364.022 60.71 365.051 82.536 364.526 102.984C364.937 123.514 364.297 126.218 348.305 126.234C348.242 98.737 348.157 85.02 332.554 84.465C315.359 84.86 299.66 84.934 299.432 126.197C288.684 126.168 283.429 126.179 282.828 97.998C283.145 68.592 283.169 40.319 283.169 40.319Z"/><path fill="currentColor" d="M425.327 40.468C447.909 40.687 459.119 40.771 484.153 41.067C484.992 42.004 484.784 43.182 484.885 44.668C475.555 45.457 472.999 45.313 441.861 45.36C441.826 56.668 441.869 67.975 441.99 79.283C470.559 78.924 474.29 79.59 475.061 80.621C474.679 83.143 474.596 84.552 442.066 84.574C441.898 96.731 441.877 108.89 442.003 121.047C471.744 120.949 486.61 120.558 486.56 126.143C445.37 126.175 425.423 126.233 425.326 97.68C425.699 68.975 425.327 40.468 425.327 40.468Z"/><path fill="currentColor" d="M542.174 40.917L559.212 41.036C578.218 82.526 587.553 102.957 597.139 82.827C615.442 40.903 631.86 41.051 632.222 69.182C631.981 98.08 631.861 126.221 615.504 126.203C615.429 84.942 615.442 64.546 609.429 67.278C590.764 110.977 582.943 125.901 581.891 126.317C551.976 63.425 548.37 54.924 547.633 70.899C548.401 88.092 548.115 104.137 547.923 125.778C543.736 126.256 542.088 126.258 542.351 97.812C542.379 69.364 542.174 40.917 542.174 40.917Z"/><path fill="currentColor" d="M694.033 40.423C733.139 40.491 750.463 40.786 753.428 41.603C754.089 43.309 753.428 44.402 744.961 45.325L710.301 45.422C710.128 67.998 710.251 79.285 742.541 79.643C743.107 81.067 742.751 83.801 714.905 84.591C710.304 84.672 710.162 96.803 710.27 121.067C736.787 121.228 749.923 120.713 755.175 123.42L754.703 124.638C737.949 126.14 733.846 126.134 694.132 126.225L694.033 40.423Z"/><path fill="currentColor" d="M812.91 40.943C860.545 39.334 869.192 46.63 888.329 62.778C876.901 82.852 855.398 87.648 864.418 100.213C874.865 113.609 884.244 126.031 866.539 126.15C865.939 126.164 865.632 126.108 863.393 125.7C841.305 93.485 838.318 89.014 828.612 89.007L828.5 126.175L812.338 126.228L812.409 63.175C812.399 59.873 811.725 42.505 812.91 40.943Z"/><path fill="currentColor" d="M964.501 38.436C965.992 38.997 966.78 39.517 967.244 40.419C975.597 57.935 979.513 66.436 1006.49 126.224L988.199 126.265C980.423 107.051 977.516 100.471 967.706 99.981C951.149 99.877 943.107 100.497 932.034 126.221L925.262 126.129C942.338 88.451 950.424 69.725 964.501 38.436Z"/></svg>;
+const W=({s=24,c="#F3F0E8",r=false})=><svg width={s} height={s} viewBox="100 40 320 380" fill="none" strokeLinecap="round" strokeLinejoin="round"><g stroke={c}><path d="M176 306C205 197 286 103 382 62C360 158 297 250 176 306Z" strokeWidth="18"/><path d="M179 304C232 245 292 189 374 68" strokeWidth="10"/><path d="M221 269C252 261 287 246 323 221" strokeWidth="9"/><path d="M252 222C281 215 312 202 344 178" strokeWidth="9"/><path d="M118 334H394" strokeWidth="14"/><path d="M151 368H357" strokeWidth="10"/></g><path d="M198 398H310" stroke={r?"#C36A3D":c} strokeWidth="8" strokeLinecap="round"/></svg>;
 
 const D={bg:"#161E1B",c1:"#1B2421",c2:"#212C28",c3:"#283632",bd:"#2E3B36",tx:"#DDE1DE",txM:"#8A948F",txD:"#5F6F7B",rust:"#C36A3D",gn:"#7A9E7E",rustS:"#C36A3D18",rustB:"#C36A3D40"};
 const L={bg:"#F3F0E8",c1:"#FFFFFF",c2:"#EBE8E0",c3:"#E0DDD5",bd:"#D0CCC2",tx:"#1F2D2A",txM:"#5F6F7B",txD:"#8A948F",rust:"#C36A3D",gn:"#5A7A5E",rustS:"#C36A3D12",rustB:"#C36A3D30"};
@@ -136,18 +135,16 @@ async function fetchEA(name){const k=`e_${name}`;if(cache[k])return cache[k];try
 const DOY=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5);
 function simT(lat){return+(6+8*Math.sin((DOY-80)*Math.PI/183)+(lat-51)*-0.8).toFixed(1)}
 function pred(wt){return H.map(sp=>{let sF=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sF=Math.max(0,1-((DOY-m)/r)**2)}else if(DOY>=sp.s-14&&DOY<sp.s)sF=(DOY-sp.s+14)/28;let tF=0;const tm=(sp.tMn+sp.tMx)/2,tr=(sp.tMx-sp.tMn)/2;if(wt>=sp.tMn&&wt<=sp.tMx)tF=Math.max(0,1-((wt-tm)/(tr*1.2))**2);else if(wt>=sp.tMn-2)tF=Math.max(0,(wt-sp.tMn+2)/4);const sc=Math.round(Math.max(0,Math.min(100,(sF*0.55+tF*0.35)*100)));return{...sp,score:sc,lb:sc>70?"Strong":sc>40?"Moderate":sc>15?"Sparse":"Unlikely"}}).sort((a,b)=>b.score-a.score)}
-function hInt(wt,hr){if(hr<5||hr>=22)return 0;let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;let sf=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((DOY-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
+function hInt(wt,hr){let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;let sf=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((DOY-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
 function hatchesAtHr(wt,hr){return H.filter(sp=>{if(DOY<sp.s-7||DOY>sp.e+7)return false;if(!sp.pk.includes(hr)&&!sp.pk.includes(hr-1)&&!sp.pk.includes(hr+1))return false;return wt>=sp.tMn-2&&wt<=sp.tMx+2}).sort((a,b)=>b.t-a.t).slice(0,3)}
 
-const hC=s=>s>70?D.gn:s>40?D.rust:s>15?D.txM:D.txD;
+const hC=s=>s>70?D.rust:s>40?D.gn:s>15?D.txM:D.txD;
 const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]};
-const scClr=s=>s>=75?D.gn:s>=55?D.rust:s>=35?D.txM:D.txD;
+const scClr=s=>s>=75?D.rust:s>=55?D.gn:s>=35?D.txM:D.txD;
 const scLb=s=>s>=90?"Exceptional":s>=75?"Excellent":s>=55?"Good":s>=35?"Fair":"Poor";
-const HOUR=new Date().getHours();const isNight=HOUR<5||HOUR>=22;
 
 /* ── SCORING with transparency ── */
 function condScore(wind,press,cloud,wt,hIdx,rq,bq){
-  if(isNight)return{pct:0,label:"Night",clr:D.txD,why:"No fishing activity at night."};
   let s=0;const why=[];
   const hp=Math.min(30,hIdx*0.30);s+=hp;
   if(hIdx>60)why.push("strong hatch activity");else if(hIdx>30)why.push("moderate hatches");else why.push("limited hatches");
@@ -308,15 +305,10 @@ export default function App(){
   const[showForm,setShowForm]=useState(false);
   const[onRiver,setOnRiver]=useState(false);
   const[sessionStart,setSessionStart]=useState(null);
-  const[sessionFish,setSessionFish]=useState([]);/* array of fish objects */
+  const[sessionFish,setSessionFish]=useState(0);
+  const[sessionFlies,setSessionFlies]=useState([]);
   const[sessionNotes,setSessionNotes]=useState("");
   const[sessionTick,setSessionTick]=useState(0);
-  const[showCatchForm,setShowCatchForm]=useState(false);
-  const[catchType,setCatchType]=useState("Trout");
-  const[catchWeight,setCatchWeight]=useState("");
-  const[catchFly,setCatchFly]=useState("");
-  const[catchWild,setCatchWild]=useState("Wild");
-  const[catchNotes,setCatchNotes]=useState("");
 
   /* SESSION FORM */
   const[fName,setFName]=useState(()=>user?.name||"");
@@ -364,22 +356,17 @@ export default function App(){
   const nowWin=useMemo(()=>nowWindow(timeline),[timeline]);
 
   /* SESSION ACTIONS */
-  const startSession=()=>{setOnRiver(true);setSessionStart(Date.now());setSessionFish([]);setSessionNotes("");setSessionTick(0)};
+  const startSession=()=>{setOnRiver(true);setSessionStart(Date.now());setSessionFish(0);setSessionFlies([]);setSessionNotes("");setSessionTick(0)};
   const endSession=()=>{
     if(sessionStart){
-      const fishCount=sessionFish.length;const bestFly=sessionFish.map(f=>f.fly).filter(Boolean).reduce((a,b,_,arr)=>{const counts={};arr.forEach(x=>counts[x]=(counts[x]||0)+1);return(counts[a]||0)>=(counts[b]||0)?a:b},"");
-      const biggestFish=sessionFish.reduce((a,f)=>parseFloat(f.weight||0)>parseFloat(a)?f.weight:a,"0");
-      const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:fishCount,big:biggestFish!=="0"?biggestFish+"lb":"",fly:bestFly,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||"",catches:sessionFish};
+      const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:sessionFish,flies:sessionFlies,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||""};
       const updated=[sess,...sessions];setSessions(updated);saveSessions(updated);
-      sbInsert("sessions",{user_email:user?.email,user_name:user?.name,river:rv.n,beat,fish:fishCount,biggest:biggestFish!=="0"?biggestFish+"lb":"",best_fly:bestFly,notes:sessionNotes+"\n\nCatches: "+JSON.stringify(sessionFish),duration:sess.dur,score:cond.pct,top_hatch:topH?.cm||""});
+      /* Write to Supabase */
+      sbInsert("sessions",{user_email:user?.email,user_name:user?.name,river:rv.n,beat,fish:sessionFish,notes:sessionNotes,duration:sess.dur,score:cond.pct,top_hatch:topH?.cm||""});
     }
-    setOnRiver(false);setSessionStart(null);setShowCatchForm(false);
+    setOnRiver(false);setSessionStart(null);
   };
-  const logCatch=()=>{
-    const fish={type:catchType,weight:catchWeight,fly:catchFly,wild:catchWild,notes:catchNotes,time:new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})};
-    setSessionFish(f=>[...f,fish]);
-    setCatchType("Trout");setCatchWeight("");setCatchFly("");setCatchWild("Wild");setCatchNotes("");setShowCatchForm(false);
-  };
+  const addFishToSession=()=>{setSessionFish(f=>f+1)};
 
   /* SAVE MANUAL SESSION */
   const saveManualSession=()=>{
@@ -398,7 +385,7 @@ export default function App(){
     <div style={{fontFamily:"'Barlow',sans-serif",background:D.bg,minHeight:"100vh",color:D.tx,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
       <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
       <style>{`*{box-sizing:border-box;margin:0}input{font-family:inherit;-webkit-appearance:none}input:focus{outline:none}`}</style>
-      <div style={{color:D.tx}}><Logo s={56}/></div>
+      <W s={48} c={D.tx} r/>
       <div style={{fontSize:16,fontWeight:600,letterSpacing:"0.25em",marginTop:12}}>EPHEMERA</div>
       <div style={{fontSize:10,color:D.txD,marginTop:4,marginBottom:32}}>Timely insight. Better days.</div>
 
@@ -476,7 +463,7 @@ export default function App(){
       {/* HEADER */}
       <div style={{background:P.c1,padding:"14px 14px 10px",borderBottom:`1px solid ${P.bd}`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:7}}><div style={{color:P.tx,display:"flex",alignItems:"center",gap:8}}><Logo s={28}/><Wordmark w={100}/></div></div>
+          <div style={{display:"flex",alignItems:"center",gap:7}}><W s={22} c={P.tx} r/><span style={{fontSize:13,fontWeight:600,letterSpacing:"0.2em"}}>EPHEMERA</span></div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <button onClick={()=>setLight(!light)} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{light?"◐":"☀"}</button>
             <button onClick={logout} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{user.name.split(" ")[0]} ✕</button>
@@ -497,11 +484,11 @@ export default function App(){
         {!onRiver?<button onClick={startSession} style={{background:"transparent",border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 14px",color:P.txD,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>◯ I'm on the river</button>
         :<>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:8,height:8,borderRadius:4,background:P.gn,animation:"pulse 2s infinite"}}/>
-            <div><div style={{fontSize:10,fontWeight:700,color:P.gn}}>ON THE RIVER</div><div style={{fontSize:9,color:P.txM}}>{sessionStart?fmtDur(Date.now()-sessionStart+(sessionTick*0)):""} · {sessionFish.length} fish</div></div>
+            <div style={{width:8,height:8,borderRadius:4,background:P.rust,animation:"pulse 2s infinite"}}/>
+            <div><div style={{fontSize:10,fontWeight:700,color:P.rust}}>ON THE RIVER</div><div style={{fontSize:9,color:P.txM}}>{sessionStart?fmtDur(Date.now()-sessionStart+(sessionTick*0)):""} · {sessionFish} fish</div></div>
           </div>
           <div style={{display:"flex",gap:4}}>
-            <button onClick={()=>setShowCatchForm(true)} style={{background:P.gn,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ CATCH</button>
+            <button onClick={addFishToSession} style={{background:P.gn,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ FISH</button>
             <button onClick={endSession} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>END</button>
           </div>
         </>}
@@ -516,47 +503,14 @@ export default function App(){
         {tab==="guide"&&<div>
           {/* SESSION ACTIVE ADVICE */}
           {onRiver&&<div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>SESSION ACTIVE — {beat}</div><div style={{fontSize:9,color:P.txD}}>Updated {new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div></div>
-            <div style={{fontSize:13,fontWeight:700,color:P.tx,lineHeight:1.5}}>{isNight?"Night time. Rest up for tomorrow.":cC>60&&cT>=12?"Cloud thickening — hatches should build. Stay on dries.":cC<30&&cT>=14?"Bright conditions. Fish the shade. Consider emergers in the film.":cW>14?"Wind making presentation tough. Try the sheltered bank.":cT<10?"Cool water. Keep nymphing. Watch for olive activity after 11am.":nowWin&&nowWin.cur&&nowWin.cur.hi>=4?"Hatch building now. Watch for rises and match the size.":"Conditions stable. Work upstream, cover water methodically."}</div>
-            {nowWin&&nowWin.nxt&&!isNight&&<div style={{fontSize:10,color:P.gn,marginTop:6}}>Next: {nowWin.nxt.hr}:00 — {nowWin.nxt.note}</div>}
-
-            {/* CATCH FORM */}
-            {showCatchForm&&<div style={{marginTop:10,padding:10,background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`}}>
-              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn,marginBottom:8}}>LOG A CATCH</div>
-              <div style={{display:"grid",gap:6}}>
-                <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>SPECIES</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{["Trout","Grayling","Sea Trout","Salmon","Other"].map(t=><button key={t} onClick={()=>setCatchType(t)} style={{padding:"4px 8px",borderRadius:4,border:catchType===t?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:catchType===t?"#7A9E7E18":"transparent",color:catchType===t?P.gn:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}</div></div>
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
-                  <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>WEIGHT (LB)</div><input value={catchWeight} onChange={e=>setCatchWeight(e.target.value)} placeholder="e.g. 2.5" type="number" step="0.25" style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:5,padding:"6px 8px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%"}}/></div>
-                  <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>WILD / STOCKED</div><div style={{display:"flex",gap:3}}>{["Wild","Stocked"].map(w=><button key={w} onClick={()=>setCatchWild(w)} style={{flex:1,padding:"6px",borderRadius:4,border:catchWild===w?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:catchWild===w?"#7A9E7E18":"transparent",color:catchWild===w?P.gn:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{w}</button>)}</div></div>
-                </div>
-                <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>FLY USED</div><input value={catchFly} onChange={e=>setCatchFly(e.target.value)} placeholder="e.g. CDC Shuttlecock #16" style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:5,padding:"6px 8px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%"}}/></div>
-                <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>REMARKS</div><input value={catchNotes} onChange={e=>setCatchNotes(e.target.value)} placeholder="Rising steadily, took first cast..." style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:5,padding:"6px 8px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%"}}/></div>
-                <div style={{display:"flex",gap:4}}><button onClick={logCatch} style={{flex:1,padding:"8px",borderRadius:6,border:"none",background:P.gn,color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>LOG CATCH</button><button onClick={()=>setShowCatchForm(false)} style={{padding:"8px 12px",borderRadius:6,border:`1px solid ${P.bd}`,background:"transparent",color:P.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button></div>
-              </div>
-            </div>}
-
-            {/* FISH CAUGHT THIS SESSION */}
-            {sessionFish.length>0&&<div style={{marginTop:8}}>
-              <div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>CATCHES TODAY ({sessionFish.length})</div>
-              {sessionFish.map((f,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:i<sessionFish.length-1?`1px solid ${P.bd}`:""}}>
-                <div style={{display:"flex",gap:6,alignItems:"center"}}>
-                  <span style={{fontSize:9,color:P.txD}}>{f.time}</span>
-                  <span style={{fontSize:10,fontWeight:600,color:f.type==="Trout"?P.gn:f.type==="Grayling"?P.rust:P.tx}}>{f.type}</span>
-                  {f.weight&&<span style={{fontSize:9,color:P.txM}}>{f.weight}lb</span>}
-                  <span style={{fontSize:8,color:f.wild==="Wild"?P.gn:P.txD}}>{f.wild}</span>
-                </div>
-                {f.fly&&<span style={{fontSize:9,color:P.rust}}>{f.fly}</span>}
-              </div>)}
-            </div>}
-
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>SESSION ACTIVE — {beat}</div><div style={{fontSize:9,color:P.txD}}>Updated {new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div></div>
+            <div style={{fontSize:13,fontWeight:700,color:P.tx,lineHeight:1.5}}>{cC>60&&cT>=12?"Cloud thickening — hatches should build. Stay on dries.":cC<30&&cT>=14?"Bright conditions. Fish the shade. Consider emergers in the film.":cW>14?"Wind making presentation tough. Try the sheltered bank.":cT<10?"Cool water. Keep nymphing. Watch for olive activity after 11am.":nowWin&&nowWin.cur&&nowWin.cur.hi>=4?"Hatch building now. Watch for rises and match the size.":"Conditions stable. Work upstream, cover water methodically."}</div>
+            {nowWin&&nowWin.nxt&&<div style={{fontSize:10,color:P.rust,marginTop:6}}>Next: {nowWin.nxt.hr}:00 — {nowWin.nxt.note}</div>}
             <div style={{marginTop:8}}><div style={{fontSize:8,color:P.txD,marginBottom:4}}>SESSION NOTES</div><textarea value={sessionNotes} onChange={e=>setSessionNotes(e.target.value)} placeholder="What's happening on the water..." rows={2} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 8px",color:P.tx,fontSize:11,fontFamily:"inherit",width:"100%",resize:"none",lineHeight:1.4}}/></div>
           </div>}
 
-          {/* NIGHTTIME */}
-          {isNight&&<div style={{padding:"16px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:12,textAlign:"center"}}><div style={{fontSize:22,marginBottom:6}}>☾</div><div style={{fontSize:14,fontWeight:700,color:P.tx}}>Night fishing</div><div style={{fontSize:11,color:P.txM,marginTop:4,lineHeight:1.6}}>No hatch activity. Rest up — the river will be here tomorrow.</div></div>}
-
           {/* HATCH OF THE DAY — dominates */}
-          {!isNight&&topH&&topH.score>5&&<div style={{background:P.rustS,borderRadius:12,border:`1px solid ${P.rustB}`,padding:16,marginBottom:12}}>
+          {topH&&topH.score>5&&<div style={{background:P.rustS,borderRadius:12,border:`1px solid ${P.rustB}`,padding:16,marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.15em",color:P.rust}}>HATCH OF THE DAY</div><div style={{fontSize:22,fontWeight:700,color:P.tx,marginTop:6}}>{topH.cm}</div><div style={{fontSize:13,color:P.rust,fontWeight:600,marginTop:4}}>{FLYMAP[topH.id]||"Match the hatch"}</div><div style={{fontSize:9,color:P.txD,marginTop:2,fontStyle:"italic"}}>{FLYCONF[topH.id]||""}</div></div><div style={{textAlign:"center"}}><div style={{fontSize:38,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{topH.score}</div><div style={{fontSize:9,color:hC(topH.score),marginTop:2}}>{topH.lb}</div></div></div>
             {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{marginTop:10,fontSize:10,color:P.txM}}>Also active: {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>`${s.cm} ${s.score}%`).join(" · ")}</div>}
           </div>}
@@ -578,21 +532,21 @@ export default function App(){
           {/* RIGHT NOW — always visible */}
           {nowWin&&nowWin.cur&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:10}}>
             <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:6}}>RIGHT NOW</div>
-            <div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{fontSize:14,fontWeight:700,color:nowWin.cur.hi>=3?P.gn:nowWin.cur.hi>=1?P.rust:P.txD}}>{nowWin.cur.hr}:00</div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:P.tx}}>{nowWin.cur.note}</div>{nowWin.cur.fly&&<div style={{fontSize:9,color:P.gn,marginTop:2}}>{nowWin.cur.hatches.join(", ")} → {nowWin.cur.fly}</div>}</div></div>
-            {nowWin.nxt&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`,display:"flex",gap:10,alignItems:"center",opacity:0.7}}><div style={{fontSize:12,fontWeight:700,color:nowWin.nxt.hi>=3?P.gn:P.txD}}>{nowWin.nxt.hr}:00</div><div style={{flex:1}}><div style={{fontSize:11,color:P.txM}}>{nowWin.nxt.note}</div></div></div>}
+            <div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{fontSize:14,fontWeight:700,color:nowWin.cur.hi>=3?P.rust:nowWin.cur.hi>=1?P.gn:P.txD}}>{nowWin.cur.hr}:00</div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:P.tx}}>{nowWin.cur.note}</div>{nowWin.cur.fly&&<div style={{fontSize:9,color:P.rust,marginTop:2}}>{nowWin.cur.hatches.join(", ")} → {nowWin.cur.fly}</div>}</div></div>
+            {nowWin.nxt&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`,display:"flex",gap:10,alignItems:"center",opacity:0.7}}><div style={{fontSize:12,fontWeight:700,color:nowWin.nxt.hi>=3?P.rust:P.txD}}>{nowWin.nxt.hr}:00</div><div style={{flex:1}}><div style={{fontSize:11,color:P.txM}}>{nowWin.nxt.note}</div></div></div>}
           </div>}
 
           {/* FULL TIMELINE — collapsible */}
           {timeline.length>0&&<><div onClick={()=>toggle("tl")} style={{background:P.c1,borderRadius:ex.tl?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex.tl?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>TODAY ON THE RIVER</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Full day timeline</div></div><span style={{color:P.txD,fontSize:11}}>{ex.tl?"−":"+"}</span></div>
           {ex.tl&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",padding:"6px 14px 10px",marginBottom:10}}>
-            {timeline.map((e,i)=><div key={i} style={{display:"flex",gap:10,padding:"7px 0",borderBottom:i<timeline.length-1?`1px solid ${P.bd}`:""}}><div style={{width:32,textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:700,color:e.hi>=3?P.gn:e.hi>=1?P.rust:P.txD}}>{e.hr}:00</div></div><div style={{flex:1}}><div style={{fontSize:11,color:P.tx,lineHeight:1.5}}>{e.note}</div>{e.fly&&<div style={{fontSize:9,color:P.gn,marginTop:1}}>{e.hatches.join(", ")} → {e.fly}</div>}</div></div>)}
+            {timeline.map((e,i)=><div key={i} style={{display:"flex",gap:10,padding:"7px 0",borderBottom:i<timeline.length-1?`1px solid ${P.bd}`:""}}><div style={{width:32,textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:700,color:e.hi>=3?P.rust:e.hi>=1?P.gn:P.txD}}>{e.hr}:00</div></div><div style={{flex:1}}><div style={{fontSize:11,color:P.tx,lineHeight:1.5}}>{e.note}</div>{e.fly&&<div style={{fontSize:9,color:P.rust,marginTop:1}}>{e.hatches.join(", ")} → {e.fly}</div>}</div></div>)}
           </div>}</>}
 
           {/* 7-DAY */}
           {wxDays.length>0&&<><div onClick={()=>toggle("7d")} style={{background:P.c1,borderRadius:ex["7d"]?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex["7d"]?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>7-DAY OUTLOOK</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Compare days</div></div><span style={{color:P.txD,fontSize:11}}>{ex["7d"]?"−":"+"}</span></div>
           {ex["7d"]&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",overflow:"hidden",marginBottom:10}}>
             <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*68}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"8px 4px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:gDay===i?P.c2:"transparent",cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div><div style={{fontSize:14,fontWeight:700,color:scClr(sc),marginTop:3}}>{sc}</div><div style={{fontSize:7,color:scClr(sc)}}>{scLb(sc)}</div><div style={{fontSize:10,fontWeight:600,color:P.tx,marginTop:2}}>{d.aH||"--"}°/{d.aL||"--"}°</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.txD}}>{d.rain}mm</div>}</div>})}</div></div>
-            {gDay>=0&&wxDays[gDay]&&<div style={{padding:"8px 12px",borderTop:`1px solid ${P.bd}`}}>{buildTimeline(wxDays[gDay].hrs,cT).filter((_,i)=>i%2===0).map((e,i)=><div key={i} style={{display:"flex",gap:8,padding:"3px 0"}}><span style={{fontSize:10,fontWeight:700,color:e.hi>=3?P.gn:P.txD,minWidth:30}}>{e.hr}:00</span><span style={{fontSize:10,color:P.txM,flex:1}}>{e.note}</span>{e.fly&&<span style={{fontSize:9,color:P.gn,flexShrink:0}}>{e.fly}</span>}</div>)}</div>}
+            {gDay>=0&&wxDays[gDay]&&<div style={{padding:"8px 12px",borderTop:`1px solid ${P.bd}`}}>{buildTimeline(wxDays[gDay].hrs,cT).filter((_,i)=>i%2===0).map((e,i)=><div key={i} style={{display:"flex",gap:8,padding:"3px 0"}}><span style={{fontSize:10,fontWeight:700,color:e.hi>=3?P.rust:P.txD,minWidth:30}}>{e.hr}:00</span><span style={{fontSize:10,color:P.txM,flex:1}}>{e.note}</span>{e.fly&&<span style={{fontSize:9,color:P.rust,flexShrink:0}}>{e.fly}</span>}</div>)}</div>}
           </div>}</>}
 
           {/* RIVER PERSONALITY */}
@@ -661,7 +615,7 @@ export default function App(){
       </div>}
 
       <div style={{textAlign:"center",padding:14,borderTop:`1px solid ${P.bd}`}}>
-        <div style={{color:P.txD}}><Logo s={22}/></div>
+        <W s={20} c={P.txD} r/>
         <div style={{fontSize:7,color:P.txD,letterSpacing:"0.1em",marginTop:4}}>EPHEMERA / Timely insight. Better days.</div>
         <div style={{display:"flex",justifyContent:"center",gap:8,marginTop:8}}>
           <span style={{fontSize:7,color:P.rust,fontWeight:700,background:P.rustS,padding:"2px 6px",borderRadius:3}}>BETA</span>
