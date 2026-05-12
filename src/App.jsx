@@ -2,7 +2,9 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 
 /* ═══ EPHEMERA — A calm expert beside you ═══ */
 
-const W=({s=24,c="#F3F0E8",r=false})=><svg width={s} height={s} viewBox="100 40 320 380" fill="none" strokeLinecap="round" strokeLinejoin="round"><g stroke={c}><path d="M176 306C205 197 286 103 382 62C360 158 297 250 176 306Z" strokeWidth="18"/><path d="M179 304C232 245 292 189 374 68" strokeWidth="10"/><path d="M221 269C252 261 287 246 323 221" strokeWidth="9"/><path d="M252 222C281 215 312 202 344 178" strokeWidth="9"/><path d="M118 334H394" strokeWidth="14"/><path d="M151 368H357" strokeWidth="10"/></g><path d="M198 398H310" stroke={r?"#C36A3D":c} strokeWidth="8" strokeLinecap="round"/></svg>;
+/* Logo Mark + Wordmark — served from /public as actual image files */
+const Logo=({s=24})=><img src="/logo-mark.svg" alt="Ephemera" width={s} height={s} style={{borderRadius:s*0.2}}/>;
+const Wordmark=({w=120,dark=true})=><img src="/wordmark.svg" alt="EPHEMERA" width={w} height={Math.round(w*168/1054)} style={{display:"block",filter:dark?"invert(0.85) brightness(1.5)":"none"}}/>;
 
 const D={bg:"#161E1B",c1:"#1B2421",c2:"#212C28",c3:"#283632",bd:"#2E3B36",tx:"#DDE1DE",txM:"#8A948F",txD:"#5F6F7B",rust:"#C36A3D",gn:"#7A9E7E",rustS:"#C36A3D18",rustB:"#C36A3D40"};
 const L={bg:"#F3F0E8",c1:"#FFFFFF",c2:"#EBE8E0",c3:"#E0DDD5",bd:"#D0CCC2",tx:"#1F2D2A",txM:"#5F6F7B",txD:"#8A948F",rust:"#C36A3D",gn:"#5A7A5E",rustS:"#C36A3D12",rustB:"#C36A3D30"};
@@ -17,7 +19,7 @@ async function sbUpdate(table,match,data){try{const r=await fetch(`${SB_URL}/res
 
 /* ── LOCAL STORAGE (fast fallback + local user state) ── */
 const STORE_USER="eph_user";const STORE_SESSIONS="eph_sessions";const STORE_PREFS="eph_prefs";
-const BETA_CODE="EPHEMERABETA";
+const BETA_CODE="RIVERTEST";
 function getUser(){try{return JSON.parse(localStorage.getItem(STORE_USER))}catch{return null}}
 function setUser(u){localStorage.setItem(STORE_USER,JSON.stringify(u))}
 function getSessions(){try{return JSON.parse(localStorage.getItem(STORE_SESSIONS))||[]}catch{return[]}}
@@ -135,16 +137,18 @@ async function fetchEA(name){const k=`e_${name}`;if(cache[k])return cache[k];try
 const DOY=Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/864e5);
 function simT(lat){return+(6+8*Math.sin((DOY-80)*Math.PI/183)+(lat-51)*-0.8).toFixed(1)}
 function pred(wt){return H.map(sp=>{let sF=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sF=Math.max(0,1-((DOY-m)/r)**2)}else if(DOY>=sp.s-14&&DOY<sp.s)sF=(DOY-sp.s+14)/28;let tF=0;const tm=(sp.tMn+sp.tMx)/2,tr=(sp.tMx-sp.tMn)/2;if(wt>=sp.tMn&&wt<=sp.tMx)tF=Math.max(0,1-((wt-tm)/(tr*1.2))**2);else if(wt>=sp.tMn-2)tF=Math.max(0,(wt-sp.tMn+2)/4);const sc=Math.round(Math.max(0,Math.min(100,(sF*0.55+tF*0.35)*100)));return{...sp,score:sc,lb:sc>70?"Strong":sc>40?"Moderate":sc>15?"Sparse":"Unlikely"}}).sort((a,b)=>b.score-a.score)}
-function hInt(wt,hr){let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;let sf=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((DOY-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
+function hInt(wt,hr){if(hr<5||hr>=22)return 0;let hi=0;H.forEach(sp=>{if(DOY<sp.s-10||DOY>sp.e+10)return;let sf=0;if(DOY>=sp.s&&DOY<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((DOY-m)/r)**2)}const hf=sp.pk.includes(hr)?1:sp.pk.includes(hr-1)||sp.pk.includes(hr+1)?0.4:0.05;let tf=0;if(wt>=sp.tMn&&wt<=sp.tMx){const tm=(sp.tMn+sp.tMx)/2;tf=Math.max(0,1-((wt-tm)/((sp.tMx-sp.tMn)/2*1.3))**2)}hi+=Math.max(0,sf*hf*tf*(sp.t===1?3:sp.t===2?1.5:0.8))});return Math.min(10,Math.max(0,hi))}
 function hatchesAtHr(wt,hr){return H.filter(sp=>{if(DOY<sp.s-7||DOY>sp.e+7)return false;if(!sp.pk.includes(hr)&&!sp.pk.includes(hr-1)&&!sp.pk.includes(hr+1))return false;return wt>=sp.tMn-2&&wt<=sp.tMx+2}).sort((a,b)=>b.t-a.t).slice(0,3)}
 
-const hC=s=>s>70?D.rust:s>40?D.gn:s>15?D.txM:D.txD;
+const hC=s=>s>70?D.gn:s>40?D.rust:s>15?D.txM:D.txD;
 const windDir=d=>{const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];return dirs[Math.round(d/22.5)%16]};
-const scClr=s=>s>=75?D.rust:s>=55?D.gn:s>=35?D.txM:D.txD;
+const scClr=s=>s>=75?D.gn:s>=55?D.rust:s>=35?D.txM:D.txD;
 const scLb=s=>s>=90?"Exceptional":s>=75?"Excellent":s>=55?"Good":s>=35?"Fair":"Poor";
+const HOUR=new Date().getHours();const isNight=HOUR<5||HOUR>=22;
 
 /* ── SCORING with transparency ── */
 function condScore(wind,press,cloud,wt,hIdx,rq,bq){
+  if(isNight)return{pct:0,label:"Night",clr:D.txD,why:"No fishing activity at night."};
   let s=0;const why=[];
   const hp=Math.min(30,hIdx*0.30);s+=hp;
   if(hIdx>60)why.push("strong hatch activity");else if(hIdx>30)why.push("moderate hatches");else why.push("limited hatches");
@@ -234,13 +238,14 @@ function fmtDur(ms){const s=Math.floor(ms/1000),m=Math.floor(s/60),h=Math.floor(
 export default function App(){
   /* AUTH */
   const[user,setUserState]=useState(()=>getUser());
-  const[authStep,setAuthStep]=useState("beta");/* beta → register → confirm → done */
+  const[authStep,setAuthStep]=useState("beta");/* beta → register → confirm → signin → reset → done */
   const[authName,setAuthName]=useState("");const[authEmail,setAuthEmail]=useState("");
   const[authPw,setAuthPw]=useState("");const[authPw2,setAuthPw2]=useState("");
   const[betaCode,setBetaCode]=useState("");const[betaErr,setBetaErr]=useState("");
   const[authErr,setAuthErr]=useState("");
   const[optNewsletter,setOptNewsletter]=useState(true);const[optBeta,setOptBeta]=useState(true);
   const[confirmCode,setConfirmCode]=useState("");const[confirmErr,setConfirmErr]=useState("");
+  const[resetSent,setResetSent]=useState(false);
   const[showFeedback,setShowFeedback]=useState(false);
   const[fbRating,setFbRating]=useState(0);const[fbBest,setFbBest]=useState("");
   const[fbWorse,setFbWorse]=useState("");const[fbFeature,setFbFeature]=useState("");const[fbSubmitted,setFbSubmitted]=useState(false);
@@ -286,6 +291,19 @@ export default function App(){
     }else{setConfirmErr("Invalid code. Use 000000 for beta.")}
   };
   const logout=()=>{localStorage.removeItem(STORE_USER);setUserState(null);setAuthStep("beta")};
+  const resetPassword=async()=>{
+    if(!authEmail.trim()){setAuthErr("Enter your email address.");return}
+    if(authPw.length<6){setAuthErr("New password must be 6+ characters.");return}
+    if(authPw!==authPw2){setAuthErr("Passwords don't match.");return}
+    setAuthErr("Resetting...");
+    const email=authEmail.trim().toLowerCase();
+    const rows=await sbSelect("signups",`email=eq.${encodeURIComponent(email)}&select=email`);
+    if(!rows||rows.length===0){setAuthErr("No account found with that email.");return}
+    const pwHash=await hashPw(authPw);
+    const ok=await sbUpdate("signups",`email=eq.${encodeURIComponent(email)}`,{pw_hash:pwHash});
+    if(!ok){setAuthErr("Reset failed. Try again or email ephemeraguideapp@gmail.com");return}
+    setResetSent(true);setAuthErr("");
+  };
   const submitFeedback=async()=>{
     await sbInsert("feedback",{user_email:user?.email,user_name:user?.name,rating:fbRating,best:fbBest,worse:fbWorse,feature:fbFeature});
     setFbSubmitted(true);
@@ -305,10 +323,15 @@ export default function App(){
   const[showForm,setShowForm]=useState(false);
   const[onRiver,setOnRiver]=useState(false);
   const[sessionStart,setSessionStart]=useState(null);
-  const[sessionFish,setSessionFish]=useState(0);
-  const[sessionFlies,setSessionFlies]=useState([]);
+  const[sessionFish,setSessionFish]=useState([]);/* array of fish objects */
   const[sessionNotes,setSessionNotes]=useState("");
   const[sessionTick,setSessionTick]=useState(0);
+  const[showCatchForm,setShowCatchForm]=useState(false);
+  const[catchType,setCatchType]=useState("Trout");
+  const[catchWeight,setCatchWeight]=useState("");
+  const[catchFly,setCatchFly]=useState("");
+  const[catchWild,setCatchWild]=useState("Wild");
+  const[catchNotes,setCatchNotes]=useState("");
 
   /* SESSION FORM */
   const[fName,setFName]=useState(()=>user?.name||"");
@@ -356,17 +379,22 @@ export default function App(){
   const nowWin=useMemo(()=>nowWindow(timeline),[timeline]);
 
   /* SESSION ACTIONS */
-  const startSession=()=>{setOnRiver(true);setSessionStart(Date.now());setSessionFish(0);setSessionFlies([]);setSessionNotes("");setSessionTick(0)};
+  const startSession=()=>{setOnRiver(true);setSessionStart(Date.now());setSessionFish([]);setSessionNotes("");setSessionTick(0)};
   const endSession=()=>{
     if(sessionStart){
-      const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:sessionFish,flies:sessionFlies,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||""};
+      const fishCount=sessionFish.length;const bestFly=sessionFish.map(f=>f.fly).filter(Boolean).reduce((a,b,_,arr)=>{const counts={};arr.forEach(x=>counts[x]=(counts[x]||0)+1);return(counts[a]||0)>=(counts[b]||0)?a:b},"");
+      const biggestFish=sessionFish.reduce((a,f)=>parseFloat(f.weight||0)>parseFloat(a)?f.weight:a,"0");
+      const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:fishCount,big:biggestFish!=="0"?biggestFish+"lb":"",fly:bestFly,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||"",catches:sessionFish};
       const updated=[sess,...sessions];setSessions(updated);saveSessions(updated);
-      /* Write to Supabase */
-      sbInsert("sessions",{user_email:user?.email,user_name:user?.name,river:rv.n,beat,fish:sessionFish,notes:sessionNotes,duration:sess.dur,score:cond.pct,top_hatch:topH?.cm||""});
+      sbInsert("sessions",{user_email:user?.email,user_name:user?.name,river:rv.n,beat,fish:fishCount,biggest:biggestFish!=="0"?biggestFish+"lb":"",best_fly:bestFly,notes:sessionNotes+"\n\nCatches: "+JSON.stringify(sessionFish),duration:sess.dur,score:cond.pct,top_hatch:topH?.cm||""});
     }
-    setOnRiver(false);setSessionStart(null);
+    setOnRiver(false);setSessionStart(null);setShowCatchForm(false);
   };
-  const addFishToSession=()=>{setSessionFish(f=>f+1)};
+  const logCatch=()=>{
+    const fish={type:catchType,weight:catchWeight,fly:catchFly,wild:catchWild,notes:catchNotes,time:new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})};
+    setSessionFish(f=>[...f,fish]);
+    setCatchType("Trout");setCatchWeight("");setCatchFly("");setCatchWild("Wild");setCatchNotes("");setShowCatchForm(false);
+  };
 
   /* SAVE MANUAL SESSION */
   const saveManualSession=()=>{
@@ -385,18 +413,18 @@ export default function App(){
     <div style={{fontFamily:"'Barlow',sans-serif",background:D.bg,minHeight:"100vh",color:D.tx,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:20}}>
       <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
       <style>{`*{box-sizing:border-box;margin:0}input{font-family:inherit;-webkit-appearance:none}input:focus{outline:none}`}</style>
-      <W s={48} c={D.tx} r/>
-      <div style={{fontSize:16,fontWeight:600,letterSpacing:"0.25em",marginTop:12}}>EPHEMERA</div>
+      <Logo s={56}/>
+      <div style={{marginTop:12}}><Wordmark w={140} dark={true}/></div>
       <div style={{fontSize:10,color:D.txD,marginTop:4,marginBottom:32}}>Timely insight. Better days.</div>
 
       {/* STEP 1: BETA CODE */}
       {authStep==="beta"&&<div style={{width:"100%",maxWidth:320}}>
         <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:D.txD,marginBottom:8}}>PRIVATE BETA</div>
         <div style={{fontSize:12,color:D.txM,lineHeight:1.6,marginBottom:16}}>Ephemera is currently in private beta. Enter your access code to continue.</div>
-        <div style={{marginBottom:10}}><div style={{fontSize:8,color:D.txD,marginBottom:4}}>BETA ACCESS CODE</div><input value={betaCode} onChange={e=>{setBetaCode(e.target.value.toUpperCase());setBetaErr("")}} placeholder="Enter code" style={{background:D.c2,border:`1px solid ${betaErr?D.rust:D.bd}`,borderRadius:6,padding:"12px",color:D.tx,fontSize:16,fontFamily:"inherit",width:"100%",letterSpacing:"0.15em",textAlign:"center",fontWeight:700}}/></div>
+        <div style={{marginBottom:10}}><div style={{fontSize:8,color:D.txD,marginBottom:4}}>BETA ACCESS CODE</div><input value={betaCode} onChange={e=>{setBetaCode(e.target.value);setBetaErr("")}} placeholder="Enter code" style={{background:D.c2,border:`1px solid ${betaErr?D.rust:D.bd}`,borderRadius:6,padding:"12px",color:D.tx,fontSize:16,fontFamily:"inherit",width:"100%",letterSpacing:"0.1em",textAlign:"center",fontWeight:700}}/></div>
         {betaErr&&<div style={{fontSize:10,color:D.rust,marginBottom:8}}>{betaErr}</div>}
-        <button onClick={()=>{if(betaCode===BETA_CODE){setAuthStep("register");setBetaErr("")}else setBetaErr("Invalid code. Contact hello@ephemera.fish for access.")}} style={{width:"100%",padding:14,borderRadius:8,border:"none",background:D.rust,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>ENTER</button>
-        <div style={{textAlign:"center",fontSize:9,color:D.txD,marginTop:16,opacity:0.5}}>Don't have a code? Email hello@ephemera.fish</div>
+        <button onClick={()=>{if(betaCode.toUpperCase()===BETA_CODE){setAuthStep("register");setBetaErr("")}else setBetaErr("Invalid code. Contact ephemeraguideapp@gmail.com for access.")}} style={{width:"100%",padding:14,borderRadius:8,border:"none",background:D.rust,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>ENTER</button>
+        <div style={{textAlign:"center",fontSize:9,color:D.txD,marginTop:16,opacity:0.5}}>Don't have a code? Email ephemeraguideapp@gmail.com</div>
         <div style={{textAlign:"center",fontSize:10,color:D.txD,cursor:"pointer",marginTop:8}} onClick={()=>setAuthStep("signin")}>Already have an account? <span style={{color:D.rust}}>Sign in</span></div>
       </div>}
 
@@ -408,8 +436,29 @@ export default function App(){
           <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>PASSWORD</div><input value={authPw} onChange={e=>{setAuthPw(e.target.value);setAuthErr("")}} placeholder="Your password" type="password" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
           {authErr&&<div style={{fontSize:10,color:D.rust}}>{authErr}</div>}
           <button onClick={signIn} style={{width:"100%",padding:14,borderRadius:8,border:"none",background:D.rust,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginTop:4}}>SIGN IN</button>
+          <div style={{textAlign:"center",fontSize:10,color:D.rust,cursor:"pointer"}} onClick={()=>{setAuthStep("reset");setAuthErr("");setAuthPw("");setAuthPw2("");setResetSent(false)}}>Forgot password?</div>
           <div style={{textAlign:"center",fontSize:10,color:D.txD,cursor:"pointer"}} onClick={()=>{setAuthStep("beta");setAuthErr("")}}>Need an account? <span style={{color:D.rust}}>Enter beta code</span></div>
         </div>
+      </div>}
+
+      {/* STEP: RESET PASSWORD */}
+      {authStep==="reset"&&<div style={{width:"100%",maxWidth:320}}>
+        <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:D.txD,marginBottom:12}}>RESET PASSWORD</div>
+        {!resetSent?<div style={{display:"grid",gap:10}}>
+          <div style={{fontSize:11,color:D.txM,lineHeight:1.6}}>Enter your email and choose a new password.</div>
+          <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>EMAIL</div><input value={authEmail} onChange={e=>{setAuthEmail(e.target.value);setAuthErr("")}} placeholder="you@example.com" type="email" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
+          <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>NEW PASSWORD</div><input value={authPw} onChange={e=>{setAuthPw(e.target.value);setAuthErr("")}} placeholder="6+ characters" type="password" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
+          <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>CONFIRM NEW PASSWORD</div><input value={authPw2} onChange={e=>{setAuthPw2(e.target.value);setAuthErr("")}} placeholder="Confirm" type="password" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
+          {authErr&&<div style={{fontSize:10,color:D.rust}}>{authErr}</div>}
+          <button onClick={resetPassword} style={{width:"100%",padding:14,borderRadius:8,border:"none",background:D.rust,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>RESET PASSWORD</button>
+          <div style={{textAlign:"center",fontSize:10,color:D.txD,cursor:"pointer"}} onClick={()=>{setAuthStep("signin");setAuthErr("")}}>Back to <span style={{color:D.rust}}>sign in</span></div>
+          <div style={{textAlign:"center",fontSize:9,color:D.txD,marginTop:4,opacity:0.5}}>Problems? Email ephemeraguideapp@gmail.com</div>
+        </div>:<div style={{textAlign:"center",padding:10}}>
+          <div style={{fontSize:22,marginBottom:8}}>✓</div>
+          <div style={{fontSize:14,fontWeight:700,color:D.tx,marginBottom:4}}>Password reset</div>
+          <div style={{fontSize:11,color:D.txM,lineHeight:1.6}}>Your password has been updated. You can now sign in.</div>
+          <button onClick={()=>{setAuthStep("signin");setAuthErr("");setResetSent(false)}} style={{marginTop:14,padding:"10px 24px",borderRadius:6,border:"none",background:D.rust,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>SIGN IN</button>
+        </div>}
       </div>}
 
       {/* STEP 2: REGISTER */}
@@ -450,6 +499,7 @@ export default function App(){
         {confirmErr&&<div style={{fontSize:10,color:D.rust,marginBottom:8}}>{confirmErr}</div>}
         <button onClick={confirmAccount} style={{width:"100%",padding:14,borderRadius:8,border:"none",background:D.rust,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>CONFIRM</button>
         <div style={{textAlign:"center",fontSize:10,color:D.txD,cursor:"pointer",marginTop:12}} onClick={()=>{localStorage.removeItem(STORE_USER);setUserState(null);setAuthStep("register")}}>Start over</div>
+        <div style={{textAlign:"center",fontSize:9,color:D.txD,marginTop:8,opacity:0.5}}>Problems? Email ephemeraguideapp@gmail.com</div>
       </div>}
     </div>
   );
@@ -463,7 +513,7 @@ export default function App(){
       {/* HEADER */}
       <div style={{background:P.c1,padding:"14px 14px 10px",borderBottom:`1px solid ${P.bd}`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:7}}><W s={22} c={P.tx} r/><span style={{fontSize:13,fontWeight:600,letterSpacing:"0.2em"}}>EPHEMERA</span></div>
+          <div style={{display:"flex",alignItems:"center",gap:8}}><Logo s={28}/><Wordmark w={100} dark={!light}/></div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <button onClick={()=>setLight(!light)} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{light?"◐":"☀"}</button>
             <button onClick={logout} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{user.name.split(" ")[0]} ✕</button>
@@ -484,11 +534,11 @@ export default function App(){
         {!onRiver?<button onClick={startSession} style={{background:"transparent",border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 14px",color:P.txD,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>◯ I'm on the river</button>
         :<>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:8,height:8,borderRadius:4,background:P.rust,animation:"pulse 2s infinite"}}/>
-            <div><div style={{fontSize:10,fontWeight:700,color:P.rust}}>ON THE RIVER</div><div style={{fontSize:9,color:P.txM}}>{sessionStart?fmtDur(Date.now()-sessionStart+(sessionTick*0)):""} · {sessionFish} fish</div></div>
+            <div style={{width:8,height:8,borderRadius:4,background:P.gn,animation:"pulse 2s infinite"}}/>
+            <div><div style={{fontSize:10,fontWeight:700,color:P.gn}}>ON THE RIVER</div><div style={{fontSize:9,color:P.txM}}>{sessionStart?fmtDur(Date.now()-sessionStart+(sessionTick*0)):""} · {sessionFish.length} fish</div></div>
           </div>
           <div style={{display:"flex",gap:4}}>
-            <button onClick={addFishToSession} style={{background:P.gn,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ FISH</button>
+            <button onClick={()=>setShowCatchForm(true)} style={{background:P.gn,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>+ CATCH</button>
             <button onClick={endSession} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>END</button>
           </div>
         </>}
@@ -503,14 +553,47 @@ export default function App(){
         {tab==="guide"&&<div>
           {/* SESSION ACTIVE ADVICE */}
           {onRiver&&<div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>SESSION ACTIVE — {beat}</div><div style={{fontSize:9,color:P.txD}}>Updated {new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div></div>
-            <div style={{fontSize:13,fontWeight:700,color:P.tx,lineHeight:1.5}}>{cC>60&&cT>=12?"Cloud thickening — hatches should build. Stay on dries.":cC<30&&cT>=14?"Bright conditions. Fish the shade. Consider emergers in the film.":cW>14?"Wind making presentation tough. Try the sheltered bank.":cT<10?"Cool water. Keep nymphing. Watch for olive activity after 11am.":nowWin&&nowWin.cur&&nowWin.cur.hi>=4?"Hatch building now. Watch for rises and match the size.":"Conditions stable. Work upstream, cover water methodically."}</div>
-            {nowWin&&nowWin.nxt&&<div style={{fontSize:10,color:P.rust,marginTop:6}}>Next: {nowWin.nxt.hr}:00 — {nowWin.nxt.note}</div>}
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>SESSION ACTIVE — {beat}</div><div style={{fontSize:9,color:P.txD}}>Updated {new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div></div>
+            <div style={{fontSize:13,fontWeight:700,color:P.tx,lineHeight:1.5}}>{isNight?"Night time. Rest up for tomorrow.":cC>60&&cT>=12?"Cloud thickening — hatches should build. Stay on dries.":cC<30&&cT>=14?"Bright conditions. Fish the shade. Consider emergers in the film.":cW>14?"Wind making presentation tough. Try the sheltered bank.":cT<10?"Cool water. Keep nymphing. Watch for olive activity after 11am.":nowWin&&nowWin.cur&&nowWin.cur.hi>=4?"Hatch building now. Watch for rises and match the size.":"Conditions stable. Work upstream, cover water methodically."}</div>
+            {nowWin&&nowWin.nxt&&!isNight&&<div style={{fontSize:10,color:P.gn,marginTop:6}}>Next: {nowWin.nxt.hr}:00 — {nowWin.nxt.note}</div>}
+
+            {/* CATCH FORM */}
+            {showCatchForm&&<div style={{marginTop:10,padding:10,background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`}}>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn,marginBottom:8}}>LOG A CATCH</div>
+              <div style={{display:"grid",gap:6}}>
+                <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>SPECIES</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{["Trout","Grayling","Sea Trout","Salmon","Other"].map(t=><button key={t} onClick={()=>setCatchType(t)} style={{padding:"4px 8px",borderRadius:4,border:catchType===t?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:catchType===t?"#7A9E7E18":"transparent",color:catchType===t?P.gn:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{t}</button>)}</div></div>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6}}>
+                  <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>WEIGHT (LB)</div><input value={catchWeight} onChange={e=>setCatchWeight(e.target.value)} placeholder="e.g. 2.5" type="number" step="0.25" style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:5,padding:"6px 8px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%"}}/></div>
+                  <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>WILD / STOCKED</div><div style={{display:"flex",gap:3}}>{["Wild","Stocked"].map(w=><button key={w} onClick={()=>setCatchWild(w)} style={{flex:1,padding:"6px",borderRadius:4,border:catchWild===w?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:catchWild===w?"#7A9E7E18":"transparent",color:catchWild===w?P.gn:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{w}</button>)}</div></div>
+                </div>
+                <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>FLY USED</div><input value={catchFly} onChange={e=>setCatchFly(e.target.value)} placeholder="e.g. CDC Shuttlecock #16" style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:5,padding:"6px 8px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%"}}/></div>
+                <div><div style={{fontSize:8,color:P.txD,marginBottom:3}}>REMARKS</div><input value={catchNotes} onChange={e=>setCatchNotes(e.target.value)} placeholder="Rising steadily, took first cast..." style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:5,padding:"6px 8px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%"}}/></div>
+                <div style={{display:"flex",gap:4}}><button onClick={logCatch} style={{flex:1,padding:"8px",borderRadius:6,border:"none",background:P.gn,color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>LOG CATCH</button><button onClick={()=>setShowCatchForm(false)} style={{padding:"8px 12px",borderRadius:6,border:`1px solid ${P.bd}`,background:"transparent",color:P.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>Cancel</button></div>
+              </div>
+            </div>}
+
+            {/* FISH CAUGHT THIS SESSION */}
+            {sessionFish.length>0&&<div style={{marginTop:8}}>
+              <div style={{fontSize:8,color:P.txD,letterSpacing:"0.1em",marginBottom:4}}>CATCHES TODAY ({sessionFish.length})</div>
+              {sessionFish.map((f,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:i<sessionFish.length-1?`1px solid ${P.bd}`:""}}>
+                <div style={{display:"flex",gap:6,alignItems:"center"}}>
+                  <span style={{fontSize:9,color:P.txD}}>{f.time}</span>
+                  <span style={{fontSize:10,fontWeight:600,color:f.type==="Trout"?P.gn:f.type==="Grayling"?P.rust:P.tx}}>{f.type}</span>
+                  {f.weight&&<span style={{fontSize:9,color:P.txM}}>{f.weight}lb</span>}
+                  <span style={{fontSize:8,color:f.wild==="Wild"?P.gn:P.txD}}>{f.wild}</span>
+                </div>
+                {f.fly&&<span style={{fontSize:9,color:P.rust}}>{f.fly}</span>}
+              </div>)}
+            </div>}
+
             <div style={{marginTop:8}}><div style={{fontSize:8,color:P.txD,marginBottom:4}}>SESSION NOTES</div><textarea value={sessionNotes} onChange={e=>setSessionNotes(e.target.value)} placeholder="What's happening on the water..." rows={2} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 8px",color:P.tx,fontSize:11,fontFamily:"inherit",width:"100%",resize:"none",lineHeight:1.4}}/></div>
           </div>}
 
+          {/* NIGHTTIME */}
+          {isNight&&<div style={{padding:"16px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:12,textAlign:"center"}}><div style={{fontSize:22,marginBottom:6}}>☾</div><div style={{fontSize:14,fontWeight:700,color:P.tx}}>Night fishing</div><div style={{fontSize:11,color:P.txM,marginTop:4,lineHeight:1.6}}>No hatch activity. Rest up — the river will be here tomorrow.</div></div>}
+
           {/* HATCH OF THE DAY — dominates */}
-          {topH&&topH.score>5&&<div style={{background:P.rustS,borderRadius:12,border:`1px solid ${P.rustB}`,padding:16,marginBottom:12}}>
+          {!isNight&&topH&&topH.score>5&&<div style={{background:P.rustS,borderRadius:12,border:`1px solid ${P.rustB}`,padding:16,marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.15em",color:P.rust}}>HATCH OF THE DAY</div><div style={{fontSize:22,fontWeight:700,color:P.tx,marginTop:6}}>{topH.cm}</div><div style={{fontSize:13,color:P.rust,fontWeight:600,marginTop:4}}>{FLYMAP[topH.id]||"Match the hatch"}</div><div style={{fontSize:9,color:P.txD,marginTop:2,fontStyle:"italic"}}>{FLYCONF[topH.id]||""}</div></div><div style={{textAlign:"center"}}><div style={{fontSize:38,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{topH.score}</div><div style={{fontSize:9,color:hC(topH.score),marginTop:2}}>{topH.lb}</div></div></div>
             {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{marginTop:10,fontSize:10,color:P.txM}}>Also active: {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>`${s.cm} ${s.score}%`).join(" · ")}</div>}
           </div>}
@@ -532,21 +615,21 @@ export default function App(){
           {/* RIGHT NOW — always visible */}
           {nowWin&&nowWin.cur&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:10}}>
             <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:6}}>RIGHT NOW</div>
-            <div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{fontSize:14,fontWeight:700,color:nowWin.cur.hi>=3?P.rust:nowWin.cur.hi>=1?P.gn:P.txD}}>{nowWin.cur.hr}:00</div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:P.tx}}>{nowWin.cur.note}</div>{nowWin.cur.fly&&<div style={{fontSize:9,color:P.rust,marginTop:2}}>{nowWin.cur.hatches.join(", ")} → {nowWin.cur.fly}</div>}</div></div>
-            {nowWin.nxt&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`,display:"flex",gap:10,alignItems:"center",opacity:0.7}}><div style={{fontSize:12,fontWeight:700,color:nowWin.nxt.hi>=3?P.rust:P.txD}}>{nowWin.nxt.hr}:00</div><div style={{flex:1}}><div style={{fontSize:11,color:P.txM}}>{nowWin.nxt.note}</div></div></div>}
+            <div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{fontSize:14,fontWeight:700,color:nowWin.cur.hi>=3?P.gn:nowWin.cur.hi>=1?P.rust:P.txD}}>{nowWin.cur.hr}:00</div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:P.tx}}>{nowWin.cur.note}</div>{nowWin.cur.fly&&<div style={{fontSize:9,color:P.gn,marginTop:2}}>{nowWin.cur.hatches.join(", ")} → {nowWin.cur.fly}</div>}</div></div>
+            {nowWin.nxt&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`,display:"flex",gap:10,alignItems:"center",opacity:0.7}}><div style={{fontSize:12,fontWeight:700,color:nowWin.nxt.hi>=3?P.gn:P.txD}}>{nowWin.nxt.hr}:00</div><div style={{flex:1}}><div style={{fontSize:11,color:P.txM}}>{nowWin.nxt.note}</div></div></div>}
           </div>}
 
           {/* FULL TIMELINE — collapsible */}
           {timeline.length>0&&<><div onClick={()=>toggle("tl")} style={{background:P.c1,borderRadius:ex.tl?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex.tl?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>TODAY ON THE RIVER</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Full day timeline</div></div><span style={{color:P.txD,fontSize:11}}>{ex.tl?"−":"+"}</span></div>
           {ex.tl&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",padding:"6px 14px 10px",marginBottom:10}}>
-            {timeline.map((e,i)=><div key={i} style={{display:"flex",gap:10,padding:"7px 0",borderBottom:i<timeline.length-1?`1px solid ${P.bd}`:""}}><div style={{width:32,textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:700,color:e.hi>=3?P.rust:e.hi>=1?P.gn:P.txD}}>{e.hr}:00</div></div><div style={{flex:1}}><div style={{fontSize:11,color:P.tx,lineHeight:1.5}}>{e.note}</div>{e.fly&&<div style={{fontSize:9,color:P.rust,marginTop:1}}>{e.hatches.join(", ")} → {e.fly}</div>}</div></div>)}
+            {timeline.map((e,i)=><div key={i} style={{display:"flex",gap:10,padding:"7px 0",borderBottom:i<timeline.length-1?`1px solid ${P.bd}`:""}}><div style={{width:32,textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:700,color:e.hi>=3?P.gn:e.hi>=1?P.rust:P.txD}}>{e.hr}:00</div></div><div style={{flex:1}}><div style={{fontSize:11,color:P.tx,lineHeight:1.5}}>{e.note}</div>{e.fly&&<div style={{fontSize:9,color:P.gn,marginTop:1}}>{e.hatches.join(", ")} → {e.fly}</div>}</div></div>)}
           </div>}</>}
 
           {/* 7-DAY */}
           {wxDays.length>0&&<><div onClick={()=>toggle("7d")} style={{background:P.c1,borderRadius:ex["7d"]?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex["7d"]?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>7-DAY OUTLOOK</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Compare days</div></div><span style={{color:P.txD,fontSize:11}}>{ex["7d"]?"−":"+"}</span></div>
           {ex["7d"]&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",overflow:"hidden",marginBottom:10}}>
             <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*68}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"8px 4px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:gDay===i?P.c2:"transparent",cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div><div style={{fontSize:14,fontWeight:700,color:scClr(sc),marginTop:3}}>{sc}</div><div style={{fontSize:7,color:scClr(sc)}}>{scLb(sc)}</div><div style={{fontSize:10,fontWeight:600,color:P.tx,marginTop:2}}>{d.aH||"--"}°/{d.aL||"--"}°</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.txD}}>{d.rain}mm</div>}</div>})}</div></div>
-            {gDay>=0&&wxDays[gDay]&&<div style={{padding:"8px 12px",borderTop:`1px solid ${P.bd}`}}>{buildTimeline(wxDays[gDay].hrs,cT).filter((_,i)=>i%2===0).map((e,i)=><div key={i} style={{display:"flex",gap:8,padding:"3px 0"}}><span style={{fontSize:10,fontWeight:700,color:e.hi>=3?P.rust:P.txD,minWidth:30}}>{e.hr}:00</span><span style={{fontSize:10,color:P.txM,flex:1}}>{e.note}</span>{e.fly&&<span style={{fontSize:9,color:P.rust,flexShrink:0}}>{e.fly}</span>}</div>)}</div>}
+            {gDay>=0&&wxDays[gDay]&&<div style={{padding:"8px 12px",borderTop:`1px solid ${P.bd}`}}>{buildTimeline(wxDays[gDay].hrs,cT).filter((_,i)=>i%2===0).map((e,i)=><div key={i} style={{display:"flex",gap:8,padding:"3px 0"}}><span style={{fontSize:10,fontWeight:700,color:e.hi>=3?P.gn:P.txD,minWidth:30}}>{e.hr}:00</span><span style={{fontSize:10,color:P.txM,flex:1}}>{e.note}</span>{e.fly&&<span style={{fontSize:9,color:P.gn,flexShrink:0}}>{e.fly}</span>}</div>)}</div>}
           </div>}</>}
 
           {/* RIVER PERSONALITY */}
@@ -615,7 +698,7 @@ export default function App(){
       </div>}
 
       <div style={{textAlign:"center",padding:14,borderTop:`1px solid ${P.bd}`}}>
-        <W s={20} c={P.txD} r/>
+        <Logo s={22}/>
         <div style={{fontSize:7,color:P.txD,letterSpacing:"0.1em",marginTop:4}}>EPHEMERA / Timely insight. Better days.</div>
         <div style={{display:"flex",justifyContent:"center",gap:8,marginTop:8}}>
           <span style={{fontSize:7,color:P.rust,fontWeight:700,background:P.rustS,padding:"2px 6px",borderRadius:3}}>BETA</span>
