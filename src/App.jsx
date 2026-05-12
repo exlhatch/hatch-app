@@ -332,6 +332,9 @@ export default function App(){
   const[flyIdMode,setFlyIdMode]=useState(false);/* fly identification mode */
   const[flyAnalysis,setFlyAnalysis]=useState(null);
   const[flyAnalyzing,setFlyAnalyzing]=useState(false);
+  const[flyBoxScan,setFlyBoxScan]=useState(null);const[flyBoxScanning,setFlyBoxScanning]=useState(false);
+  const[archiveOverview,setArchiveOverview]=useState("");const[archiveLoading,setArchiveLoading]=useState(false);
+  const[expandedSession,setExpandedSession]=useState(null);
   const fileRef=typeof document!=="undefined"?document.createElement("input"):null;
   if(fileRef){fileRef.type="file";fileRef.accept="image/*";fileRef.setAttribute("capture","environment")}
   const flyFileRef=typeof document!=="undefined"?document.createElement("input"):null;
@@ -521,6 +524,37 @@ export default function App(){
 
   /* UPDATE SNAP DETAIL (during review) */
   const updateSnap=(id,field,val)=>setSessionSnaps(s=>s.map(sn=>sn.id===id?{...sn,[field]:val}:sn));
+
+  /* AI FLY BOX SCAN — photograph your box, get recommendations */
+  const flyBoxRef=typeof document!=="undefined"?document.createElement("input"):null;
+  if(flyBoxRef){flyBoxRef.type="file";flyBoxRef.accept="image/*";flyBoxRef.setAttribute("capture","environment")}
+  const scanFlyBox=()=>{
+    if(!flyBoxRef)return;
+    flyBoxRef.onchange=async(e)=>{
+      const file=e.target.files?.[0];if(!file)return;
+      const b64=await compressImg(file,1200);
+      setFlyBoxScanning(true);setFlyBoxScan(null);
+      try{
+        const condText=`River: ${rv.n}, Beat: ${beat}, Water temp: ${cT}°C, Air: ${cAir}°C, Wind: ${cW}mph, Cloud: ${cC}%, Top hatch: ${topH?.cm||"none"} (score ${topH?.score||0}), Active hatches: ${spp.filter(s=>s.score>15).map(s=>s.cm).join(", ")||"none"}, Time: ${new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}, Method: ${method}`;
+        const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:b64,mode:"flybox",conditions:condText})});
+        setFlyBoxScan(await r.json());
+      }catch(e){setFlyBoxScan({error:e.message})}
+      setFlyBoxScanning(false);flyBoxRef.value="";
+    };
+    flyBoxRef.click();
+  };
+
+  /* AI ARCHIVE OVERVIEW — analyse all past sessions */
+  const generateArchiveOverview=async()=>{
+    if(!sessions.length)return;
+    setArchiveLoading(true);
+    const data=sessions.slice(0,20).map(s=>`${s.d}: ${s.river}/${s.beat||s.bt}, ${s.fish||0} fish, ${s.dur||""}, best fly: ${s.fly||"?"}, rating: ${s.rating||"?"}, score: ${s.score||"?"}/100, hatch: ${s.topHatch||"?"}, ${s.notes||""}${s.summary?", AI: "+s.summary:""}`).join("\n");
+    try{
+      const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"summary",sessionData:`Analyse this angler's fishing history and give a detailed overview. Include: patterns in what's working (flies, conditions, times), rivers where they do best, areas to improve, and specific advice for their next session. Be specific and data-driven, not generic. Warm but honest British guide tone.\n\nAngler: ${user?.name||"Unknown"}\nSessions:\n${data}`})});
+      const d=await r.json();setArchiveOverview(d.summary||"Could not generate overview.");
+    }catch{setArchiveOverview("Overview unavailable — check your connection.")}
+    setArchiveLoading(false);
+  };
 
   /* END SESSION → go to review */
   const endToReview=()=>{setOnRiver(false);setReviewing(true)};
@@ -850,6 +884,7 @@ export default function App(){
                 {flyAnalysis.quality==="poor"&&<div style={{fontSize:9,color:P.rust,marginTop:2}}>⚠ {flyAnalysis.quality_note}</div>}
                 <div style={{fontSize:9,color:P.txM,marginTop:4,lineHeight:1.6}}>{flyAnalysis.identification_notes}</div>
                 {flyAnalysis.matching_artificials?.length>0&&<div style={{marginTop:6}}><div style={{fontSize:8,fontWeight:700,color:P.gn,marginBottom:2}}>MATCH WITH</div>{flyAnalysis.matching_artificials.map((f,i)=><div key={i} style={{fontSize:10,color:P.gn,fontWeight:600}}>{f}</div>)}</div>}
+                {flyAnalysis.tie_on_now&&<div style={{marginTop:6,padding:"6px 8px",background:P.gn+"18",borderRadius:5,border:`1px solid ${P.gn}40`}}><div style={{fontSize:8,fontWeight:700,color:P.gn}}>TIE ON NOW</div><div style={{fontSize:12,fontWeight:700,color:P.tx,marginTop:2}}>{flyAnalysis.tie_on_now}</div></div>}
                 {flyAnalysis.fishing_notes&&<div style={{fontSize:9,color:P.txM,marginTop:4,fontStyle:"italic"}}>{flyAnalysis.fishing_notes}</div>}
               </>}
             </div>}
@@ -861,6 +896,45 @@ export default function App(){
 
         {/* ═══ FLY BOX ═══ */}
         {tab==="fly"&&<div>
+          {/* SCAN MY FLY BOX */}
+          <div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>SCAN MY FLY BOX</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>Photograph your box — AI picks the best fly</div></div><button onClick={scanFlyBox} disabled={flyBoxScanning} style={{background:P.rust,border:"none",borderRadius:6,padding:"8px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{flyBoxScanning?"Scanning...":"📷 Scan"}</button></div>
+            {flyBoxScan&&!flyBoxScan.error&&flyBoxScan.quality!=="unusable"&&<div style={{marginTop:10}}>
+              {/* TIE ON NOW */}
+              {flyBoxScan.tie_on_now&&<div style={{padding:"10px 12px",background:P.gn+"18",borderRadius:8,border:`1px solid ${P.gn}40`,marginBottom:8}}>
+                <div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:3}}>TIE ON NOW</div>
+                <div style={{fontSize:15,fontWeight:700,color:P.tx}}>{flyBoxScan.tie_on_now.name}</div>
+                <div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.5}}>{flyBoxScan.tie_on_now.reason}</div>
+              </div>}
+              {/* BACKUP */}
+              {flyBoxScan.backup&&<div style={{padding:"8px 12px",background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,marginBottom:8}}>
+                <div style={{fontSize:8,fontWeight:700,color:P.rust,letterSpacing:"0.1em",marginBottom:2}}>BACKUP</div>
+                <div style={{fontSize:12,fontWeight:700,color:P.tx}}>{flyBoxScan.backup.name}</div>
+                <div style={{fontSize:9,color:P.txM,marginTop:1}}>{flyBoxScan.backup.reason}</div>
+              </div>}
+              {/* FISHING PLAN */}
+              {flyBoxScan.fishing_plan&&<div style={{padding:"8px 12px",background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,marginBottom:8}}>
+                <div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em",marginBottom:2}}>SESSION PLAN</div>
+                <div style={{fontSize:10,color:P.txM,lineHeight:1.6}}>{flyBoxScan.fishing_plan}</div>
+              </div>}
+              {/* FLIES IDENTIFIED */}
+              {flyBoxScan.flies_identified?.length>0&&<div onClick={()=>toggle("boxflies")} style={{padding:"8px 12px",background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,marginBottom:8,cursor:"pointer"}}>
+                <div style={{display:"flex",justifyContent:"space-between"}}><div style={{fontSize:8,fontWeight:700,color:P.txD,letterSpacing:"0.1em"}}>IDENTIFIED {flyBoxScan.flies_identified.length} FLIES</div><span style={{fontSize:10,color:P.txD}}>{ex.boxflies?"−":"+"}</span></div>
+                {ex.boxflies&&<div style={{marginTop:6}}>{flyBoxScan.flies_identified.map((f,i)=><div key={i} style={{display:"flex",justifyContent:"space-between",padding:"3px 0",borderBottom:i<flyBoxScan.flies_identified.length-1?`1px solid ${P.bd}`:""}}><span style={{fontSize:10,color:P.tx,fontWeight:600}}>{f.name}</span><span style={{fontSize:9,color:P.txD}}>#{f.size_estimate} · {f.type}</span></div>)}</div>}
+              </div>}
+              {/* MISSING */}
+              {flyBoxScan.missing?.length>0&&<div style={{padding:"8px 12px",background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,marginBottom:8}}>
+                <div style={{fontSize:8,fontWeight:700,color:P.rust,letterSpacing:"0.1em",marginBottom:3}}>YOU'RE MISSING</div>
+                {flyBoxScan.missing.map((f,i)=><div key={i} style={{fontSize:10,color:P.txM,lineHeight:1.5}}>• {f}</div>)}
+              </div>}
+              {flyBoxScan.box_notes&&<div style={{fontSize:9,color:P.txD,lineHeight:1.5,fontStyle:"italic"}}>{flyBoxScan.box_notes}</div>}
+            </div>}
+            {flyBoxScan&&flyBoxScan.quality==="unusable"&&<div style={{marginTop:8,padding:"8px 12px",background:P.c2,borderRadius:8,border:`1px solid ${P.rust}40`}}>
+              <div style={{fontSize:9,fontWeight:700,color:P.rust}}>BETTER PHOTO NEEDED</div>
+              <div style={{fontSize:10,color:P.txM,marginTop:2}}>{flyBoxScan.quality_note||"Open the box flat, good light, shoot from above."}</div>
+            </div>}
+            {flyBoxScan?.error&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Scan failed — {flyBoxScan.error}</div>}
+          </div>
           <div style={{display:"flex",gap:4,marginBottom:10}}>{[{id:"dry",l:"Dries"},{id:"emerger",l:"Emergers"},{id:"nymph",l:"Nymphs"}].map(t=><button key={t.id} onClick={()=>{setFlyT(t.id);setOpenFly(null)}} style={{flex:1,padding:"9px",borderRadius:8,border:flyT===t.id?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:flyT===t.id?P.rustS:"transparent",color:flyT===t.id?P.rust:P.txD,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{t.l}</button>)}</div>
           <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{FLIES[flyT].map((f,i)=>{const isM=f.mt.some(m=>actIds.includes(m));const isO=openFly===f.nm;return<div key={i}><div onClick={()=>setOpenFly(isO?null:f.nm)} style={{padding:"10px 12px",borderBottom:`1px solid ${P.bd}`,background:isM?P.rustS:"transparent",cursor:"pointer"}}><div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><span style={{fontSize:13,fontWeight:700,color:isM?P.rust:P.tx}}>{f.nm}</span>{isM&&<span style={{fontSize:7,fontWeight:700,color:P.rust,marginLeft:6,background:P.rustB,padding:"1px 5px",borderRadius:3}}>MATCH</span>}<div style={{fontSize:9,color:P.txD,marginTop:2}}>#{f.sz} — <i>{f.cf}</i></div></div><span style={{color:P.txD,fontSize:11}}>{isO?"−":"+"}</span></div></div>{isO&&<div style={{padding:12,background:P.c2,borderBottom:`1px solid ${P.bd}`}}><div style={{fontSize:11,color:P.txM,lineHeight:1.7}}>{f.nt}</div></div>}</div>})}</div>
         </div>}
@@ -873,8 +947,32 @@ export default function App(){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD}}>LOG A SESSION</div><button onClick={()=>setShowForm(!showForm)} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{showForm?"CANCEL":"+ LOG"}</button></div>
           {showForm&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:14,marginBottom:14}}><div style={{display:"grid",gap:8}}><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEAT</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{rv.b.map(b=><button key={b} onClick={()=>setFBeat(b)} style={{padding:"4px 8px",borderRadius:4,border:fBeat===b?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fBeat===b?P.rustS:"transparent",color:fBeat===b?P.rust:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>CAUGHT</div><input value={fFish} onChange={e=>setFish(e.target.value)} placeholder="0" type="number" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEST FLY</div><input value={fFly} onChange={e=>setFFly(e.target.value)} placeholder="CDC #16" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div></div><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>RATING</div><div style={{display:"flex",gap:4}}>{["Poor","Fair","Good","Excellent"].map(r=><button key={r} onClick={()=>setFRating(r)} style={{flex:1,padding:"7px",borderRadius:5,border:fRating===r?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fRating===r?P.rustS:"transparent",color:fRating===r?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{r}</button>)}</div></div><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>NOTES</div><textarea value={fNotes} onChange={e=>setFNotes(e.target.value)} placeholder="What happened?" rows={3} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%",resize:"none",lineHeight:1.5}}/></div><button onClick={saveManualSession} style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:P.rust,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>SUBMIT</button></div></div>}
 
-          {/* YOUR SESSIONS — persistent */}
-          {sessions.length>0&&<div style={{marginBottom:14}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD,marginBottom:6}}>YOUR SESSIONS ({sessions.length})</div><div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{sessions.slice(0,20).map((s,i)=><div key={s.id||i} style={{padding:"10px 12px",borderBottom:`1px solid ${P.bd}`}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:11,fontWeight:600}}>{s.river} — {s.beat||s.bt}</span><span style={{fontSize:8,fontWeight:700,color:s.rating==="Excellent"||s.fish>=3?P.rust:P.gn}}>{s.rating||`${s.fish} fish`}</span></div><div style={{display:"flex",gap:8,fontSize:9,color:P.txD}}><span>{s.d}</span>{s.time&&<span>{s.time}</span>}{s.dur&&<span>{s.dur}</span>}<span>{s.user}</span></div>{s.fish>0&&!s.rating&&<div style={{fontSize:10,color:P.txM,marginTop:2}}>{s.fish} fish caught{s.topHatch?` during ${s.topHatch}`:""}</div>}{s.notes&&<div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.5}}>{s.notes}</div>}{s.fly&&<div style={{fontSize:9,color:P.rust,marginTop:2}}>Best fly: {s.fly}</div>}</div>)}</div></div>}
+          {/* YOUR SESSIONS — archive with AI overview */}
+          {sessions.length>0&&<div style={{marginBottom:14}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD}}>YOUR SESSIONS ({sessions.length})</div><button onClick={generateArchiveOverview} disabled={archiveLoading} style={{padding:"4px 10px",borderRadius:5,border:`1px solid ${P.gn}`,background:"transparent",color:P.gn,fontSize:8,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{archiveLoading?"Analysing...":"✨ AI Overview"}</button></div>
+
+            {archiveOverview&&<div style={{padding:"10px 12px",background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,marginBottom:8}}>
+              <div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:4}}>AI SEASON OVERVIEW</div>
+              <div style={{fontSize:11,color:P.tx,lineHeight:1.7,fontStyle:"italic"}}>{archiveOverview}</div>
+            </div>}
+
+            <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{sessions.slice(0,20).map((s,i)=><div key={s.id||i}>
+              <div onClick={()=>setExpandedSession(expandedSession===(s.id||i)?null:(s.id||i))} style={{padding:"10px 12px",borderBottom:`1px solid ${P.bd}`,cursor:"pointer"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:11,fontWeight:600}}>{s.river} — {s.beat||s.bt}</span><span style={{fontSize:8,fontWeight:700,color:s.fish>=3?P.gn:s.fish>0?P.rust:P.txD}}>{s.fish||0} fish</span></div>
+                <div style={{display:"flex",gap:8,fontSize:9,color:P.txD}}><span>{s.d}</span>{s.dur&&<span>{s.dur}</span>}{s.score&&<span>Score: {s.score}</span>}<span style={{marginLeft:"auto",color:P.txD}}>{expandedSession===(s.id||i)?"−":"+"}</span></div>
+              </div>
+              {expandedSession===(s.id||i)&&<div style={{padding:"10px 12px",background:P.c2,borderBottom:`1px solid ${P.bd}`}}>
+                {s.time&&<div style={{fontSize:9,color:P.txD,marginBottom:4}}>Started {s.time} · {s.user}</div>}
+                {s.fly&&<div style={{fontSize:10,color:P.gn,marginBottom:2}}>Best fly: {s.fly}</div>}
+                {s.big&&<div style={{fontSize:10,color:P.txM,marginBottom:2}}>Biggest: {s.big}</div>}
+                {s.topHatch&&<div style={{fontSize:10,color:P.txM,marginBottom:2}}>Top hatch: {s.topHatch}</div>}
+                {s.rating&&<div style={{fontSize:10,color:s.rating==="Excellent"?P.gn:P.txM,marginBottom:2}}>Rating: {s.rating}</div>}
+                {s.notes&&<div style={{fontSize:10,color:P.txM,lineHeight:1.5,marginBottom:4}}>{s.notes}</div>}
+                {s.summary&&<div style={{padding:"6px 8px",background:P.bg,borderRadius:5,border:`1px solid ${P.bd}`,marginTop:4}}><div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:2}}>AI SUMMARY</div><div style={{fontSize:10,color:P.tx,lineHeight:1.6,fontStyle:"italic"}}>{s.summary}</div></div>}
+                {s.catches&&s.catches.length>0&&<div style={{marginTop:6}}><div style={{fontSize:8,color:P.txD,marginBottom:3}}>CATCHES</div>{s.catches.map((c,ci)=><div key={ci} style={{fontSize:9,color:P.txM,padding:"2px 0"}}>{c.timestamp}: {c.species||"?"} {c.weight?c.weight+"lb":""} {c.wild||""} {c.fly?("on "+c.fly):""}</div>)}</div>}
+              </div>}
+            </div>)}</div>
+          </div>}
 
           {/* RIVER REPORTS */}
           <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD,marginBottom:6}}>RIVER REPORTS</div>
