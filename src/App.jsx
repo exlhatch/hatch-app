@@ -47,6 +47,117 @@ const RV=[
   {id:"wandle",n:"River Wandle",ea:"Wandle",lat:51.42,lng:-0.17,q:4,p:"London's chalkstream. Urban but remarkable. Brown trout in zone 3. An achievement to catch one here.",b:["Carshalton"],bq:{Carshalton:4}},
 ];
 
+/* ── UK RIVERS DATABASE — all regions ── */
+const UK=[
+  /* South West */
+  {id:"exe",n:"River Exe",ea:"Exe",lat:50.87,lng:-3.52,q:7,rg:"South West",b:["Tiverton","Dulverton","Exebridge"]},
+  {id:"taw",n:"River Taw",ea:"Taw",lat:50.99,lng:-3.95,q:7,rg:"South West",b:["Umberleigh","Chulmleigh"]},
+  {id:"torridge",n:"River Torridge",ea:"Torridge",lat:50.95,lng:-4.18,q:6,rg:"South West",b:["Great Torrington","Sheepwash"]},
+  {id:"lyn",n:"River Lyn",ea:"Lyn",lat:51.22,lng:-3.82,q:7,rg:"South West",b:["Lynmouth","Watersmeet"]},
+  {id:"barle",n:"River Barle",ea:"Barle",lat:51.07,lng:-3.55,q:7,rg:"South West",b:["Dulverton","Withypool"]},
+  {id:"camel",n:"River Camel",ea:"Camel",lat:50.56,lng:-4.83,q:6,rg:"South West",b:["Wadebridge","Bodmin"]},
+  {id:"fowey",n:"River Fowey",ea:"Fowey",lat:50.40,lng:-4.65,q:6,rg:"South West",b:["Lostwithiel","Restormel"]},
+  {id:"teign",n:"River Teign",ea:"Teign",lat:50.62,lng:-3.62,q:6,rg:"South West",b:["Chagford","Steps Bridge"]},
+  {id:"dart",n:"River Dart",ea:"Dart",lat:50.48,lng:-3.70,q:7,rg:"South West",b:["Buckfastleigh","Dartmeet"]},
+  {id:"avondevon",n:"River Avon (Devon)",ea:"Avon",lat:50.32,lng:-3.78,q:5,rg:"South West",b:["Aveton Gifford"]},
+  {id:"axe",n:"River Axe",ea:"Axe",lat:50.75,lng:-3.03,q:5,rg:"South West",b:["Axminster"]},
+  {id:"otter",n:"River Otter",ea:"Otter",lat:50.73,lng:-3.28,q:5,rg:"South West",b:["Ottery St Mary"]},
+  {id:"frome_somerset",n:"River Frome (Somerset)",ea:"Frome",lat:51.23,lng:-2.32,q:5,rg:"South West",b:["Frome"]},
+  {id:"brue",n:"River Brue",ea:"Brue",lat:51.15,lng:-2.70,q:4,rg:"South West",b:["Bruton"]},
+  /* Wales */
+  {id:"usk",n:"River Usk",ea:"Usk",lat:51.77,lng:-3.08,q:8,rg:"Wales",b:["Brecon","Crickhowell","Abergavenny"]},
+  {id:"wye",n:"River Wye",ea:"Wye",lat:51.95,lng:-2.73,q:9,rg:"Wales",b:["Hay-on-Wye","Ross-on-Wye","Builth Wells","Rhayader"]},
+  {id:"teifi",n:"River Teifi",ea:"Teifi",lat:52.10,lng:-4.32,q:7,rg:"Wales",b:["Newcastle Emlyn","Llandysul","Tregaron"]},
+  {id:"towy",n:"River Towy",ea:"Towy",lat:51.88,lng:-4.00,q:7,rg:"Wales",b:["Llandeilo","Carmarthen"]},
+  {id:"dee_wales",n:"River Dee (Wales)",ea:"Dee",lat:52.97,lng:-3.08,q:8,rg:"Wales",b:["Llangollen","Corwen","Bala"]},
+  {id:"conwy",n:"River Conwy",ea:"Conwy",lat:53.12,lng:-3.82,q:6,rg:"Wales",b:["Betws-y-Coed","Llanrwst"]},
+  {id:"mawddach",n:"River Mawddach",ea:"Mawddach",lat:52.78,lng:-3.88,q:6,rg:"Wales",b:["Dolgellau"]},
+  {id:"dovey",n:"River Dovey",ea:"Dyfi",lat:52.58,lng:-3.75,q:6,rg:"Wales",b:["Machynlleth"]},
+  {id:"irfon",n:"River Irfon",ea:"Irfon",lat:52.15,lng:-3.50,q:7,rg:"Wales",b:["Builth Wells"]},
+  {id:"taff",n:"River Taff",ea:"Taff",lat:51.52,lng:-3.28,q:4,rg:"Wales",b:["Merthyr Tydfil","Pontypridd"]},
+  /* Midlands */
+  {id:"dove",n:"River Dove",ea:"Dove",lat:53.05,lng:-1.78,q:8,rg:"Midlands",b:["Dovedale","Hartington","Beresford"]},
+  {id:"derwent_derbys",n:"River Derwent (Derbys)",ea:"Derwent",lat:53.05,lng:-1.52,q:7,rg:"Midlands",b:["Matlock","Baslow","Bamford"]},
+  {id:"manifold",n:"River Manifold",ea:"Manifold",lat:53.10,lng:-1.82,q:7,rg:"Midlands",b:["Ilam","Wetton"]},
+  {id:"wye_derbys",n:"River Wye (Derbys)",ea:"Wye",lat:53.25,lng:-1.72,q:7,rg:"Midlands",b:["Bakewell","Ashford"]},
+  {id:"teme",n:"River Teme",ea:"Teme",lat:52.32,lng:-2.62,q:7,rg:"Midlands",b:["Ludlow","Tenbury Wells","Knighton"]},
+  {id:"lugg",n:"River Lugg",ea:"Lugg",lat:52.12,lng:-2.80,q:6,rg:"Midlands",b:["Leominster","Presteigne"]},
+  {id:"arrow",n:"River Arrow",ea:"Arrow",lat:52.22,lng:-2.92,q:5,rg:"Midlands",b:["Pembridge"]},
+  /* North West */
+  {id:"ribble",n:"River Ribble",ea:"Ribble",lat:53.87,lng:-2.30,q:7,rg:"North West",b:["Settle","Clitheroe","Ribchester"]},
+  {id:"lune",n:"River Lune",ea:"Lune",lat:54.15,lng:-2.65,q:8,rg:"North West",b:["Kirkby Lonsdale","Tebay","Sedbergh"]},
+  {id:"eden",n:"River Eden",ea:"Eden",lat:54.67,lng:-2.78,q:8,rg:"North West",b:["Appleby","Kirkby Stephen","Lazonby"]},
+  {id:"derwent_cumbria",n:"River Derwent (Cumbria)",ea:"Derwent",lat:54.58,lng:-3.37,q:7,rg:"North West",b:["Cockermouth","Bassenthwaite"]},
+  {id:"kent_river",n:"River Kent",ea:"Kent",lat:54.33,lng:-2.75,q:7,rg:"North West",b:["Kendal","Staveley"]},
+  {id:"wenning",n:"River Wenning",ea:"Wenning",lat:54.10,lng:-2.52,q:5,rg:"North West",b:["Wennington"]},
+  {id:"hodder",n:"River Hodder",ea:"Hodder",lat:53.92,lng:-2.50,q:6,rg:"North West",b:["Whitewell","Slaidburn"]},
+  {id:"irwell",n:"River Irwell",ea:"Irwell",lat:53.50,lng:-2.28,q:4,rg:"North West",b:["Bury","Ramsbottom"]},
+  /* North East */
+  {id:"tyne_ne",n:"River Tyne",ea:"Tyne",lat:54.97,lng:-2.15,q:7,rg:"North East",b:["Hexham","Wylam","Corbridge"]},
+  {id:"wear",n:"River Wear",ea:"Wear",lat:54.78,lng:-1.72,q:6,rg:"North East",b:["Bishop Auckland","Stanhope"]},
+  {id:"tees",n:"River Tees",ea:"Tees",lat:54.55,lng:-2.10,q:7,rg:"North East",b:["Barnard Castle","Middleton"]},
+  {id:"coquet",n:"River Coquet",ea:"Coquet",lat:55.33,lng:-1.72,q:7,rg:"North East",b:["Rothbury","Warkworth"]},
+  {id:"north_tyne",n:"North Tyne",ea:"Tyne",lat:55.12,lng:-2.35,q:7,rg:"North East",b:["Bellingham","Kielder"]},
+  {id:"south_tyne",n:"South Tyne",ea:"Tyne",lat:54.82,lng:-2.50,q:6,rg:"North East",b:["Alston","Haltwhistle"]},
+  {id:"tweed",n:"River Tweed",ea:"Tweed",lat:55.60,lng:-2.32,q:9,rg:"North East",b:["Kelso","Coldstream","Peebles"]},
+  {id:"till",n:"River Till",ea:"Till",lat:55.58,lng:-2.05,q:6,rg:"North East",b:["Wooler","Chillingham"]},
+  /* Yorkshire */
+  {id:"swale",n:"River Swale",ea:"Swale",lat:54.37,lng:-1.65,q:6,rg:"Yorkshire",b:["Richmond","Reeth"]},
+  {id:"ure",n:"River Ure",ea:"Ure",lat:54.30,lng:-1.78,q:7,rg:"Yorkshire",b:["Leyburn","Hawes","Middleham"]},
+  {id:"wharfe",n:"River Wharfe",ea:"Wharfe",lat:53.95,lng:-1.72,q:7,rg:"Yorkshire",b:["Bolton Abbey","Grassington","Burnsall"]},
+  {id:"nidd",n:"River Nidd",ea:"Nidd",lat:54.02,lng:-1.55,q:6,rg:"Yorkshire",b:["Pateley Bridge","Knaresborough"]},
+  {id:"aire",n:"River Aire",ea:"Aire",lat:53.88,lng:-2.02,q:5,rg:"Yorkshire",b:["Skipton","Malham"]},
+  {id:"derbyshire_wye",n:"River Rye",ea:"Rye",lat:54.25,lng:-1.08,q:5,rg:"Yorkshire",b:["Helmsley"]},
+  {id:"esk_yorks",n:"River Esk (Yorks)",ea:"Esk",lat:54.45,lng:-0.75,q:6,rg:"Yorkshire",b:["Whitby","Grosmont"]},
+  {id:"derwent_yorks",n:"River Derwent (Yorks)",ea:"Derwent",lat:54.10,lng:-0.78,q:5,rg:"Yorkshire",b:["Malton","Stamford Bridge"]},
+  {id:"costa",n:"Costa Beck",ea:"Costa",lat:54.22,lng:-0.82,q:7,rg:"Yorkshire",b:["Pickering"]},
+  /* South East & East */
+  {id:"itchensurrey",n:"River Wey",ea:"Wey",lat:51.23,lng:-0.67,q:5,rg:"South East",b:["Guildford","Farnham"]},
+  {id:"mole",n:"River Mole",ea:"Mole",lat:51.25,lng:-0.33,q:4,rg:"South East",b:["Dorking","Leatherhead"]},
+  {id:"medway",n:"River Medway",ea:"Medway",lat:51.17,lng:0.50,q:4,rg:"South East",b:["Tonbridge","Yalding"]},
+  {id:"stour_kent",n:"River Stour (Kent)",ea:"Stour",lat:51.28,lng:1.05,q:4,rg:"South East",b:["Canterbury","Wye"]},
+  {id:"rother",n:"River Rother",ea:"Rother",lat:51.00,lng:0.65,q:4,rg:"South East",b:["Robertsbridge"]},
+  {id:"arun",n:"River Arun",ea:"Arun",lat:50.92,lng:-0.55,q:4,rg:"South East",b:["Arundel","Pulborough"]},
+  {id:"loddon",n:"River Loddon",ea:"Loddon",lat:51.37,lng:-0.90,q:5,rg:"South East",b:["Twyford"]},
+  {id:"colne",n:"River Colne",ea:"Colne",lat:51.70,lng:-0.47,q:5,rg:"South East",b:["Watford","Rickmansworth"]},
+  {id:"lea",n:"River Lea",ea:"Lea",lat:51.80,lng:-0.10,q:4,rg:"South East",b:["Hertford","Broxbourne"]},
+  {id:"ver",n:"River Ver",ea:"Ver",lat:51.75,lng:-0.35,q:5,rg:"South East",b:["St Albans","Redbourn"]},
+  {id:"gade",n:"River Gade",ea:"Gade",lat:51.75,lng:-0.48,q:5,rg:"South East",b:["Hemel Hempstead"]},
+  {id:"misbourne",n:"River Misbourne",ea:"Misbourne",lat:51.65,lng:-0.58,q:4,rg:"South East",b:["Amersham","Chalfont"]},
+  /* Scotland */
+  {id:"spey",n:"River Spey",ea:"Spey",lat:57.35,lng:-3.22,q:10,rg:"Scotland",b:["Grantown","Aberlour","Craigellachie"]},
+  {id:"tay",n:"River Tay",ea:"Tay",lat:56.42,lng:-3.43,q:9,rg:"Scotland",b:["Pitlochry","Dunkeld","Perth"]},
+  {id:"dee_scotland",n:"River Dee (Scotland)",ea:"Dee",lat:57.05,lng:-2.97,q:9,rg:"Scotland",b:["Banchory","Aboyne","Braemar"]},
+  {id:"don_scotland",n:"River Don (Scotland)",ea:"Don",lat:57.17,lng:-2.48,q:7,rg:"Scotland",b:["Inverurie","Alford"]},
+  {id:"findhorn",n:"River Findhorn",ea:"Findhorn",lat:57.55,lng:-3.63,q:7,rg:"Scotland",b:["Forres","Tomatin"]},
+  {id:"deveron",n:"River Deveron",ea:"Deveron",lat:57.52,lng:-2.72,q:7,rg:"Scotland",b:["Huntly","Turriff"]},
+  {id:"nith",n:"River Nith",ea:"Nith",lat:55.22,lng:-3.60,q:6,rg:"Scotland",b:["Dumfries","Thornhill"]},
+  {id:"annan",n:"River Annan",ea:"Annan",lat:55.20,lng:-3.28,q:7,rg:"Scotland",b:["Moffat","Lockerbie"]},
+  {id:"clyde",n:"River Clyde",ea:"Clyde",lat:55.68,lng:-3.78,q:5,rg:"Scotland",b:["Lanark","Biggar"]},
+  {id:"esk_scotland",n:"Border Esk",ea:"Esk",lat:55.03,lng:-3.05,q:6,rg:"Scotland",b:["Langholm","Canonbie"]},
+  {id:"helmsdale",n:"River Helmsdale",ea:"Helmsdale",lat:58.12,lng:-3.65,q:8,rg:"Scotland",b:["Helmsdale"]},
+  {id:"oykel",n:"River Oykel",ea:"Oykel",lat:57.95,lng:-4.70,q:7,rg:"Scotland",b:["Oykel Bridge"]},
+  {id:"shin",n:"River Shin",ea:"Shin",lat:57.97,lng:-4.38,q:7,rg:"Scotland",b:["Lairg"]},
+  {id:"beauly",n:"River Beauly",ea:"Beauly",lat:57.47,lng:-4.47,q:7,rg:"Scotland",b:["Beauly"]},
+  {id:"conon",n:"River Conon",ea:"Conon",lat:57.58,lng:-4.65,q:6,rg:"Scotland",b:["Conon Bridge"]},
+  {id:"naver",n:"River Naver",ea:"Naver",lat:58.38,lng:-4.22,q:8,rg:"Scotland",b:["Bettyhill"]},
+  {id:"thurso",n:"River Thurso",ea:"Thurso",lat:58.48,lng:-3.55,q:7,rg:"Scotland",b:["Halkirk"]},
+  {id:"lochy",n:"River Lochy",ea:"Lochy",lat:56.85,lng:-5.08,q:7,rg:"Scotland",b:["Fort William"]},
+  {id:"awe",n:"River Awe",ea:"Awe",lat:56.40,lng:-5.18,q:7,rg:"Scotland",b:["Taynuilt"]},
+  {id:"earn",n:"River Earn",ea:"Earn",lat:56.35,lng:-3.62,q:6,rg:"Scotland",b:["Comrie","Crieff"]},
+  {id:"teith",n:"River Teith",ea:"Teith",lat:56.22,lng:-4.08,q:6,rg:"Scotland",b:["Callander","Doune"]},
+  {id:"tummel",n:"River Tummel",ea:"Tummel",lat:56.70,lng:-3.73,q:7,rg:"Scotland",b:["Pitlochry"]},
+  {id:"ness",n:"River Ness",ea:"Ness",lat:57.48,lng:-4.23,q:7,rg:"Scotland",b:["Inverness"]},
+];
+
+/* Merge: premium chalkstreams + UK rivers */
+const ALL_RV=[...RV,...UK.map(r=>({...r,p:r.p||`${r.rg} river. Weather and hatch data available.`,b:r.b||[],bq:r.bq||{},premium:false}))];
+RV.forEach(r=>r.premium=true);
+const REGIONS=[...new Set(UK.map(r=>r.rg))].sort();
+const STORE_FAVS="eph_favs";
+function getFavs(){try{return JSON.parse(localStorage.getItem(STORE_FAVS))||[]}catch{return[]}}
+function saveFavs(f){localStorage.setItem(STORE_FAVS,JSON.stringify(f))}
+
 /* ── HATCH DATA ── */
 const H=[
   {id:"danica",cm:"Mayfly",cat:"m",t:1,s:135,e:172,tMn:12,tMx:18,pk:[12,13,14,15,16],hk:"10-12 LD",sz:"20-25mm",avgS:139},
@@ -317,6 +428,10 @@ export default function App(){
   const[scenario,setScenario]=useState(null);const[method,setMethod]=useState("dry");
   const[flyT,setFlyT]=useState("dry");const[openFly,setOpenFly]=useState(null);
   const[ex,setEx]=useState({});const toggle=k=>setEx(p=>({...p,[k]:!p[k]}));
+  const[riverSearch,setRiverSearch]=useState("");
+  const[regionFilter,setRegionFilter]=useState("");
+  const[favs,setFavs]=useState(()=>getFavs());
+  const toggleFav=(id)=>{const nf=favs.includes(id)?favs.filter(f=>f!==id):[...favs,id];setFavs(nf);saveFavs(nf)};
 
   /* SESSION TRACKING — quick snap, log later */
   const[sessions,setSessions]=useState(()=>getSessions());
@@ -418,7 +533,7 @@ export default function App(){
   const[fBig,setFBig]=useState("");const[fFly,setFFly]=useState("");
   const[fNotes,setFNotes]=useState("");const[fRating,setFRating]=useState("");
 
-  const P=light?L:D;const rv=RV.find(r=>r.id===riv);
+  const P=light?L:D;const rv=ALL_RV.find(r=>r.id===riv)||RV[0];
 
   /* SAVE PREFS */
   useEffect(()=>{savePrefs({lastRiver:riv,lastBeat:beat,light})},[riv,beat,light]);
@@ -703,8 +818,44 @@ export default function App(){
             <button onClick={logout} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{user.name.split(" ")[0]} ✕</button>
           </div>
         </div>
-        <button onClick={()=>setPick(!pick)} style={{width:"100%",background:P.c2,border:`1px solid ${P.bd}`,borderRadius:7,padding:"9px 12px",color:P.tx,fontSize:11,fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",justifyContent:"space-between"}}><span>{rv.n} / {beat}</span><span style={{color:P.txD}}>{pick?"−":"+"}</span></button>
-        {pick&&<div style={{marginTop:6,background:P.c2,borderRadius:7,padding:10,border:`1px solid ${P.bd}`,maxHeight:200,overflowY:"auto"}}><div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:6}}>{RV.map(r=><button key={r.id} onClick={()=>setRiv(r.id)} style={{padding:"3px 8px",borderRadius:4,border:riv===r.id?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:riv===r.id?P.rustS:"transparent",color:riv===r.id?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{r.n}</button>)}</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setPick(false)}} style={{padding:"2px 7px",borderRadius:4,border:beat===b?`1px solid ${P.tx}`:`1px solid ${P.bd}`,background:beat===b?P.c3:"transparent",color:beat===b?P.tx:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div></div>}
+        <button onClick={()=>{setPick(!pick);setRiverSearch("");setRegionFilter("")}} style={{width:"100%",background:P.c2,border:`1px solid ${P.bd}`,borderRadius:7,padding:"9px 12px",color:P.tx,fontSize:11,fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",justifyContent:"space-between"}}><span>{rv.n}{beat?" / "+beat:""}</span><span style={{color:P.txD}}>{pick?"−":"+"}</span></button>
+        {pick&&<div style={{marginTop:6,background:P.c2,borderRadius:7,padding:10,border:`1px solid ${P.bd}`,maxHeight:360,overflowY:"auto"}}>
+          {/* SEARCH */}
+          <input value={riverSearch} onChange={e=>setRiverSearch(e.target.value)} placeholder="Search rivers..." style={{width:"100%",background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",marginBottom:8}}/>
+
+          {/* REGION FILTER */}
+          <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:8}}>
+            <button onClick={()=>setRegionFilter("")} style={{padding:"2px 7px",borderRadius:3,border:!regionFilter?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:!regionFilter?P.gn+"18":"transparent",color:!regionFilter?P.gn:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>All</button>
+            <button onClick={()=>setRegionFilter("favs")} style={{padding:"2px 7px",borderRadius:3,border:regionFilter==="favs"?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:regionFilter==="favs"?P.rustS:"transparent",color:regionFilter==="favs"?P.rust:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>★ Favourites</button>
+            <button onClick={()=>setRegionFilter("chalk")} style={{padding:"2px 7px",borderRadius:3,border:regionFilter==="chalk"?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:regionFilter==="chalk"?P.gn+"18":"transparent",color:regionFilter==="chalk"?P.gn:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Chalkstreams</button>
+            {REGIONS.map(rg=><button key={rg} onClick={()=>setRegionFilter(regionFilter===rg?"":rg)} style={{padding:"2px 7px",borderRadius:3,border:regionFilter===rg?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:regionFilter===rg?P.rustS:"transparent",color:regionFilter===rg?P.rust:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{rg}</button>)}
+          </div>
+
+          {/* RIVER LIST */}
+          {(()=>{
+            let rivers=ALL_RV;
+            if(regionFilter==="favs")rivers=rivers.filter(r=>favs.includes(r.id));
+            else if(regionFilter==="chalk")rivers=rivers.filter(r=>r.premium);
+            else if(regionFilter)rivers=rivers.filter(r=>r.rg===regionFilter);
+            if(riverSearch.trim())rivers=rivers.filter(r=>r.n.toLowerCase().includes(riverSearch.toLowerCase())||r.rg?.toLowerCase().includes(riverSearch.toLowerCase()));
+            /* Sort: favs first, then premium, then alpha */
+            rivers=rivers.sort((a,b)=>{const af=favs.includes(a.id)?0:1,bf=favs.includes(b.id)?0:1;if(af!==bf)return af-bf;const ap=a.premium?0:1,bp=b.premium?0:1;if(ap!==bp)return ap-bp;return a.n.localeCompare(b.n)});
+            if(!rivers.length)return<div style={{textAlign:"center",padding:12,color:P.txD,fontSize:11}}>No rivers found</div>;
+            return<div style={{display:"grid",gap:2}}>{rivers.slice(0,30).map(r=><div key={r.id} style={{display:"flex",alignItems:"center",gap:6}}>
+              <button onClick={()=>toggleFav(r.id)} style={{background:"none",border:"none",color:favs.includes(r.id)?P.rust:P.txD,fontSize:12,cursor:"pointer",padding:0,flexShrink:0}}>{favs.includes(r.id)?"★":"☆"}</button>
+              <button onClick={()=>{setRiv(r.id);setPick(false);setRiverSearch("")}} style={{flex:1,padding:"5px 8px",borderRadius:4,border:riv===r.id?`1px solid ${P.gn}`:`1px solid transparent`,background:riv===r.id?P.gn+"18":"transparent",color:riv===r.id?P.gn:P.tx,fontSize:10,fontWeight:riv===r.id?700:400,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <span>{r.n}</span>
+                <span style={{fontSize:8,color:r.premium?P.gn:P.txD}}>{r.premium?"●":r.rg||""}</span>
+              </button>
+            </div>)}{rivers.length>30&&<div style={{fontSize:9,color:P.txD,textAlign:"center",padding:4}}>Showing 30 of {rivers.length} — search to narrow</div>}</div>;
+          })()}
+
+          {/* BEATS for selected river */}
+          {rv.b&&rv.b.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`}}>
+            <div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEATS — {rv.n}</div>
+            <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setPick(false)}} style={{padding:"2px 7px",borderRadius:4,border:beat===b?`1px solid ${P.tx}`:`1px solid ${P.bd}`,background:beat===b?P.c3:"transparent",color:beat===b?P.tx:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
+          </div>}
+        </div>}
       </div>
 
       {/* SCORE BAR — 3 second answer */}
