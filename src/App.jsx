@@ -1019,6 +1019,37 @@ export default function App(){
           {/* RIVER PERSONALITY */}
           <div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:4}}>{rv.n.toUpperCase()}</div><div style={{fontSize:11,color:P.txM,lineHeight:1.7,fontStyle:"italic"}}>{rv.p}</div></div>
 
+          {/* RIVER MAP */}
+          <div onClick={()=>{if(!ex.map){toggle("map");if(!window._riverData)fetch("/rivers.json").then(r=>r.json()).then(d=>{window._riverData=d;setEx(p=>({...p,mapLoaded:true}))}).catch(()=>{})}else toggle("map")}} style={{background:P.c1,borderRadius:ex.map?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex.map?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>RIVER MAP</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>View the river network</div></div><span style={{color:P.txD,fontSize:11}}>{ex.map?"−":"+"}</span></div>
+          {ex.map&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",marginBottom:10,overflow:"hidden"}}>
+            <div id="eph-map" style={{height:280,width:"100%"}} ref={el=>{
+              if(!el||el.dataset.init)return;el.dataset.init="1";
+              const link=document.createElement("link");link.rel="stylesheet";link.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";document.head.appendChild(link);
+              const script=document.createElement("script");script.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+              script.onload=()=>{
+                const map=window.L.map(el,{zoomControl:false,attributionControl:false}).setView([rv.lat,rv.lng],12);
+                window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{opacity:0.4}).addTo(map);
+                window.L.control.zoom({position:"bottomright"}).addTo(map);
+                const data=window._riverData?.[riv];
+                if(data){
+                  const bounds=[];
+                  data.forEach(seg=>{
+                    const latlngs=seg.map(p=>[p[0],p[1]]);
+                    bounds.push(...latlngs);
+                    window.L.polyline(latlngs,{color:"#7A9E7E",weight:2.5,opacity:0.9}).addTo(map);
+                  });
+                  if(bounds.length)map.fitBounds(bounds,{padding:[20,20]});
+                }
+                /* Mark beats */
+                (rv.b||[]).forEach((b,i)=>{
+                  const offset=i*0.005;
+                  window.L.circleMarker([rv.lat+offset,rv.lng+offset*1.5],{radius:4,color:"#C36A3D",fillColor:"#C36A3D",fillOpacity:1}).bindTooltip(b,{permanent:false}).addTo(map);
+                });
+              };
+              document.head.appendChild(script);
+            }}/>
+          </div>}
+
           {/* MAYFLY TRACKER */}
           {dan&&<div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>MAYFLY TRACKER</div><div style={{fontSize:13,fontWeight:700,color:ds.c,marginTop:3}}>{ds.s}</div><div style={{fontSize:9,color:P.txD,marginTop:2}}>Avg May 18-22 / Peak Jun 1-7</div></div><div style={{fontSize:22,fontWeight:700,color:P.rust}}>{dan.score}%</div></div>}
         </div>}
