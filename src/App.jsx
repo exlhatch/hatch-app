@@ -148,6 +148,22 @@ const UK=[
   {id:"teith",n:"River Teith",ea:"Teith",lat:56.22,lng:-4.08,q:6,rg:"Scotland",b:["Callander","Doune"]},
   {id:"tummel",n:"River Tummel",ea:"Tummel",lat:56.70,lng:-3.73,q:7,rg:"Scotland",b:["Pitlochry"]},
   {id:"ness",n:"River Ness",ea:"Ness",lat:57.48,lng:-4.23,q:7,rg:"Scotland",b:["Inverness"]},
+  /* Stillwaters — trout lakes and reservoirs */
+  {id:"rutland",n:"Rutland Water",ea:"",lat:52.65,lng:-0.68,q:8,rg:"Stillwater",b:["North Arm","South Arm","Dam"],p:"England's finest big-water stillwater. Rainbow and brown trout. Bank and boat. Buzzer fishing supreme."},
+  {id:"grafham",n:"Grafham Water",ea:"",lat:52.30,lng:-0.32,q:8,rg:"Stillwater",b:["Dam","Church Bay","Savages Creek"],p:"Premier reservoir. Strong buzzer and sedge hatches. Big rainbows. Good bank fishing."},
+  {id:"chew",n:"Chew Valley Lake",ea:"",lat:51.33,lng:-2.63,q:8,rg:"Stillwater",b:["Woodford","Herriott's Pool","Nunnery"],p:"Bristol Water reservoir. Excellent wild brown trout. Famous for buzzer fishing."},
+  {id:"blagdon",n:"Blagdon Lake",ea:"",lat:51.33,lng:-2.70,q:8,rg:"Stillwater",b:["Dam","Green Lawn","Butcombe Bay"],p:"Historic stillwater. Where stillwater fly fishing began. Nymph fishing paradise."},
+  {id:"bewl",n:"Bewl Water",ea:"",lat:51.07,lng:0.38,q:7,rg:"Stillwater",b:["Dam","Ferry Point","Tinkers"],p:"Kent/Sussex border reservoir. Bank and boat. Good hatches of sedge and buzzer."},
+  {id:"eyebrook",n:"Eyebrook Reservoir",ea:"",lat:52.52,lng:-0.82,q:7,rg:"Stillwater",b:["Dam","Stoke Dry"],p:"Small reservoir with big fish. Excellent sedge hatches. Intimate water."},
+  {id:"draycote",n:"Draycote Water",ea:"",lat:52.33,lng:-1.33,q:7,rg:"Stillwater",b:["Dam","Toft","Farborough"],p:"Warwickshire reservoir. Good rainbow fishing. Bank and boat."},
+  {id:"llyn_brenig",n:"Llyn Brenig",ea:"",lat:53.05,lng:-3.55,q:7,rg:"Stillwater",b:["Dam","North Shore"],p:"Welsh upland reservoir. Wild brown trout. Beautiful setting."},
+  {id:"lake_vyrnwy",n:"Lake Vyrnwy",ea:"",lat:52.78,lng:-3.47,q:7,rg:"Stillwater",b:["Dam","Tower"],p:"Iconic Welsh reservoir. Wild brown trout in stunning scenery."},
+  {id:"pitsford",n:"Pitsford Reservoir",ea:"",lat:52.32,lng:-0.88,q:6,rg:"Stillwater",b:["Dam","Fishing Lodge"],p:"Northampton reservoir. Good buzzer fishing. Consistent sport."},
+  {id:"ravensthorpe",n:"Ravensthorpe Reservoir",ea:"",lat:52.33,lng:-1.03,q:6,rg:"Stillwater",b:["Dam"],p:"Small Northants water. Intimate fishing. Good for beginners."},
+  {id:"loch_leven",n:"Loch Leven",ea:"",lat:56.20,lng:-3.38,q:9,rg:"Stillwater",b:["Boat only"],p:"Scotland's most famous trout loch. Wild brown trout. Boat fishing. Legendary hatches."},
+  {id:"menteith",n:"Lake of Menteith",ea:"",lat:56.17,lng:-4.28,q:7,rg:"Stillwater",b:["Boat only"],p:"Scotland's only lake (not loch). Rainbow and brown. Sheltered boat fishing."},
+  {id:"hanningfield",n:"Hanningfield Reservoir",ea:"",lat:51.63,lng:0.52,q:6,rg:"Stillwater",b:["Dam","South Bank"],p:"Essex reservoir. Good rainbow trout fishing close to London."},
+  {id:"farmoor",n:"Farmoor Reservoir",ea:"",lat:51.75,lng:-1.35,q:5,rg:"Stillwater",b:["Farmoor I","Farmoor II"],p:"Two concrete bowls near Oxford. Consistent stocked rainbow fishing."},
 ];
 
 /* Merge: premium chalkstreams + UK rivers */
@@ -188,6 +204,25 @@ const FLIES={
     {nm:"Iron Blue Dun",sz:"16-18",mt:["ib"],cf:"Cold weather pick",nt:"Small, dark. Fish love them on drizzly, cool days."},
     {nm:"Black Gnat",sz:"16-18",mt:["bg"],cf:"Search pattern",nt:"Midsummer staple. Fish it when nothing specific is hatching."},
     {nm:"Last Hope",sz:"16-20",mt:["pw","caen"],cf:"Desert island fly",nt:"Clarke's classic. For the most selective fish on the smallest food."},
+    {nm:"F Fly",sz:"14-18",mt:["ldo","mo","bwo"],cf:"High confidence",nt:"CDC wing, thread body. Does everything."},
+    {nm:"Parachute Adams",sz:"14-18",mt:["ldo","mo","bwo"],cf:"Search pattern",nt:"Easier to see than standard Adams. White post."},
+    {nm:"Goddard Caddis",sz:"12-16",mt:["sedge"],cf:"Evening essential",nt:"Deer hair caddis. Unsinkable. Skate it."},
+    {nm:"Griffith's Gnat",sz:"20-24",mt:["smut","bg"],cf:"Last resort",nt:"Peacock herl and grizzle hackle. For midge feeders."},
+    {nm:"Grey Duster",sz:"14-18",mt:["ldo","mo","pw"],cf:"Search pattern",nt:"Badger hackle, rabbit body. Old school and effective."},
+    {nm:"Greenwell's Glory",sz:"14-16",mt:["ldo","mo"],cf:"High confidence",nt:"Waxed olive thread. One of the oldest chalkstream patterns."},
+    {nm:"Tup's Indispensable",sz:"14-16",mt:["pw","mo"],cf:"Good match",nt:"Pink thorax, cream body. Pale watery and spinner."},
+    {nm:"Daddy Long Legs",sz:"8-12",mt:["haw"],cf:"Autumn essential",nt:"Crane fly. Big mouthful. September gold."},
+    {nm:"Flying Ant",sz:"14-18",mt:["bg"],cf:"Opportunistic",nt:"Ant falls are rare but devastating. Fish gorge."},
+    {nm:"Black Ant",sz:"16-18",mt:["bg"],cf:"Windy day pick",nt:"Wind blows ants onto the water. Fish the lee bank."},
+    {nm:"Beetle (Coch-y-bondhu)",sz:"14-16",mt:["haw","bg"],cf:"Terrestrial",nt:"Peacock herl body. Classic beetle imitation."},
+    {nm:"Black Beetle",sz:"14-18",mt:["bg"],cf:"Windy day pick",nt:"Foam back, black body. Land it with a splat."},
+    {nm:"Hawthorn Fly",sz:"12-14",mt:["haw"],cf:"Seasonal",nt:"Trailing legs are the key. April-May on warm days."},
+    {nm:"Wickham's Fancy",sz:"14-16",mt:["ldo","mo","bg"],cf:"Attractor",nt:"Gold body, palmered hackle. When nothing else works."},
+    {nm:"Blue Upright",sz:"14-16",mt:["ldo","ib"],cf:"Good match",nt:"Classic sparse dry. Dark and deadly."},
+    {nm:"Alder Fly",sz:"12-14",mt:["sedge"],cf:"Seasonal",nt:"Dark winged. Fish go mad for them."},
+    {nm:"Red Ant",sz:"16-18",mt:["bg"],cf:"Windy day pick",nt:"Cinnamon body. Wind drops them on the water."},
+    {nm:"Drone Fly",sz:"12-14",mt:["bg"],cf:"Opportunistic",nt:"Bee-like. Fish take them confidently."},
+    {nm:"Terry's Terror",sz:"14-16",mt:["ldo","mo"],cf:"Search pattern",nt:"Peacock herl body, versatile. Works on everything."},
   ],
   emerger:[
     {nm:"Klinkhamer Special",sz:"12-18",mt:["ldo","mo","bwo","danica"],cf:"High confidence",nt:"Hangs in the film. The most versatile chalkstream fly ever tied."},
@@ -442,14 +477,17 @@ export default function App(){
   const[sessionNotes,setSessionNotes]=useState("");
   const[sessionTick,setSessionTick]=useState(0);
   const[reviewing,setReviewing]=useState(false);/* end-of-session review screen */
+  const[sessionPublic,setSessionPublic]=useState(false);
   const[analyzing,setAnalyzing]=useState(null);/* snap id being analyzed */
   const[sessionSummary,setSessionSummary]=useState("");
   const[flyIdMode,setFlyIdMode]=useState(false);/* fly identification mode */
   const[flyAnalysis,setFlyAnalysis]=useState(null);
+  const[flyQ,setFlyQ]=useState({size:"",colour:"",behaviour:""});
   const[flyAnalyzing,setFlyAnalyzing]=useState(false);
   const[flyBoxScan,setFlyBoxScan]=useState(null);const[flyBoxScanning,setFlyBoxScanning]=useState(false);
   const[archiveOverview,setArchiveOverview]=useState("");const[archiveLoading,setArchiveLoading]=useState(false);
   const[expandedSession,setExpandedSession]=useState(null);
+  const[hatchObs,setHatchObs]=useState({});/* {hatchId: "yes"|"no"|"unsure"} */
   const fileRef=typeof document!=="undefined"?document.createElement("input"):null;
   if(fileRef){fileRef.type="file";fileRef.accept="image/*";fileRef.setAttribute("capture","environment")}
   const flyFileRef=typeof document!=="undefined"?document.createElement("input"):null;
@@ -532,6 +570,10 @@ export default function App(){
   const[fBeat,setFBeat]=useState("");const[fFish,setFish]=useState("");
   const[fBig,setFBig]=useState("");const[fFly,setFFly]=useState("");
   const[fNotes,setFNotes]=useState("");const[fRating,setFRating]=useState("");
+  const[fDate,setFDate]=useState(()=>new Date().toISOString().slice(0,10));
+  const[fPhotos,setFPhotos]=useState([]);/* base64 photos for manual log */
+  const manualPhotoRef=typeof document!=="undefined"?document.createElement("input"):null;
+  if(manualPhotoRef){manualPhotoRef.type="file";manualPhotoRef.accept="image/*";manualPhotoRef.multiple=true}
 
   const P=light?L:D;const rv=ALL_RV.find(r=>r.id===riv)||RV[0];
 
@@ -628,8 +670,12 @@ export default function App(){
       const file=e.target.files?.[0];if(!file)return;
       const b64=await compressImg(file,800);
       setFlyAnalyzing(true);setFlyAnalysis(null);setFlyIdMode(true);
+      const extra=[];
+      if(flyQ.size)extra.push(`Approximate size: ${flyQ.size}`);
+      if(flyQ.colour)extra.push(`Colour: ${flyQ.colour}`);
+      if(flyQ.behaviour)extra.push(`Behaviour: ${flyQ.behaviour}`);
       try{
-        const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:b64,mode:"fly"})});
+        const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:b64,mode:"fly",observations:extra.join(". ")})});
         setFlyAnalysis(await r.json());
       }catch(e){setFlyAnalysis({error:e.message})}
       setFlyAnalyzing(false);flyFileRef.value="";
@@ -647,12 +693,15 @@ export default function App(){
     if(!flyBoxRef)return;
     flyBoxRef.onchange=async(e)=>{
       const file=e.target.files?.[0];if(!file)return;
-      const b64=await compressImg(file,1200);
+      const b64=await compressImg(file,800);
       setFlyBoxScanning(true);setFlyBoxScan(null);
       try{
         const condText=`River: ${rv.n}, Beat: ${beat}, Water temp: ${cT}°C, Air: ${cAir}°C, Wind: ${cW}mph, Cloud: ${cC}%, Top hatch: ${topH?.cm||"none"} (score ${topH?.score||0}), Active hatches: ${spp.filter(s=>s.score>15).map(s=>s.cm).join(", ")||"none"}, Time: ${new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}, Method: ${method}`;
         const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:b64,mode:"flybox",conditions:condText})});
-        setFlyBoxScan(await r.json());
+        const data=await r.json();
+        if(data.error)setFlyBoxScan({error:data.error});
+        else if(data.raw)setFlyBoxScan({error:"Could not parse response. Try a clearer photo."});
+        else setFlyBoxScan(data);
       }catch(e){setFlyBoxScan({error:e.message})}
       setFlyBoxScanning(false);flyBoxRef.value="";
     };
@@ -692,18 +741,34 @@ export default function App(){
     const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:fishCount,big:biggest!=="0"?biggest+"lb":"",fly:bestFly,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||"",summary:sessionSummary,catches:sessionSnaps.map(s=>({timestamp:s.timestamp,species:s.species,weight:s.weight,fly:s.fly,wild:s.wild,notes:s.notes,photo:s.photo?.substring(0,100)+"..."}))};
     const updated=[sess,...sessions];setSessions(updated);saveSessions(updated);
     sbInsert("sessions",{user_email:user?.email,user_name:user?.name,river:rv.n,beat,fish:fishCount,biggest:biggest!=="0"?biggest+"lb":"",best_fly:bestFly,notes:sessionNotes+(sessionSummary?"\n\nAI Summary: "+sessionSummary:""),duration:sess.dur,score:cond.pct,top_hatch:topH?.cm||""});
-    setReviewing(false);setSessionStart(null);setSessionSnaps([]);setSessionSummary("");
+    setReviewing(false);setSessionStart(null);setSessionSnaps([]);setSessionSummary("");setHatchObs({});
+  };
+
+  /* ADD PHOTOS TO MANUAL LOG */
+  const addManualPhotos=()=>{
+    if(!manualPhotoRef)return;
+    manualPhotoRef.onchange=async(e)=>{
+      const files=Array.from(e.target.files||[]);
+      const newPhotos=[];
+      for(const file of files){
+        const b64=await compressImg(file,800);
+        const exifDate=await extractExifTime(file);
+        newPhotos.push({b64,time:exifDate?exifDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"",exifDate:exifDate?.toISOString()||null});
+      }
+      setFPhotos(p=>[...p,...newPhotos]);
+      manualPhotoRef.value="";
+    };
+    manualPhotoRef.click();
   };
 
   /* SAVE MANUAL SESSION */
   const saveManualSession=()=>{
     if(fBeat&&(fNotes||fFish)){
-      const now=new Date();
-      const sess={id:Date.now(),d:now.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:now.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),river:rv.n,beat:fBeat,fish:parseInt(fFish)||0,big:fBig,fly:fFly,notes:fNotes,rating:fRating,user:fName||user?.name||"Anon",dur:"Manual"};
+      const dateObj=new Date(fDate+"T12:00:00");
+      const sess={id:Date.now(),d:dateObj.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:"",river:rv.n,beat:fBeat,fish:parseInt(fFish)||0,big:fBig,fly:fFly,notes:fNotes,rating:fRating,user:fName||user?.name||"Anon",dur:"Manual",photos:fPhotos.map(p=>({b64:p.b64,time:p.time})),catches:fPhotos.map((p,i)=>({timestamp:p.time||"Photo "+(i+1),species:"",weight:"",fly:fFly,wild:"",notes:""}))};
       const updated=[sess,...sessions];setSessions(updated);saveSessions(updated);
-      /* Write to Supabase */
       sbInsert("sessions",{user_email:user?.email,user_name:user?.name||fName,river:rv.n,beat:fBeat,fish:parseInt(fFish)||0,biggest:fBig,best_fly:fFly,notes:fNotes,rating:fRating,duration:"Manual"});
-      setFBeat("");setFish("");setFBig("");setFFly("");setFNotes("");setFRating("");setShowForm(false);
+      setFBeat("");setFish("");setFBig("");setFFly("");setFNotes("");setFRating("");setFPhotos([]);setFDate(new Date().toISOString().slice(0,10));setShowForm(false);
     }
   };
 
@@ -865,9 +930,18 @@ export default function App(){
       </div>
 
       {/* SESSION MODE BAR */}
-      <div style={{background:onRiver?P.rustS:P.c2,padding:"8px 14px",borderBottom:`1px solid ${onRiver?P.rustB:P.bd}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-        {!onRiver&&!reviewing?<button onClick={startSession} style={{background:"transparent",border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 14px",color:P.txD,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>◯ I'm on the river</button>
-        :onRiver?<>
+      <div style={{background:onRiver?P.rustS:P.c2,padding:!onRiver&&!reviewing?"12px 14px":"8px 14px",borderBottom:`1px solid ${onRiver?P.rustB:P.bd}`}}>
+        {!onRiver&&!reviewing?<div>
+          <button onClick={startSession} style={{width:"100%",background:P.gn,border:"none",borderRadius:8,padding:"14px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🎣 Start Fishing Session</button>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
+            <div style={{fontSize:8,color:P.txD}}>Tracks time, catches, and conditions</div>
+            <div style={{display:"flex",alignItems:"center",gap:4,cursor:"pointer"}} onClick={()=>setSessionPublic(!sessionPublic)}>
+              <div style={{width:14,height:14,borderRadius:3,border:`1px solid ${sessionPublic?P.gn:P.bd}`,background:sessionPublic?P.gn+"18":"transparent",display:"flex",alignItems:"center",justifyContent:"center"}}>{sessionPublic&&<span style={{color:P.gn,fontSize:9,fontWeight:700}}>✓</span>}</div>
+              <span style={{fontSize:8,color:P.txD}}>Public session</span>
+            </div>
+          </div>
+        </div>
+        :onRiver?<div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:8,height:8,borderRadius:4,background:P.gn,animation:"pulse 2s infinite"}}/>
             <div><div style={{fontSize:10,fontWeight:700,color:P.gn}}>ON THE RIVER</div><div style={{fontSize:9,color:P.txM}}>{sessionStart?fmtDur(Date.now()-sessionStart+(sessionTick*0)):""} · {sessionSnaps.length} snap{sessionSnaps.length!==1?"s":""}</div></div>
@@ -876,7 +950,7 @@ export default function App(){
             <button onClick={quickSnap} style={{background:P.gn,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📷 SNAP</button>
             <button onClick={endToReview} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>END</button>
           </div>
-        </>:reviewing?<div style={{display:"flex",alignItems:"center",gap:8,width:"100%",justifyContent:"space-between"}}>
+        </div>:reviewing?<div style={{display:"flex",alignItems:"center",gap:8,width:"100%",justifyContent:"space-between"}}>
           <div style={{fontSize:10,fontWeight:700,color:P.rust}}>SESSION REVIEW — {sessionSnaps.length} catch{sessionSnaps.length!==1?"es":""}</div>
           <button onClick={()=>{setReviewing(false);setSessionStart(null);setSessionSnaps([])}} style={{fontSize:9,color:P.txD,background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"4px 8px",cursor:"pointer",fontFamily:"inherit"}}>Discard</button>
         </div>:null}
@@ -1019,35 +1093,16 @@ export default function App(){
           {/* RIVER PERSONALITY */}
           <div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:4}}>{rv.n.toUpperCase()}</div><div style={{fontSize:11,color:P.txM,lineHeight:1.7,fontStyle:"italic"}}>{rv.p}</div></div>
 
-          {/* RIVER MAP */}
-          <div onClick={()=>{if(!ex.map){toggle("map");if(!window._riverData)fetch("/rivers.json").then(r=>r.json()).then(d=>{window._riverData=d;setEx(p=>({...p,mapLoaded:true}))}).catch(()=>{})}else toggle("map")}} style={{background:P.c1,borderRadius:ex.map?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex.map?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>RIVER MAP</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>View the river network</div></div><span style={{color:P.txD,fontSize:11}}>{ex.map?"−":"+"}</span></div>
-          {ex.map&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",marginBottom:10,overflow:"hidden"}}>
-            <div id="eph-map" style={{height:280,width:"100%"}} ref={el=>{
-              if(!el||el.dataset.init)return;el.dataset.init="1";
-              const link=document.createElement("link");link.rel="stylesheet";link.href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";document.head.appendChild(link);
-              const script=document.createElement("script");script.src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
-              script.onload=()=>{
-                const map=window.L.map(el,{zoomControl:false,attributionControl:false}).setView([rv.lat,rv.lng],12);
-                window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{opacity:0.4}).addTo(map);
-                window.L.control.zoom({position:"bottomright"}).addTo(map);
-                const data=window._riverData?.[riv];
-                if(data){
-                  const bounds=[];
-                  data.forEach(seg=>{
-                    const latlngs=seg.map(p=>[p[0],p[1]]);
-                    bounds.push(...latlngs);
-                    window.L.polyline(latlngs,{color:"#7A9E7E",weight:2.5,opacity:0.9}).addTo(map);
-                  });
-                  if(bounds.length)map.fitBounds(bounds,{padding:[20,20]});
-                }
-                /* Mark beats */
-                (rv.b||[]).forEach((b,i)=>{
-                  const offset=i*0.005;
-                  window.L.circleMarker([rv.lat+offset,rv.lng+offset*1.5],{radius:4,color:"#C36A3D",fillColor:"#C36A3D",fillOpacity:1}).bindTooltip(b,{permanent:false}).addTo(map);
-                });
-              };
-              document.head.appendChild(script);
-            }}/>
+          {/* HATCH OBSERVATIONS — user reports what they see */}
+          {onRiver&&spp.filter(s=>s.score>5).length>0&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:10}}>
+            <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:6}}>WHAT ARE YOU SEEING?</div>
+            <div style={{fontSize:9,color:P.txM,marginBottom:8}}>Help improve predictions — tap what you've observed today</div>
+            {spp.filter(s=>s.score>5).map(sp=><div key={sp.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 0",borderBottom:`1px solid ${P.bd}`}}>
+              <span style={{fontSize:11,color:P.tx,fontWeight:500}}>{sp.cm}</span>
+              <div style={{display:"flex",gap:3}}>
+                {[{v:"yes",l:"Yes",c:P.gn},{v:"no",l:"No",c:P.rust},{v:"unsure",l:"?",c:P.txD}].map(o=><button key={o.v} onClick={()=>setHatchObs(h=>({...h,[sp.id]:h[sp.id]===o.v?"":o.v}))} style={{padding:"3px 8px",borderRadius:3,border:hatchObs[sp.id]===o.v?`1px solid ${o.c}`:`1px solid ${P.bd}`,background:hatchObs[sp.id]===o.v?o.c+"18":"transparent",color:hatchObs[sp.id]===o.v?o.c:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit",minWidth:28,textAlign:"center"}}>{o.l}</button>)}
+              </div>
+            </div>)}
           </div>}
 
           {/* MAYFLY TRACKER */}
@@ -1059,6 +1114,12 @@ export default function App(){
           {/* FLY IDENTIFICATION */}
           <div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>FLY IDENTIFICATION</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>Photograph insects on the water</div></div><button onClick={identifyFly} style={{background:P.rust,border:"none",borderRadius:6,padding:"8px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{flyAnalyzing?"Analysing...":"📷 ID a Fly"}</button></div>
+            {/* GUIDED OBSERVATIONS */}
+            <div style={{marginTop:8,display:"grid",gap:6}}>
+              <div><div style={{fontSize:7,color:P.txD,marginBottom:3}}>SIZE (MM)</div><div style={{display:"flex",gap:3}}>{["<5mm","5-8mm","8-12mm","12-18mm","18-25mm"].map(s=><button key={s} onClick={()=>setFlyQ(q=>({...q,size:q.size===s?"":s}))} style={{padding:"3px 6px",borderRadius:3,border:flyQ.size===s?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:flyQ.size===s?P.rustS:"transparent",color:flyQ.size===s?P.rust:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{s}</button>)}</div></div>
+              <div><div style={{fontSize:7,color:P.txD,marginBottom:3}}>COLOUR</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{["Dark olive","Pale olive","Brown","Black","Grey","Cream","Yellow","Ginger"].map(c=><button key={c} onClick={()=>setFlyQ(q=>({...q,colour:q.colour===c?"":c}))} style={{padding:"3px 6px",borderRadius:3,border:flyQ.colour===c?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:flyQ.colour===c?P.rustS:"transparent",color:flyQ.colour===c?P.rust:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{c}</button>)}</div></div>
+              <div><div style={{fontSize:7,color:P.txD,marginBottom:3}}>BEHAVIOUR</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{["Sitting in film","Skittering on surface","Drifting upright","Flat on surface","Skating across","Flying low","In a swarm","Crawling on rocks"].map(b=><button key={b} onClick={()=>setFlyQ(q=>({...q,behaviour:q.behaviour===b?"":b}))} style={{padding:"3px 6px",borderRadius:3,border:flyQ.behaviour===b?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:flyQ.behaviour===b?P.rustS:"transparent",color:flyQ.behaviour===b?P.rust:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div></div>
+            </div>
             {flyAnalysis&&!flyAnalysis.error&&<div style={{marginTop:10,padding:"10px",background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`}}>
               {flyAnalysis.quality==="unusable"?<div><div style={{fontSize:9,fontWeight:700,color:P.rust}}>BETTER PHOTO NEEDED</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>{flyAnalysis.quality_note}</div></div>:<>
                 <div style={{fontSize:13,fontWeight:700,color:P.tx}}>{flyAnalysis.likely_species||flyAnalysis.common_group||"Unknown"}</div>
@@ -1126,8 +1187,30 @@ export default function App(){
 
         {/* ═══ REPORTS — with persistent sessions ═══ */}
         {tab==="reports"&&<div>
-          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD}}>LOG A SESSION</div><button onClick={()=>setShowForm(!showForm)} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{showForm?"CANCEL":"+ LOG"}</button></div>
-          {showForm&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:14,marginBottom:14}}><div style={{display:"grid",gap:8}}><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEAT</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{rv.b.map(b=><button key={b} onClick={()=>setFBeat(b)} style={{padding:"4px 8px",borderRadius:4,border:fBeat===b?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fBeat===b?P.rustS:"transparent",color:fBeat===b?P.rust:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div></div><div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>CAUGHT</div><input value={fFish} onChange={e=>setFish(e.target.value)} placeholder="0" type="number" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEST FLY</div><input value={fFly} onChange={e=>setFFly(e.target.value)} placeholder="CDC #16" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div></div><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>RATING</div><div style={{display:"flex",gap:4}}>{["Poor","Fair","Good","Excellent"].map(r=><button key={r} onClick={()=>setFRating(r)} style={{flex:1,padding:"7px",borderRadius:5,border:fRating===r?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fRating===r?P.rustS:"transparent",color:fRating===r?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{r}</button>)}</div></div><div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>NOTES</div><textarea value={fNotes} onChange={e=>setFNotes(e.target.value)} placeholder="What happened?" rows={3} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%",resize:"none",lineHeight:1.5}}/></div><button onClick={saveManualSession} style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:P.rust,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>SUBMIT</button></div></div>}
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD}}>LOG A SESSION</div><button onClick={()=>{setShowForm(!showForm);setFPhotos([])}} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{showForm?"CANCEL":"+ LOG"}</button></div>
+          {showForm&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:14,marginBottom:14}}><div style={{display:"grid",gap:8}}>
+            {/* DATE */}
+            <div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>DATE</div><input type="date" value={fDate} onChange={e=>setFDate(e.target.value)} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%",colorScheme:light?"light":"dark"}}/></div>
+            {/* BEAT */}
+            {rv.b&&rv.b.length>0&&<div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEAT</div><div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{rv.b.map(b=><button key={b} onClick={()=>setFBeat(b)} style={{padding:"4px 8px",borderRadius:4,border:fBeat===b?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fBeat===b?P.rustS:"transparent",color:fBeat===b?P.rust:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div></div>}
+            {/* PHOTOS */}
+            <div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>PHOTOS</div>
+              <button onClick={addManualPhotos} style={{width:"100%",padding:"10px",borderRadius:6,border:`1px dashed ${P.bd}`,background:"transparent",color:P.txM,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>📷 Add Photos from Camera Roll</button>
+              {fPhotos.length>0&&<div style={{display:"flex",gap:6,marginTop:8,overflowX:"auto",paddingBottom:4}}>{fPhotos.map((p,i)=><div key={i} style={{position:"relative",flexShrink:0}}>
+                <img src={`data:image/jpeg;base64,${p.b64}`} alt="" style={{width:56,height:56,borderRadius:6,objectFit:"cover"}}/>
+                {p.time&&<div style={{fontSize:7,color:P.txD,textAlign:"center",marginTop:2}}>{p.time}</div>}
+                <button onClick={()=>setFPhotos(fp=>fp.filter((_,j)=>j!==i))} style={{position:"absolute",top:-4,right:-4,width:16,height:16,borderRadius:8,background:P.rust,border:"none",color:"#fff",fontSize:9,cursor:"pointer",lineHeight:"16px",padding:0}}>✕</button>
+              </div>)}</div>}
+            </div>
+            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
+              <div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>CAUGHT</div><input value={fFish} onChange={e=>setFish(e.target.value)} placeholder="0" type="number" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
+              <div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>BIGGEST</div><input value={fBig} onChange={e=>setFBig(e.target.value)} placeholder="2.5lb" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
+            </div>
+            <div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEST FLY</div><input value={fFly} onChange={e=>setFFly(e.target.value)} placeholder="CDC #16" style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:13,fontFamily:"inherit",width:"100%"}}/></div>
+            <div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>RATING</div><div style={{display:"flex",gap:4}}>{["Poor","Fair","Good","Excellent"].map(r=><button key={r} onClick={()=>setFRating(r)} style={{flex:1,padding:"7px",borderRadius:5,border:fRating===r?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:fRating===r?P.rustS:"transparent",color:fRating===r?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{r}</button>)}</div></div>
+            <div><div style={{fontSize:8,color:P.txD,marginBottom:4}}>NOTES</div><textarea value={fNotes} onChange={e=>setFNotes(e.target.value)} placeholder="What happened?" rows={3} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",width:"100%",resize:"none",lineHeight:1.5}}/></div>
+            <button onClick={saveManualSession} style={{width:"100%",padding:"12px",borderRadius:8,border:"none",background:P.rust,color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>SAVE SESSION</button>
+          </div></div>}
 
           {/* YOUR SESSIONS — archive with AI overview */}
           {sessions.length>0&&<div style={{marginBottom:14}}>
@@ -1140,15 +1223,24 @@ export default function App(){
 
             <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{sessions.slice(0,20).map((s,i)=><div key={s.id||i}>
               <div onClick={()=>setExpandedSession(expandedSession===(s.id||i)?null:(s.id||i))} style={{padding:"10px 12px",borderBottom:`1px solid ${P.bd}`,cursor:"pointer"}}>
-                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:11,fontWeight:600}}>{s.river} — {s.beat||s.bt}</span><span style={{fontSize:8,fontWeight:700,color:s.fish>=3?P.gn:s.fish>0?P.rust:P.txD}}>{s.fish||0} fish</span></div>
-                <div style={{display:"flex",gap:8,fontSize:9,color:P.txD}}><span>{s.d}</span>{s.dur&&<span>{s.dur}</span>}{s.score&&<span>Score: {s.score}</span>}<span style={{marginLeft:"auto",color:P.txD}}>{expandedSession===(s.id||i)?"−":"+"}</span></div>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:11,fontWeight:600}}>{s.river} — {s.beat||s.bt}</span><div style={{display:"flex",gap:4,alignItems:"center"}}>{s.rating&&<span style={{fontSize:7,fontWeight:700,padding:"1px 5px",borderRadius:3,color:s.rating==="Excellent"?P.gn:s.rating==="Good"?P.gn:P.rust,background:(s.rating==="Excellent"||s.rating==="Good"?P.gn:P.rust)+"18"}}>{s.rating.toUpperCase()}</span>}<span style={{fontSize:10,fontWeight:700,color:s.fish>=3?P.gn:s.fish>0?P.rust:P.txD}}>{s.fish||0}</span></div></div>
+                <div style={{display:"flex",gap:8,fontSize:9,color:P.txD,alignItems:"center"}}><span>{s.d}</span>{s.dur&&s.dur!=="Manual"&&<span>{s.dur}</span>}{s.photos&&s.photos.length>0&&<span>📷 {s.photos.length}</span>}{s.score&&<span>Score: {s.score}</span>}<span style={{marginLeft:"auto"}}>{expandedSession===(s.id||i)?"−":"+"}</span></div>
               </div>
               {expandedSession===(s.id||i)&&<div style={{padding:"10px 12px",background:P.c2,borderBottom:`1px solid ${P.bd}`}}>
                 {s.time&&<div style={{fontSize:9,color:P.txD,marginBottom:4}}>Started {s.time} · {s.user}</div>}
-                {s.fly&&<div style={{fontSize:10,color:P.gn,marginBottom:2}}>Best fly: {s.fly}</div>}
-                {s.big&&<div style={{fontSize:10,color:P.txM,marginBottom:2}}>Biggest: {s.big}</div>}
-                {s.topHatch&&<div style={{fontSize:10,color:P.txM,marginBottom:2}}>Top hatch: {s.topHatch}</div>}
-                {s.rating&&<div style={{fontSize:10,color:s.rating==="Excellent"?P.gn:P.txM,marginBottom:2}}>Rating: {s.rating}</div>}
+                {/* RATING BAR */}
+                {s.rating&&<div style={{display:"inline-block",padding:"3px 10px",borderRadius:4,background:s.rating==="Excellent"?P.gn+"20":s.rating==="Good"?P.gn+"15":s.rating==="Fair"?P.rust+"20":P.txD+"20",marginBottom:6}}><span style={{fontSize:10,fontWeight:700,color:s.rating==="Excellent"?P.gn:s.rating==="Good"?P.gn:s.rating==="Fair"?P.rust:P.txD}}>{s.rating}</span></div>}
+                {/* PHOTOS GALLERY */}
+                {s.photos&&s.photos.length>0&&<div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:6}}>{s.photos.map((p,pi)=><div key={pi} style={{flexShrink:0,textAlign:"center"}}>
+                  <img src={`data:image/jpeg;base64,${p.b64}`} alt="" style={{width:72,height:72,borderRadius:8,objectFit:"cover",border:`2px solid ${P.bd}`}}/>
+                  {p.time&&<div style={{fontSize:7,color:P.txD,marginTop:2}}>{p.time}</div>}
+                </div>)}</div>}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginBottom:4}}>
+                  {s.fly&&<div style={{fontSize:10,color:P.gn}}>Fly: {s.fly}</div>}
+                  {s.big&&<div style={{fontSize:10,color:P.txM}}>Biggest: {s.big}</div>}
+                  {s.topHatch&&<div style={{fontSize:10,color:P.txM}}>Hatch: {s.topHatch}</div>}
+                  {s.dur&&<div style={{fontSize:10,color:P.txM}}>Duration: {s.dur}</div>}
+                </div>
                 {s.notes&&<div style={{fontSize:10,color:P.txM,lineHeight:1.5,marginBottom:4}}>{s.notes}</div>}
                 {s.summary&&<div style={{padding:"6px 8px",background:P.bg,borderRadius:5,border:`1px solid ${P.bd}`,marginTop:4}}><div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:2}}>AI SUMMARY</div><div style={{fontSize:10,color:P.tx,lineHeight:1.6,fontStyle:"italic"}}>{s.summary}</div></div>}
                 {s.catches&&s.catches.length>0&&<div style={{marginTop:6}}><div style={{fontSize:8,color:P.txD,marginBottom:3}}>CATCHES</div>{s.catches.map((c,ci)=><div key={ci} style={{fontSize:9,color:P.txM,padding:"2px 0"}}>{c.timestamp}: {c.species||"?"} {c.weight?c.weight+"lb":""} {c.wild||""} {c.fly?("on "+c.fly):""}</div>)}</div>}
