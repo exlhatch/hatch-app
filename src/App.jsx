@@ -170,6 +170,90 @@ const UK=[
 const ALL_RV=[...RV,...UK.map(r=>({...r,p:r.p||`${r.rg} river. Weather and hatch data available.`,b:r.b||[],bq:r.bq||{},premium:false}))];
 RV.forEach(r=>r.premium=true);
 const REGIONS=[...new Set(UK.map(r=>r.rg))].sort();
+
+/* ── BEAT GPS COORDINATES ── */
+const BL={
+  /* River Test — downstream to upstream */
+  "test:Broadlands":{lat:50.947,lng:-1.497},"test:Nursling":{lat:50.960,lng:-1.467},
+  "test:Timsbury":{lat:51.003,lng:-1.477},"test:Mottisfont":{lat:51.038,lng:-1.492},
+  "test:Horsebridge":{lat:51.065,lng:-1.503},"test:Park Stream":{lat:51.075,lng:-1.508},
+  "test:Stockbridge":{lat:51.087,lng:-1.508},"test:Leckford":{lat:51.107,lng:-1.503},
+  "test:Longparish":{lat:51.142,lng:-1.430},"test:Whitchurch":{lat:51.157,lng:-1.337},
+  "test:Laverstoke":{lat:51.162,lng:-1.307},
+  /* River Itchen */
+  "itchen:Twyford":{lat:51.017,lng:-1.327},"itchen:Abbotts Barton":{lat:51.072,lng:-1.312},
+  "itchen:Easton":{lat:51.088,lng:-1.302},"itchen:Martyr Worthy":{lat:51.097,lng:-1.292},
+  "itchen:Itchen Abbas":{lat:51.107,lng:-1.278},
+  /* River Kennet */
+  "kennet:Kintbury":{lat:51.400,lng:-1.440},"kennet:Hungerford":{lat:51.413,lng:-1.515},
+  "kennet:Littlecote":{lat:51.423,lng:-1.540},"kennet:Ramsbury":{lat:51.437,lng:-1.590},
+  "kennet:Marlborough":{lat:51.420,lng:-1.728},
+  /* River Lambourn */
+  "lambourn:Great Shefford":{lat:51.472,lng:-1.478},"lambourn:Upper Lambourn":{lat:51.520,lng:-1.535},
+  /* Hampshire Avon */
+  "avon:Salisbury":{lat:51.068,lng:-1.798},"avon:Amesbury":{lat:51.170,lng:-1.770},
+  "avon:Netheravon":{lat:51.225,lng:-1.780},"avon:Upavon":{lat:51.265,lng:-1.782},
+  /* River Wylye */
+  "wylye:Codford":{lat:51.153,lng:-2.058},"wylye:Heytesbury":{lat:51.163,lng:-2.085},
+  /* River Anton */
+  "anton:Anton Lakes":{lat:51.195,lng:-1.487},"anton:Goodworth Clatford":{lat:51.160,lng:-1.498},
+  /* River Meon */
+  "meon:Droxford":{lat:50.937,lng:-1.133},"meon:East Meon":{lat:50.975,lng:-1.058},
+  /* Chess */
+  "chess:Rickmansworth":{lat:51.638,lng:-0.475},"chess:Nr. Sarratt":{lat:51.665,lng:-0.510},
+  "chess:Latimer":{lat:51.680,lng:-0.537},"chess:Chesham":{lat:51.705,lng:-0.610},
+  /* Darent */
+  "darent:Eynsford":{lat:51.370,lng:0.202},"darent:Shoreham":{lat:51.342,lng:0.187},
+  /* Wye (Wales) */
+  "wye:Rhayader":{lat:52.298,lng:-3.510},"wye:Builth Wells":{lat:52.157,lng:-3.405},
+  "wye:Hay-on-Wye":{lat:52.073,lng:-3.122},"wye:Ross-on-Wye":{lat:51.912,lng:-2.577},
+  /* Usk */
+  "usk:Brecon":{lat:51.945,lng:-3.395},"usk:Crickhowell":{lat:51.858,lng:-3.137},
+  "usk:Abergavenny":{lat:51.822,lng:-3.022},
+  /* Dee (Wales) */
+  "dee_wales:Bala":{lat:52.910,lng:-3.593},"dee_wales:Corwen":{lat:52.980,lng:-3.378},
+  "dee_wales:Llangollen":{lat:52.970,lng:-3.168},
+  /* Dove */
+  "dove:Beresford":{lat:53.115,lng:-1.808},"dove:Hartington":{lat:53.105,lng:-1.805},
+  "dove:Dovedale":{lat:53.055,lng:-1.775},
+  /* Ribble */
+  "ribble:Settle":{lat:54.068,lng:-2.278},"ribble:Clitheroe":{lat:53.870,lng:-2.390},
+  "ribble:Ribchester":{lat:53.820,lng:-2.528},
+  /* Eden */
+  "eden:Kirkby Stephen":{lat:54.472,lng:-2.348},"eden:Appleby":{lat:54.580,lng:-2.488},
+  "eden:Lazonby":{lat:54.737,lng:-2.698},
+  /* Lune */
+  "lune:Sedbergh":{lat:54.322,lng:-2.525},"lune:Tebay":{lat:54.437,lng:-2.590},
+  "lune:Kirkby Lonsdale":{lat:54.197,lng:-2.597},
+  /* Wharfe */
+  "wharfe:Burnsall":{lat:54.045,lng:-1.935},"wharfe:Grassington":{lat:54.067,lng:-1.998},
+  "wharfe:Bolton Abbey":{lat:53.985,lng:-1.885},
+  /* Tweed */
+  "tweed:Peebles":{lat:55.652,lng:-3.188},"tweed:Coldstream":{lat:55.648,lng:-2.248},
+  "tweed:Kelso":{lat:55.598,lng:-2.432},
+  /* Tyne */
+  "tyne_ne:Corbridge":{lat:54.968,lng:-2.020},"tyne_ne:Hexham":{lat:54.972,lng:-2.098},
+  "tyne_ne:Wylam":{lat:54.975,lng:-1.815},
+  /* Spey */
+  "spey:Grantown":{lat:57.330,lng:-3.610},"spey:Aberlour":{lat:57.468,lng:-3.228},
+  "spey:Craigellachie":{lat:57.453,lng:-3.182},
+  /* Tay */
+  "tay:Perth":{lat:56.395,lng:-3.430},"tay:Dunkeld":{lat:56.565,lng:-3.582},
+  "tay:Pitlochry":{lat:56.707,lng:-3.732},
+  /* Dee (Scotland) */
+  "dee_scotland:Braemar":{lat:57.005,lng:-3.397},"dee_scotland:Aboyne":{lat:57.075,lng:-2.783},
+  "dee_scotland:Banchory":{lat:57.055,lng:-2.498},
+  /* Stillwaters */
+  "rutland:North Arm":{lat:52.665,lng:-0.680},"rutland:South Arm":{lat:52.638,lng:-0.655},
+  "rutland:Dam":{lat:52.640,lng:-0.720},
+  "grafham:Dam":{lat:52.292,lng:-0.325},"grafham:Church Bay":{lat:52.307,lng:-0.322},
+  "grafham:Savages Creek":{lat:52.312,lng:-0.300},
+  "chew:Woodford":{lat:51.342,lng:-2.618},"chew:Herriott's Pool":{lat:51.330,lng:-2.635},
+  "chew:Nunnery":{lat:51.325,lng:-2.648},
+  "blagdon:Dam":{lat:51.332,lng:-2.698},"blagdon:Green Lawn":{lat:51.330,lng:-2.712},
+  "blagdon:Butcombe Bay":{lat:51.338,lng:-2.720},
+};
+
 const STORE_FAVS="eph_favs";
 function getFavs(){try{return JSON.parse(localStorage.getItem(STORE_FAVS))||[]}catch{return[]}}
 function saveFavs(f){localStorage.setItem(STORE_FAVS,JSON.stringify(f))}
@@ -1193,19 +1277,19 @@ export default function App(){
               el.dataset.init="1";
               const map=new window.google.maps.Map(el,{center:{lat:rv.lat,lng:rv.lng},zoom:12,disableDefaultUI:true,zoomControl:true,styles:[{featureType:"water",stylers:[{color:"#c8d7d4"}]},{featureType:"landscape",stylers:[{color:"#e8e4dc"}]},{featureType:"road",stylers:[{visibility:"simplified"},{color:"#d4d0c8"}]},{featureType:"poi",stylers:[{visibility:"off"}]}]});
               const bounds=new window.google.maps.LatLngBounds();
+              let hasMarkers=false;
               (rv.b||[]).forEach((b,i)=>{
-                /* Distribute beats along river direction */
-                const spread=rv.b.length>1?0.008:0;
-                const angle=rv.lng<-1?0.3:-0.3;/* rough river direction */
-                const lat=rv.lat+(i-(rv.b.length-1)/2)*spread;
-                const lng=rv.lng+(i-(rv.b.length-1)/2)*spread*angle;
-                const pos={lat,lng};
+                const key=`${riv}:${b}`;
+                const loc=BL[key];
+                if(!loc)return;/* skip beats without coordinates */
+                hasMarkers=true;
+                const pos={lat:loc.lat,lng:loc.lng};
                 bounds.extend(pos);
                 const marker=new window.google.maps.Marker({position:pos,map,title:b,label:{text:String(i+1),color:"#fff",fontSize:"10px",fontWeight:"700"},icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:12,fillColor:"#C36A3D",fillOpacity:1,strokeColor:"#fff",strokeWeight:2}});
                 const info=new window.google.maps.InfoWindow({content:`<div style="font-family:Barlow,sans-serif;padding:4px"><strong>${b}</strong><br><span style="font-size:11px;color:#666">${rv.n}${rv.bq&&rv.bq[b]?` · Quality: ${rv.bq[b]}/10`:""}</span></div>`});
                 marker.addListener("click",()=>info.open(map,marker));
               });
-              if(rv.b.length>1)map.fitBounds(bounds,{padding:40});
+              if(hasMarkers&&rv.b.length>1)map.fitBounds(bounds,{padding:40});
             }}/>
             {/* BEAT LIST */}
             <div style={{padding:"8px 12px",borderTop:`1px solid ${P.bd}`}}>
