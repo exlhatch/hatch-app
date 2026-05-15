@@ -583,6 +583,9 @@ export default function App(){
   const[sessionSnaps,setSessionSnaps]=useState([]);/* {id,photo,timestamp,species,weight,fly,wild,notes,analysis} */
   const[sessionNotes,setSessionNotes]=useState("");
   const[sessionTick,setSessionTick]=useState(0);
+  const[sessionTrack,setSessionTrack]=useState([]);/* GPS breadcrumbs [{lat,lng,time}] */
+  const[watchId,setWatchId]=useState(null);
+  const[showSessionMap,setShowSessionMap]=useState(false);
   const[reviewing,setReviewing]=useState(false);/* end-of-session review screen */
   const[sessionPublic,setSessionPublic]=useState(false);
   const[analyzing,setAnalyzing]=useState(null);/* snap id being analyzed */
@@ -723,7 +726,18 @@ export default function App(){
   const nowWin=useMemo(()=>nowWindow(timeline),[timeline]);
 
   /* SESSION ACTIONS */
-  const startSession=()=>{setOnRiver(true);setSessionStart(Date.now());setSessionSnaps([]);setSessionNotes("");setSessionTick(0);setReviewing(false);setSessionSummary("")};
+  const startSession=()=>{
+    setOnRiver(true);setSessionStart(Date.now());setSessionSnaps([]);setSessionNotes("");setSessionTick(0);setReviewing(false);setSessionSummary("");setSessionTrack([]);setShowSessionMap(false);
+    /* Start GPS tracking */
+    if(navigator.geolocation){
+      const id=navigator.geolocation.watchPosition(
+        pos=>setSessionTrack(t=>[...t,{lat:pos.coords.latitude,lng:pos.coords.longitude,time:new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),acc:Math.round(pos.coords.accuracy)}]),
+        ()=>{},
+        {enableHighAccuracy:true,maximumAge:30000,timeout:15000}
+      );
+      setWatchId(id);
+    }
+  };
 
   /* QUICK SNAP — take photo, timestamp it, back to fishing */
   const quickSnap=()=>{
@@ -771,24 +785,27 @@ export default function App(){
     setAnalyzing(null);
   };
 
-  /* AI FLY ID */
-  const identifyFly=()=>{
-    if(!flyFileRef)return;
-    flyFileRef.onchange=async(e)=>{
-      const file=e.target.files?.[0];if(!file)return;
-      const b64=await compressImg(file,800);
+  /* AI FLY ID — photo or describe */
+  const identifyFly=(withPhoto)=>{
+    if(withPhoto){
+      if(!flyFileRef)return;
+      flyFileRef.onchange=async(e)=>{
+        const file=e.target.files?.[0];if(!file)return;
+        const b64=await compressImg(file,800);
+        setFlyAnalyzing(true);setFlyAnalysis(null);setFlyIdMode(true);
+        const extra=[];if(flyQ.size)extra.push(`Size: ${flyQ.size}`);if(flyQ.colour)extra.push(`Colour: ${flyQ.colour}`);if(flyQ.behaviour)extra.push(`Behaviour: ${flyQ.behaviour}`);
+        try{const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:b64,mode:"fly",observations:extra.join(". ")})});setFlyAnalysis(await r.json())}catch(e){setFlyAnalysis({error:e.message})}
+        setFlyAnalyzing(false);flyFileRef.value="";
+      };
+      flyFileRef.click();
+    }else{
+      const obs=[];if(flyQ.size)obs.push(`Size: ${flyQ.size}`);if(flyQ.colour)obs.push(`Colour: ${flyQ.colour}`);if(flyQ.behaviour)obs.push(`Behaviour: ${flyQ.behaviour}`);
+      if(!obs.length){setFlyAnalysis({error:"Select at least size, colour, or behaviour first."});return}
       setFlyAnalyzing(true);setFlyAnalysis(null);setFlyIdMode(true);
-      const extra=[];
-      if(flyQ.size)extra.push(`Approximate size: ${flyQ.size}`);
-      if(flyQ.colour)extra.push(`Colour: ${flyQ.colour}`);
-      if(flyQ.behaviour)extra.push(`Behaviour: ${flyQ.behaviour}`);
-      try{
-        const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:b64,mode:"fly",observations:extra.join(". ")})});
-        setFlyAnalysis(await r.json());
-      }catch(e){setFlyAnalysis({error:e.message})}
-      setFlyAnalyzing(false);flyFileRef.value="";
-    };
-    flyFileRef.click();
+      fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"summary",sessionData:`You are an expert UK chalkstream entomologist. Identify the most likely insect from these observations and recommend artificial flies. Give: likely species, common group, life stage, confidence, matching artificials with hook sizes, and a single "tie on now" recommendation. Current: River ${rv.n}, ${cT}°C water, ${new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}. Observations: ${obs.join(". ")}`})})
+        .then(r=>r.json()).then(d=>setFlyAnalysis({textId:true,summary:d.summary||"Could not identify."}))
+        .catch(e=>setFlyAnalysis({error:e.message})).finally(()=>setFlyAnalyzing(false));
+    }
   };
 
   /* UPDATE SNAP DETAIL (during review) */
@@ -829,7 +846,10 @@ export default function App(){
   };
 
   /* END SESSION → go to review */
-  const endToReview=()=>{setOnRiver(false);setReviewing(true)};
+  const endToReview=()=>{
+    setOnRiver(false);setReviewing(true);
+    if(watchId!==null){navigator.geolocation.clearWatch(watchId);setWatchId(null)}
+  };
 
   /* AI SESSION SUMMARY */
   const generateSummary=async()=>{
@@ -846,10 +866,10 @@ export default function App(){
     const fishCount=sessionSnaps.length;
     const bestFly=sessionSnaps.map(f=>f.fly).filter(Boolean).sort((a,b)=>sessionSnaps.filter(s=>s.fly===b).length-sessionSnaps.filter(s=>s.fly===a).length)[0]||"";
     const biggest=sessionSnaps.reduce((a,s)=>parseFloat(s.weight||0)>parseFloat(a)?s.weight:a,"0");
-    const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:fishCount,big:biggest!=="0"?biggest+"lb":"",fly:bestFly,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||"",summary:sessionSummary,catches:sessionSnaps.map(s=>({timestamp:s.timestamp,species:s.species,weight:s.weight,fly:s.fly,wild:s.wild,notes:s.notes,photo:s.photo?.substring(0,100)+"..."}))};
+    const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:fishCount,big:biggest!=="0"?biggest+"lb":"",fly:bestFly,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||"",summary:sessionSummary,isPublic:sessionPublic,gpsTrack:sessionTrack.length>1?sessionTrack:null,catches:sessionSnaps.map(s=>({timestamp:s.timestamp,species:s.species,weight:s.weight,fly:s.fly,wild:s.wild,notes:s.notes,photo:s.photo?.substring(0,100)+"..."}))};
     const updated=[sess,...sessions];setSessions(updated);saveSessions(updated);
     sbInsert("sessions",{user_email:user?.email,user_name:user?.name,river:rv.n,beat,fish:fishCount,biggest:biggest!=="0"?biggest+"lb":"",best_fly:bestFly,notes:sessionNotes+(sessionSummary?"\n\nAI Summary: "+sessionSummary:""),duration:sess.dur,score:cond.pct,top_hatch:topH?.cm||""});
-    setReviewing(false);setSessionStart(null);setSessionSnaps([]);setSessionSummary("");setHatchObs({});
+    setReviewing(false);setSessionStart(null);setSessionSnaps([]);setSessionSummary("");setHatchObs({});setSessionTrack([]);
   };
 
   /* ADD PHOTOS TO MANUAL LOG */
@@ -1099,6 +1119,35 @@ export default function App(){
             </div>
             <div style={{fontSize:8,color:P.txD,marginBottom:10,lineHeight:1.5}}>Upload photos from today — timestamps are read from the image data so catches appear in the order you took them.</div>
 
+            {/* SESSION GPS MAP */}
+            {sessionTrack.length>1&&<div style={{marginBottom:10}}>
+              <div onClick={()=>setShowSessionMap(!showSessionMap)} style={{background:P.c2,borderRadius:showSessionMap?"8px 8px 0 0":8,border:`1px solid ${P.bd}`,padding:"10px 12px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>SESSION ROUTE</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>{sessionTrack.length} GPS points tracked</div></div>
+                <span style={{color:P.txD,fontSize:11}}>{showSessionMap?"−":"+"}</span>
+              </div>
+              {showSessionMap&&<div style={{background:P.c2,borderRadius:"0 0 8px 8px",border:`1px solid ${P.bd}`,borderTop:"none",overflow:"hidden"}}>
+                <div style={{height:220,width:"100%"}} ref={el=>{
+                  if(!el||el.dataset.init||!mapsLoaded||!window.google||!sessionTrack.length)return;
+                  el.dataset.init="1";
+                  const map=new window.google.maps.Map(el,{center:{lat:sessionTrack[0].lat,lng:sessionTrack[0].lng},zoom:15,disableDefaultUI:true,zoomControl:true,styles:[{featureType:"water",stylers:[{color:"#c8d7d4"}]},{featureType:"landscape",stylers:[{color:"#e8e4dc"}]},{featureType:"road",stylers:[{visibility:"simplified"}]},{featureType:"poi",stylers:[{visibility:"off"}]}]});
+                  const path=sessionTrack.map(p=>({lat:p.lat,lng:p.lng}));
+                  new window.google.maps.Polyline({path,geodesic:true,strokeColor:"#7A9E7E",strokeOpacity:0.9,strokeWeight:3,map});
+                  /* Start marker */
+                  new window.google.maps.Marker({position:path[0],map,icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:6,fillColor:"#7A9E7E",fillOpacity:1,strokeColor:"#fff",strokeWeight:2},title:"Start"});
+                  /* End marker */
+                  new window.google.maps.Marker({position:path[path.length-1],map,icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:6,fillColor:"#C36A3D",fillOpacity:1,strokeColor:"#fff",strokeWeight:2},title:"End"});
+                  /* Catch markers */
+                  sessionSnaps.forEach((s,i)=>{
+                    const nearest=sessionTrack.reduce((best,p)=>{const t1=new Date("2026-01-01 "+s.timestamp).getTime();const t2=new Date("2026-01-01 "+p.time).getTime();const d=Math.abs(t1-t2);return d<best.d?{d,p}:best},{d:Infinity,p:sessionTrack[0]});
+                    new window.google.maps.Marker({position:{lat:nearest.p.lat,lng:nearest.p.lng},map,label:{text:String(i+1),color:"#fff",fontSize:"9px",fontWeight:"700"},icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:10,fillColor:"#C36A3D",fillOpacity:1,strokeColor:"#fff",strokeWeight:2},title:`Catch ${i+1}: ${s.species||"?"}`});
+                  });
+                  const bounds=new window.google.maps.LatLngBounds();
+                  path.forEach(p=>bounds.extend(p));
+                  map.fitBounds(bounds,{padding:30});
+                }}/>
+              </div>}
+            </div>}
+
             {sessionSnaps.length===0&&<div style={{textAlign:"center",padding:16,color:P.txD}}>
               <div style={{fontSize:13,fontWeight:600}}>No photos yet</div>
               <div style={{fontSize:10,marginTop:4,lineHeight:1.6}}>Upload photos from your camera roll above — EXIF timestamps will order them chronologically. Or add notes and save a blank session.</div>
@@ -1320,7 +1369,7 @@ export default function App(){
         {tab==="hatches"&&<div>
           {/* FLY IDENTIFICATION */}
           <div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>FLY IDENTIFICATION</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>Photograph insects on the water</div></div><button onClick={identifyFly} style={{background:P.rust,border:"none",borderRadius:6,padding:"8px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{flyAnalyzing?"Analysing...":"📷 ID a Fly"}</button></div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>FLY IDENTIFICATION</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>Photo or describe what you see</div></div><div style={{display:"flex",gap:4}}><button onClick={()=>identifyFly(false)} disabled={flyAnalyzing} style={{background:"transparent",border:`1px solid ${P.rust}`,borderRadius:6,padding:"8px 10px",color:P.rust,fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{flyAnalyzing?"...":"🔍 Describe"}</button><button onClick={()=>identifyFly(true)} disabled={flyAnalyzing} style={{background:P.rust,border:"none",borderRadius:6,padding:"8px 10px",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{flyAnalyzing?"Analysing...":"📷 Photo"}</button></div></div>
             {/* GUIDED OBSERVATIONS */}
             <div style={{marginTop:8,display:"grid",gap:6}}>
               <div><div style={{fontSize:7,color:P.txD,marginBottom:3}}>SIZE (MM)</div><div style={{display:"flex",gap:3}}>{["<5mm","5-8mm","8-12mm","12-18mm","18-25mm"].map(s=><button key={s} onClick={()=>setFlyQ(q=>({...q,size:q.size===s?"":s}))} style={{padding:"3px 6px",borderRadius:3,border:flyQ.size===s?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:flyQ.size===s?P.rustS:"transparent",color:flyQ.size===s?P.rust:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{s}</button>)}</div></div>
@@ -1339,6 +1388,10 @@ export default function App(){
               </>}
             </div>}
             {flyAnalysis?.error&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Analysis failed — {flyAnalysis.error}</div>}
+            {flyAnalysis?.textId&&flyAnalysis.summary&&<div style={{marginTop:10,padding:"10px",background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`}}>
+              <div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:4}}>AI IDENTIFICATION</div>
+              <div style={{fontSize:11,color:P.tx,lineHeight:1.7,whiteSpace:"pre-wrap"}}>{flyAnalysis.summary}</div>
+            </div>}
           </div>
           {spp.filter(s=>s.score>15).length>0&&<div style={{marginBottom:12}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD,marginBottom:6}}>ACTIVE NOW</div><div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{spp.filter(s=>s.score>15).map(sp=><div key={sp.id} style={{padding:"10px 12px",borderBottom:`1px solid ${P.bd}`,background:sp.id==="danica"?P.rustS:"transparent"}}><div style={{display:"flex",gap:8}}><div style={{width:3,height:3,borderRadius:2,background:CC[sp.cat],marginTop:6}}/><div style={{flex:1}}><span style={{fontSize:12,fontWeight:700,color:sp.id==="danica"?P.rust:P.tx}}>{sp.cm}</span><div style={{fontSize:9,color:P.txD,marginTop:2}}>Hook {sp.hk} · {sp.sz}</div><div style={{fontSize:9,color:P.rust,marginTop:1}}>{FLYMAP[sp.id]||""} — <i>{FLYCONF[sp.id]||""}</i></div></div><div style={{textAlign:"right"}}><div style={{fontSize:18,fontWeight:700,color:hC(sp.score)}}>{sp.score}</div><div style={{fontSize:7,color:hC(sp.score)}}>{sp.lb}</div></div></div></div>)}</div></div>}
           {spp.filter(s=>s.score>0&&s.score<=15).length>0&&<div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD,marginBottom:6}}>EXPECTED LATER THIS SEASON</div><div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{spp.filter(s=>s.score>0&&s.score<=15).map(sp=><div key={sp.id} style={{padding:"8px 12px",borderBottom:`1px solid ${P.bd}`,opacity:0.5}}><div style={{display:"flex",justifyContent:"space-between"}}><span style={{fontSize:11,color:P.txM}}>{sp.cm}</span><span style={{fontSize:11,color:P.txD}}>{sp.score}% — {sp.lb}</span></div></div>)}</div></div>}
