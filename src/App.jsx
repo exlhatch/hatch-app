@@ -2,6 +2,11 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 
 /* ═══ EPHEMERA — A calm expert beside you ═══ */
 
+/* Register service worker for offline support */
+if(typeof window!=="undefined"&&"serviceWorker"in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+}
+
 /* Logo Mark + Wordmark — served from /public as actual image files */
 const Logo=({s=24})=><img src="/logo-mark.svg" alt="Ephemera" width={s} height={s} style={{borderRadius:s*0.2}}/>;
 const Wordmark=({w=120,dark=true})=><img src="/wordmark.svg" alt="EPHEMERA" width={w} height={Math.round(w*168/1054)} style={{display:"block",filter:dark?"invert(0.85) brightness(1.5)":"none"}}/>;
@@ -467,7 +472,10 @@ function futureDayGuide(dayData,dayIdx,wt,rv,beat,method){
   const futDoy=DOY+dayIdx;
   /* Predict hatches for that day */
   const futSpp=H.map(sp=>{let sF=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sF=Math.max(0,1-((futDoy-m)/r)**2)}else if(futDoy>=sp.s-14&&futDoy<sp.s)sF=(futDoy-sp.s+14)/28;const avgT=dayData.hrs.reduce((s,h)=>s+(h.wt||wt),0)/dayData.hrs.length;let tF=0;const tm=(sp.tMn+sp.tMx)/2,tr=(sp.tMx-sp.tMn)/2;if(avgT>=sp.tMn&&avgT<=sp.tMx)tF=Math.max(0,1-((avgT-tm)/(tr*1.2))**2);else if(avgT>=sp.tMn-2)tF=Math.max(0,(avgT-sp.tMn+2)/4);const sc=Math.round(Math.max(0,Math.min(100,(sF*0.55+tF*0.35)*100)));return{...sp,score:sc,lb:sc>70?"Strong":sc>40?"Moderate":sc>15?"Sparse":"Unlikely"}}).sort((a,b)=>b.score-a.score);
-  const topH=futSpp[0];
+  /* Mayfly override for future days too */
+  const futDan=futSpp.find(s=>s.id==="danica");
+  const futMayfly=futDoy>=130&&futDoy<=175;
+  const topH=futMayfly&&futDan&&futDan.score>5?futDan:futSpp[0];
   /* Avg conditions */
   const midHrs=dayData.hrs.filter(h=>h.h>=10&&h.h<=16);
   const avgWind=midHrs.length?Math.round(midHrs.reduce((s,h)=>s+(h.ws||5),0)/midHrs.length):8;
@@ -583,9 +591,9 @@ export default function App(){
   const[sessionSnaps,setSessionSnaps]=useState([]);/* {id,photo,timestamp,species,weight,fly,wild,notes,analysis} */
   const[sessionNotes,setSessionNotes]=useState("");
   const[sessionTick,setSessionTick]=useState(0);
-  const[sessionTrack,setSessionTrack]=useState([]);/* GPS breadcrumbs [{lat,lng,time}] */
-  const[watchId,setWatchId]=useState(null);
+  const[sessionTrack,setSessionTrack]=useState([]);/* GPS points [{lat,lng,time,label}] */
   const[showSessionMap,setShowSessionMap]=useState(false);
+  const[recovered,setRecovered]=useState(false);
   const[reviewing,setReviewing]=useState(false);/* end-of-session review screen */
   const[sessionPublic,setSessionPublic]=useState(false);
   const[analyzing,setAnalyzing]=useState(null);/* snap id being analyzed */
@@ -710,7 +718,22 @@ export default function App(){
   const cAir=live.wx?.current?.temperature_2m?Math.round(live.wx.current.temperature_2m):(11+(rSeed%8));
 
   const spp=useMemo(()=>pred(cT),[cT]);
-  const topH=spp[0];const dan=spp.find(s=>s.id==="danica");
+  /* Mayfly override: during season, even sparse mayfly = fish switch to it */
+  const dan=spp.find(s=>s.id==="danica");
+  const mayflyInSeason=DOY>=130&&DOY<=175;
+  const topH=mayflyInSeason&&dan&&dan.score>5?dan:spp[0];
+  const guideNote=useMemo(()=>{
+    if(isNight)return"Rest up. The river will be there tomorrow.";
+    if(mayflyInSeason&&dan&&dan.score>5){
+      if(dan.score>50)return`Mayfly season in full swing. Fish will key on emergers even before you see duns on the surface. Try a Danica Emerger or Klinkhamer first, switch to Grey Wulff when you see them taking off the top. Best window likely ${cT>=14?"early afternoon":"midday when it warms"}.`;
+      return`Sparse mayfly expected but don't be fooled — when fish see them, they switch. Keep a Danica Emerger ready. ${spp[0]?.id!=="danica"?`${spp[0]?.cm} is also active — good backup.`:""}`;
+    }
+    if(cC>70&&cT>=11)return`Overcast and ${cT>=14?"warm":"mild"} — ideal conditions. Expect steady olive hatches. Start with ${FLYMAP[spp[0]?.id]||"a dry"} and watch for rises.`;
+    if(cW>14)return`Windy today — fish the sheltered bank with terrestrials. Ants and beetles blown onto the water. Shorter casts, bigger flies.`;
+    if(cC<30&&cT>=14)return`Bright and warm — tough dry fly conditions. Fish the shade, go fine (6X minimum), or wait for the evening rise. Emergers in the film may outperform dries.`;
+    if(cT<10)return`Cool water. Nymphing will outperform dries until it warms. PTN or Killer Bug fished slow on the bottom. Watch for the first olive hatch around midday.`;
+    return`${spp[0]?.cm||"Olives"} should be the dominant hatch. Match the size, fish the rise. ${cT>=14?"Evening could be excellent.":""}`;
+  },[spp,dan,cC,cW,cT,mayflyInSeason,isNight]);
   const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
   const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;
   const cond=useMemo(()=>condScore(cW,cP,cC,cT,hIdx,rv.q,rv.bq?.[beat]),[cW,cP,cC,cT,hIdx,rv,beat]);
@@ -728,25 +751,69 @@ export default function App(){
   /* SESSION ACTIONS */
   const startSession=()=>{
     setOnRiver(true);setSessionStart(Date.now());setSessionSnaps([]);setSessionNotes("");setSessionTick(0);setReviewing(false);setSessionSummary("");setSessionTrack([]);setShowSessionMap(false);
-    /* Start GPS tracking */
-    if(navigator.geolocation){
-      const id=navigator.geolocation.watchPosition(
-        pos=>setSessionTrack(t=>[...t,{lat:pos.coords.latitude,lng:pos.coords.longitude,time:new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),acc:Math.round(pos.coords.accuracy)}]),
-        ()=>{},
-        {enableHighAccuracy:true,maximumAge:30000,timeout:15000}
-      );
-      setWatchId(id);
-    }
+    /* Get starting position */
+    if(navigator.geolocation)navigator.geolocation.getCurrentPosition(
+      pos=>setSessionTrack([{lat:pos.coords.latitude,lng:pos.coords.longitude,time:new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),label:"Start"}]),
+      ()=>{},{enableHighAccuracy:true,timeout:10000}
+    );
   };
 
-  /* QUICK SNAP — take photo, timestamp it, back to fishing */
+  /* AUTO-SAVE session to localStorage every 30s — crash recovery */
+  useEffect(()=>{
+    if(!onRiver||!sessionStart)return;
+    const save=()=>{try{localStorage.setItem("eph_live_session",JSON.stringify({start:sessionStart,river:rv.n,beat,snaps:sessionSnaps,notes:sessionNotes,track:sessionTrack,hatchObs,ts:Date.now()}))}catch{}};
+    save();
+    const i=setInterval(save,30000);
+    return()=>clearInterval(i);
+  },[onRiver,sessionStart,sessionSnaps,sessionNotes,sessionTrack,hatchObs]);
+
+  /* RECOVER crashed session on load */
+  useEffect(()=>{
+    try{
+      const saved=JSON.parse(localStorage.getItem("eph_live_session"));
+      if(saved&&saved.start&&Date.now()-saved.ts<86400000){
+        setOnRiver(true);setSessionStart(saved.start);
+        setSessionSnaps(saved.snaps||[]);setSessionNotes(saved.notes||"");
+        setSessionTrack(saved.track||[]);setHatchObs(saved.hatchObs||{});
+        setRecovered(true);
+      }else{localStorage.removeItem("eph_live_session")}
+    }catch{localStorage.removeItem("eph_live_session")}
+  },[]);
+
+  const clearSavedSession=()=>{try{localStorage.removeItem("eph_live_session")}catch{}};
+
+  /* SAVE PHOTO TO CAMERA ROLL */
+  const saveToRoll=(b64)=>{
+    try{
+      const link=document.createElement("a");
+      link.href=`data:image/jpeg;base64,${b64}`;
+      link.download=`ephemera-catch-${Date.now()}.jpg`;
+      document.body.appendChild(link);link.click();document.body.removeChild(link);
+    }catch{}
+  };
+
+  /* GET CURRENT POSITION — returns a promise */
+  const getPos=()=>new Promise(res=>{
+    if(!navigator.geolocation){res(null);return}
+    navigator.geolocation.getCurrentPosition(
+      pos=>res({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+      ()=>res(null),
+      {enableHighAccuracy:true,timeout:8000}
+    );
+  });
+
+  /* QUICK SNAP — photo + geotag + save to camera roll */
   const quickSnap=()=>{
     if(!fileRef)return;
     fileRef.onchange=async(e)=>{
       const file=e.target.files?.[0];if(!file)return;
       const b64=await compressImg(file,800);
-      const snap={id:Date.now(),photo:b64,timestamp:new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),species:"",weight:"",fly:"",wild:"",notes:"",analysis:null};
+      const pos=await getPos();
+      const time=new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+      const snap={id:Date.now(),photo:b64,timestamp:time,species:"",weight:"",fly:"",wild:"",notes:"",analysis:null,lat:pos?.lat||null,lng:pos?.lng||null};
       setSessionSnaps(s=>[...s,snap]);
+      if(pos)setSessionTrack(t=>[...t,{lat:pos.lat,lng:pos.lng,time,label:`Catch ${sessionSnaps.length+1}`}]);
+      saveToRoll(b64);
       fileRef.value="";
     };
     fileRef.click();
@@ -783,6 +850,50 @@ export default function App(){
       }
     }catch(e){setSessionSnaps(s=>s.map(sn=>sn.id===snapId?{...sn,analysis:{error:e.message}}:sn))}
     setAnalyzing(null);
+  };
+
+  /* ANALYSE ALL — batch AI on all unanalysed snaps */
+  const[analysingAll,setAnalysingAll]=useState(false);
+  const[archiveAnalyzing,setArchiveAnalyzing]=useState(null);/* "sessionId-catchIdx" */
+
+  /* ANALYSE ARCHIVED CATCH — runs AI on a photo from a saved session */
+  const analyzeArchiveCatch=async(sessionId,catchIdx)=>{
+    const sess=sessions.find(s=>(s.id||0)===sessionId);
+    if(!sess||!sess.catches?.[catchIdx]?.photo)return;
+    const key=`${sessionId}-${catchIdx}`;
+    setArchiveAnalyzing(key);
+    try{
+      const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:sess.catches[catchIdx].photo,mode:"fish"})});
+      const data=await r.json();
+      const updated=sessions.map(s=>{
+        if((s.id||0)!==sessionId)return s;
+        const catches=[...s.catches];
+        if(data.quality!=="unusable"){
+          catches[catchIdx]={...catches[catchIdx],analysis:data,species:data.species||catches[catchIdx].species,weight:data.weight_estimate_lb?String(data.weight_estimate_lb):catches[catchIdx].weight,wild:data.wild_stocked||catches[catchIdx].wild};
+        }else{catches[catchIdx]={...catches[catchIdx],analysis:{...data,unusable:true}}}
+        return{...s,catches};
+      });
+      setSessions(updated);try{saveSessions(updated)}catch{}
+    }catch{}
+    setArchiveAnalyzing(null);
+  };
+  const analyseAll=async()=>{
+    const unanalysed=sessionSnaps.filter(s=>s.photo&&!s.analysis);
+    if(!unanalysed.length)return;
+    setAnalysingAll(true);
+    for(const snap of unanalysed){
+      setAnalyzing(snap.id);
+      try{
+        const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:snap.photo,mode:"fish"})});
+        const data=await r.json();
+        if(data.quality==="unusable"){
+          setSessionSnaps(s=>s.map(sn=>sn.id===snap.id?{...sn,analysis:{...data,unusable:true}}:sn));
+        }else{
+          setSessionSnaps(s=>s.map(sn=>sn.id===snap.id?{...sn,analysis:data,species:data.species||sn.species,weight:data.weight_estimate_lb?String(data.weight_estimate_lb):sn.weight,wild:data.wild_stocked||sn.wild}:sn));
+        }
+      }catch(e){setSessionSnaps(s=>s.map(sn=>sn.id===snap.id?{...sn,analysis:{error:e.message}}:sn))}
+    }
+    setAnalyzing(null);setAnalysingAll(false);
   };
 
   /* AI FLY ID — photo or describe */
@@ -848,7 +959,11 @@ export default function App(){
   /* END SESSION → go to review */
   const endToReview=()=>{
     setOnRiver(false);setReviewing(true);
-    if(watchId!==null){navigator.geolocation.clearWatch(watchId);setWatchId(null)}
+    /* Tag end position */
+    if(navigator.geolocation)navigator.geolocation.getCurrentPosition(
+      pos=>setSessionTrack(t=>[...t,{lat:pos.coords.latitude,lng:pos.coords.longitude,time:new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),label:"End"}]),
+      ()=>{},{enableHighAccuracy:true,timeout:8000}
+    );
   };
 
   /* AI SESSION SUMMARY */
@@ -866,10 +981,14 @@ export default function App(){
     const fishCount=sessionSnaps.length;
     const bestFly=sessionSnaps.map(f=>f.fly).filter(Boolean).sort((a,b)=>sessionSnaps.filter(s=>s.fly===b).length-sessionSnaps.filter(s=>s.fly===a).length)[0]||"";
     const biggest=sessionSnaps.reduce((a,s)=>parseFloat(s.weight||0)>parseFloat(a)?s.weight:a,"0");
-    const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:fishCount,big:biggest!=="0"?biggest+"lb":"",fly:bestFly,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||"",summary:sessionSummary,isPublic:sessionPublic,gpsTrack:sessionTrack.length>1?sessionTrack:null,catches:sessionSnaps.map(s=>({timestamp:s.timestamp,species:s.species,weight:s.weight,fly:s.fly,wild:s.wild,notes:s.notes,photo:s.photo?.substring(0,100)+"..."}))};
-    const updated=[sess,...sessions];setSessions(updated);saveSessions(updated);
+    const sess={id:Date.now(),d:new Date(sessionStart).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(sessionStart).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),dur:fmtDur(Date.now()-sessionStart),river:rv.n,beat,fish:fishCount,big:biggest!=="0"?biggest+"lb":"",fly:bestFly,notes:sessionNotes,user:user?.name||"Anon",score:cond.pct,topHatch:topH?.cm||"",summary:sessionSummary,isPublic:sessionPublic,gpsTrack:sessionTrack.length?sessionTrack:null,catches:sessionSnaps.map(s=>({timestamp:s.timestamp,species:s.species,weight:s.weight,fly:s.fly,wild:s.wild,notes:s.notes,photo:s.photo||null,lat:s.lat,lng:s.lng}))};
+    try{const updated=[sess,...sessions];setSessions(updated);saveSessions(updated)}catch{
+      /* localStorage full — save without full photos */
+      const lite={...sess,catches:sess.catches.map(c=>({...c,photo:null}))};
+      try{const ul=[lite,...sessions];setSessions(ul);saveSessions(ul)}catch{}
+    }
     sbInsert("sessions",{user_email:user?.email,user_name:user?.name,river:rv.n,beat,fish:fishCount,biggest:biggest!=="0"?biggest+"lb":"",best_fly:bestFly,notes:sessionNotes+(sessionSummary?"\n\nAI Summary: "+sessionSummary:""),duration:sess.dur,score:cond.pct,top_hatch:topH?.cm||""});
-    setReviewing(false);setSessionStart(null);setSessionSnaps([]);setSessionSummary("");setHatchObs({});setSessionTrack([]);
+    setReviewing(false);setSessionStart(null);setSessionSnaps([]);setSessionSummary("");setHatchObs({});setSessionTrack([]);clearSavedSession();
   };
 
   /* ADD PHOTOS TO MANUAL LOG */
@@ -1012,41 +1131,44 @@ export default function App(){
           </div>
         </div>
         <button onClick={()=>{setPick(!pick);setRiverSearch("");setRegionFilter("")}} style={{width:"100%",background:P.c2,border:`1px solid ${P.bd}`,borderRadius:7,padding:"9px 12px",color:P.tx,fontSize:11,fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",justifyContent:"space-between"}}><span>{rv.n}{beat?" / "+beat:""}</span><span style={{color:P.txD}}>{pick?"−":"+"}</span></button>
-        {pick&&<div style={{marginTop:6,background:P.c2,borderRadius:7,padding:10,border:`1px solid ${P.bd}`,maxHeight:360,overflowY:"auto"}}>
-          {/* SEARCH */}
-          <input value={riverSearch} onChange={e=>setRiverSearch(e.target.value)} placeholder="Search rivers..." style={{width:"100%",background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",marginBottom:8}}/>
+        {pick&&<div style={{marginTop:6,background:P.c2,borderRadius:7,padding:10,border:`1px solid ${P.bd}`}}>
 
-          {/* REGION FILTER */}
-          <div style={{display:"flex",gap:3,flexWrap:"wrap",marginBottom:8}}>
-            <button onClick={()=>setRegionFilter("")} style={{padding:"2px 7px",borderRadius:3,border:!regionFilter?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:!regionFilter?P.gn+"18":"transparent",color:!regionFilter?P.gn:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>All</button>
-            <button onClick={()=>setRegionFilter("favs")} style={{padding:"2px 7px",borderRadius:3,border:regionFilter==="favs"?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:regionFilter==="favs"?P.rustS:"transparent",color:regionFilter==="favs"?P.rust:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>★ Favourites</button>
-            <button onClick={()=>setRegionFilter("chalk")} style={{padding:"2px 7px",borderRadius:3,border:regionFilter==="chalk"?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:regionFilter==="chalk"?P.gn+"18":"transparent",color:regionFilter==="chalk"?P.gn:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Chalkstreams</button>
-            {REGIONS.map(rg=><button key={rg} onClick={()=>setRegionFilter(regionFilter===rg?"":rg)} style={{padding:"2px 7px",borderRadius:3,border:regionFilter===rg?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:regionFilter===rg?P.rustS:"transparent",color:regionFilter===rg?P.rust:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{rg}</button>)}
+          {/* FAVOURITES — quick access */}
+          {favs.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8,marginBottom:8,borderBottom:`1px solid ${P.bd}`}}>
+            {favs.map(fid=>{const fr=ALL_RV.find(r=>r.id===fid);if(!fr)return null;return<button key={fid} onClick={()=>{setRiv(fid);setPick(false)}} style={{flexShrink:0,padding:"5px 10px",borderRadius:5,border:riv===fid?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:riv===fid?P.gn+"18":"transparent",color:riv===fid?P.gn:P.tx,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{fr.n.replace("River ","")}</button>})}
+          </div>}
+
+          {/* SEARCH + REGION in one row */}
+          <div style={{display:"flex",gap:6,marginBottom:8}}>
+            <input value={riverSearch} onChange={e=>setRiverSearch(e.target.value)} placeholder="Search rivers..." style={{flex:1,background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"7px 10px",color:P.tx,fontSize:11,fontFamily:"inherit"}}/>
+            <select value={regionFilter} onChange={e=>setRegionFilter(e.target.value)} style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"7px 8px",color:P.tx,fontSize:10,fontFamily:"inherit",minWidth:90}}>
+              <option value="">All rivers</option>
+              <option value="chalk">Chalkstreams</option>
+              <option value="Stillwater">Stillwater</option>
+              {REGIONS.filter(r=>r!=="Stillwater").map(rg=><option key={rg} value={rg}>{rg}</option>)}
+            </select>
           </div>
 
-          {/* RIVER LIST */}
+          {/* RIVER LIST — compact */}
+          <div style={{maxHeight:200,overflowY:"auto"}}>
           {(()=>{
             let rivers=ALL_RV;
-            if(regionFilter==="favs")rivers=rivers.filter(r=>favs.includes(r.id));
-            else if(regionFilter==="chalk")rivers=rivers.filter(r=>r.premium);
+            if(regionFilter==="chalk")rivers=rivers.filter(r=>r.premium);
             else if(regionFilter)rivers=rivers.filter(r=>r.rg===regionFilter);
             if(riverSearch.trim())rivers=rivers.filter(r=>r.n.toLowerCase().includes(riverSearch.toLowerCase())||r.rg?.toLowerCase().includes(riverSearch.toLowerCase()));
-            /* Sort: favs first, then premium, then alpha */
             rivers=rivers.sort((a,b)=>{const af=favs.includes(a.id)?0:1,bf=favs.includes(b.id)?0:1;if(af!==bf)return af-bf;const ap=a.premium?0:1,bp=b.premium?0:1;if(ap!==bp)return ap-bp;return a.n.localeCompare(b.n)});
             if(!rivers.length)return<div style={{textAlign:"center",padding:12,color:P.txD,fontSize:11}}>No rivers found</div>;
-            return<div style={{display:"grid",gap:2}}>{rivers.slice(0,30).map(r=><div key={r.id} style={{display:"flex",alignItems:"center",gap:6}}>
-              <button onClick={()=>toggleFav(r.id)} style={{background:"none",border:"none",color:favs.includes(r.id)?P.rust:P.txD,fontSize:12,cursor:"pointer",padding:0,flexShrink:0}}>{favs.includes(r.id)?"★":"☆"}</button>
-              <button onClick={()=>{setRiv(r.id);setPick(false);setRiverSearch("")}} style={{flex:1,padding:"5px 8px",borderRadius:4,border:riv===r.id?`1px solid ${P.gn}`:`1px solid transparent`,background:riv===r.id?P.gn+"18":"transparent",color:riv===r.id?P.gn:P.tx,fontSize:10,fontWeight:riv===r.id?700:400,cursor:"pointer",fontFamily:"inherit",textAlign:"left",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <span>{r.n}</span>
-                <span style={{fontSize:8,color:r.premium?P.gn:P.txD}}>{r.premium?"●":r.rg||""}</span>
-              </button>
-            </div>)}{rivers.length>30&&<div style={{fontSize:9,color:P.txD,textAlign:"center",padding:4}}>Showing 30 of {rivers.length} — search to narrow</div>}</div>;
+            return rivers.slice(0,20).map(r=><div key={r.id} onClick={()=>{setRiv(r.id);if(!r.b||r.b.length<=1)setPick(false);setRiverSearch("")}} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 4px",borderBottom:`1px solid ${P.bd}`,cursor:"pointer"}}>
+              <button onClick={e=>{e.stopPropagation();toggleFav(r.id)}} style={{background:"none",border:"none",color:favs.includes(r.id)?P.rust:P.txD,fontSize:11,cursor:"pointer",padding:0,flexShrink:0,width:16}}>{favs.includes(r.id)?"★":"☆"}</button>
+              <span style={{flex:1,fontSize:11,fontWeight:riv===r.id?700:400,color:riv===r.id?P.gn:P.tx}}>{r.n}</span>
+              <span style={{fontSize:8,color:r.premium?P.gn:P.txD,flexShrink:0}}>{r.premium?"●":r.rg||""}</span>
+            </div>);
           })()}
+          </div>
 
-          {/* BEATS for selected river */}
-          {rv.b&&rv.b.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`}}>
-            <div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEATS — {rv.n}</div>
-            <div style={{display:"flex",gap:3,flexWrap:"wrap"}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setPick(false)}} style={{padding:"2px 7px",borderRadius:4,border:beat===b?`1px solid ${P.tx}`:`1px solid ${P.bd}`,background:beat===b?P.c3:"transparent",color:beat===b?P.tx:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
+          {/* BEATS — horizontal strip */}
+          {rv.b&&rv.b.length>1&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`}}>
+            <div style={{display:"flex",gap:4,overflowX:"auto"}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setPick(false)}} style={{flexShrink:0,padding:"5px 10px",borderRadius:5,border:beat===b?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:beat===b?P.gn+"18":"transparent",color:beat===b?P.gn:P.txD,fontSize:9,fontWeight:beat===b?700:400,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
           </div>}
         </div>}
       </div>
@@ -1076,11 +1198,20 @@ export default function App(){
           </div>
           <div style={{display:"flex",gap:4}}>
             <button onClick={quickSnap} style={{background:P.gn,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📷 SNAP</button>
+            <button onClick={async()=>{
+              const pos=await getPos();
+              if(pos){
+                const url=`https://maps.google.com/?q=${pos.lat},${pos.lng}`;
+                const text=`I'm fishing on ${rv.n}${beat?" / "+beat:""} — find me here: ${url}`;
+                if(navigator.share)navigator.share({title:"Ephemera — Live Location",text}).catch(()=>{});
+                else{navigator.clipboard.writeText(text).catch(()=>{});alert("Location link copied!")}
+              }else alert("GPS not available — check location permissions")
+            }} style={{background:"transparent",border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 8px",color:P.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>📍</button>
             <button onClick={endToReview} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 10px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>END</button>
           </div>
         </div>:reviewing?<div style={{display:"flex",alignItems:"center",gap:8,width:"100%",justifyContent:"space-between"}}>
           <div style={{fontSize:10,fontWeight:700,color:P.rust}}>SESSION REVIEW — {sessionSnaps.length} catch{sessionSnaps.length!==1?"es":""}</div>
-          <button onClick={()=>{setReviewing(false);setSessionStart(null);setSessionSnaps([])}} style={{fontSize:9,color:P.txD,background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"4px 8px",cursor:"pointer",fontFamily:"inherit"}}>Discard</button>
+          <button onClick={()=>{setReviewing(false);setSessionStart(null);setSessionSnaps([]);clearSavedSession()}} style={{fontSize:9,color:P.txD,background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"4px 8px",cursor:"pointer",fontFamily:"inherit"}}>Discard</button>
         </div>:null}
       </div>
 
@@ -1089,8 +1220,19 @@ export default function App(){
 
       <div style={{padding:14}}>
 
+        {/* SESSION RECOVERY BANNER */}
+        {recovered&&<div style={{background:P.gn+"18",borderRadius:8,border:`1px solid ${P.gn}40`,padding:"10px 14px",marginBottom:10,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div><div style={{fontSize:10,fontWeight:700,color:P.gn}}>Session recovered</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>Your session was restored after the app closed. {sessionSnaps.length} snap{sessionSnaps.length!==1?"s":""} saved.</div></div>
+          <button onClick={()=>setRecovered(false)} style={{background:"none",border:"none",color:P.txD,fontSize:14,cursor:"pointer"}}>✕</button>
+        </div>}
+
         {/* ═══ GUIDE ═══ */}
         {tab==="guide"&&<div>
+          {/* AI GUIDE NOTE — the calm expert speaks */}
+          <div style={{padding:"12px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:12}}>
+            <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn,marginBottom:4}}>TODAY'S GUIDE NOTE</div>
+            <div style={{fontSize:12,color:P.tx,lineHeight:1.7}}>{guideNote}</div>
+          </div>
           {/* SESSION ACTIVE — minimal, quick snap */}
           {onRiver&&<div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>SESSION ACTIVE — {beat}</div><div style={{fontSize:9,color:P.txD}}>{new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div></div>
@@ -1119,10 +1261,13 @@ export default function App(){
             </div>
             <div style={{fontSize:8,color:P.txD,marginBottom:10,lineHeight:1.5}}>Upload photos from today — timestamps are read from the image data so catches appear in the order you took them.</div>
 
+            {/* ANALYSE ALL BUTTON */}
+            {sessionSnaps.filter(s=>s.photo&&!s.analysis).length>0&&<button onClick={analyseAll} disabled={analysingAll} style={{width:"100%",padding:"10px",borderRadius:8,border:`1px solid ${P.gn}`,background:analysingAll?P.c2:"transparent",color:analysingAll?P.txD:P.gn,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit",marginBottom:12}}>{analysingAll?`Analysing... (${sessionSnaps.filter(s=>s.analysis).length}/${sessionSnaps.length})`:`🐟 AI Analyse All Photos (${sessionSnaps.filter(s=>s.photo&&!s.analysis).length})`}</button>}
+
             {/* SESSION GPS MAP */}
-            {sessionTrack.length>1&&<div style={{marginBottom:10}}>
+            {sessionTrack.length>0&&<div style={{marginBottom:10}}>
               <div onClick={()=>setShowSessionMap(!showSessionMap)} style={{background:P.c2,borderRadius:showSessionMap?"8px 8px 0 0":8,border:`1px solid ${P.bd}`,padding:"10px 12px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>SESSION ROUTE</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>{sessionTrack.length} GPS points tracked</div></div>
+                <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>CATCH LOCATIONS</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>{sessionTrack.filter(t=>t.label&&t.label.startsWith("Catch")).length} catch{sessionTrack.filter(t=>t.label&&t.label.startsWith("Catch")).length!==1?"es":""} geotagged</div></div>
                 <span style={{color:P.txD,fontSize:11}}>{showSessionMap?"−":"+"}</span>
               </div>
               {showSessionMap&&<div style={{background:P.c2,borderRadius:"0 0 8px 8px",border:`1px solid ${P.bd}`,borderTop:"none",overflow:"hidden"}}>
@@ -1130,20 +1275,19 @@ export default function App(){
                   if(!el||el.dataset.init||!mapsLoaded||!window.google||!sessionTrack.length)return;
                   el.dataset.init="1";
                   const map=new window.google.maps.Map(el,{center:{lat:sessionTrack[0].lat,lng:sessionTrack[0].lng},zoom:15,disableDefaultUI:true,zoomControl:true,styles:[{featureType:"water",stylers:[{color:"#c8d7d4"}]},{featureType:"landscape",stylers:[{color:"#e8e4dc"}]},{featureType:"road",stylers:[{visibility:"simplified"}]},{featureType:"poi",stylers:[{visibility:"off"}]}]});
-                  const path=sessionTrack.map(p=>({lat:p.lat,lng:p.lng}));
-                  new window.google.maps.Polyline({path,geodesic:true,strokeColor:"#7A9E7E",strokeOpacity:0.9,strokeWeight:3,map});
-                  /* Start marker */
-                  new window.google.maps.Marker({position:path[0],map,icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:6,fillColor:"#7A9E7E",fillOpacity:1,strokeColor:"#fff",strokeWeight:2},title:"Start"});
-                  /* End marker */
-                  new window.google.maps.Marker({position:path[path.length-1],map,icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:6,fillColor:"#C36A3D",fillOpacity:1,strokeColor:"#fff",strokeWeight:2},title:"End"});
-                  /* Catch markers */
-                  sessionSnaps.forEach((s,i)=>{
-                    const nearest=sessionTrack.reduce((best,p)=>{const t1=new Date("2026-01-01 "+s.timestamp).getTime();const t2=new Date("2026-01-01 "+p.time).getTime();const d=Math.abs(t1-t2);return d<best.d?{d,p}:best},{d:Infinity,p:sessionTrack[0]});
-                    new window.google.maps.Marker({position:{lat:nearest.p.lat,lng:nearest.p.lng},map,label:{text:String(i+1),color:"#fff",fontSize:"9px",fontWeight:"700"},icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:10,fillColor:"#C36A3D",fillOpacity:1,strokeColor:"#fff",strokeWeight:2},title:`Catch ${i+1}: ${s.species||"?"}`});
-                  });
                   const bounds=new window.google.maps.LatLngBounds();
-                  path.forEach(p=>bounds.extend(p));
-                  map.fitBounds(bounds,{padding:30});
+                  sessionTrack.forEach((p,i)=>{
+                    const pos={lat:p.lat,lng:p.lng};bounds.extend(pos);
+                    const isCatch=p.label&&p.label.startsWith("Catch");
+                    const isStart=p.label==="Start";
+                    const isEnd=p.label==="End";
+                    new window.google.maps.Marker({position:pos,map,
+                      label:isCatch?{text:p.label.replace("Catch ",""),color:"#fff",fontSize:"9px",fontWeight:"700"}:undefined,
+                      icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:isCatch?10:6,
+                        fillColor:isCatch?"#C36A3D":isStart?"#7A9E7E":"#5F6F7B",fillOpacity:1,strokeColor:"#fff",strokeWeight:2},
+                      title:`${p.label} — ${p.time}`});
+                  });
+                  if(sessionTrack.length>1)map.fitBounds(bounds,{padding:30});
                 }}/>
               </div>}
             </div>}
@@ -1484,18 +1628,47 @@ export default function App(){
             <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{sessions.slice(0,20).map((s,i)=><div key={s.id||i}>
               <div onClick={()=>setExpandedSession(expandedSession===(s.id||i)?null:(s.id||i))} style={{padding:"10px 12px",borderBottom:`1px solid ${P.bd}`,cursor:"pointer"}}>
                 <div style={{display:"flex",justifyContent:"space-between",marginBottom:3}}><span style={{fontSize:11,fontWeight:600}}>{s.river} — {s.beat||s.bt}</span><div style={{display:"flex",gap:4,alignItems:"center"}}>{s.rating&&<span style={{fontSize:7,fontWeight:700,padding:"1px 5px",borderRadius:3,color:s.rating==="Excellent"?P.gn:s.rating==="Good"?P.gn:P.rust,background:(s.rating==="Excellent"||s.rating==="Good"?P.gn:P.rust)+"18"}}>{s.rating.toUpperCase()}</span>}<span style={{fontSize:10,fontWeight:700,color:s.fish>=3?P.gn:s.fish>0?P.rust:P.txD}}>{s.fish||0}</span></div></div>
-                <div style={{display:"flex",gap:8,fontSize:9,color:P.txD,alignItems:"center"}}><span>{s.d}</span>{s.dur&&s.dur!=="Manual"&&<span>{s.dur}</span>}{s.photos&&s.photos.length>0&&<span>📷 {s.photos.length}</span>}{s.score&&<span>Score: {s.score}</span>}<span style={{marginLeft:"auto"}}>{expandedSession===(s.id||i)?"−":"+"}</span></div>
+                <div style={{display:"flex",gap:8,fontSize:9,color:P.txD,alignItems:"center"}}><span>{s.d}</span>{s.dur&&s.dur!=="Manual"&&<span>{s.dur}</span>}{(s.catches||[]).filter(c=>c.photo&&c.photo.length>200).length>0&&<span>📷 {(s.catches||[]).filter(c=>c.photo&&c.photo.length>200).length}</span>}{(s.photos||[]).length>0&&!(s.catches||[]).some(c=>c.photo&&c.photo.length>200)&&<span>📷 {s.photos.length}</span>}{s.score&&<span>Score: {s.score}</span>}<span style={{marginLeft:"auto"}}>{expandedSession===(s.id||i)?"−":"+"}</span></div>
               </div>
               {expandedSession===(s.id||i)&&<div style={{padding:"10px 12px",background:P.c2,borderBottom:`1px solid ${P.bd}`}}>
                 {s.time&&<div style={{fontSize:9,color:P.txD,marginBottom:4}}>Started {s.time} · {s.user}</div>}
                 {/* RATING BAR */}
                 {s.rating&&<div style={{display:"inline-block",padding:"3px 10px",borderRadius:4,background:s.rating==="Excellent"?P.gn+"20":s.rating==="Good"?P.gn+"15":s.rating==="Fair"?P.rust+"20":P.txD+"20",marginBottom:6}}><span style={{fontSize:10,fontWeight:700,color:s.rating==="Excellent"?P.gn:s.rating==="Good"?P.gn:s.rating==="Fair"?P.rust:P.txD}}>{s.rating}</span></div>}
-                {/* PHOTOS GALLERY */}
-                {s.photos&&s.photos.length>0&&<div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:6,marginBottom:6}}>{s.photos.map((p,pi)=><div key={pi} style={{flexShrink:0,textAlign:"center"}}>
-                  <img src={`data:image/jpeg;base64,${p.b64}`} alt="" style={{width:72,height:72,borderRadius:8,objectFit:"cover",border:`2px solid ${P.bd}`}}/>
-                  {p.time&&<div style={{fontSize:7,color:P.txD,marginTop:2}}>{p.time}</div>}
-                </div>)}</div>}
-                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginBottom:4}}>
+                {/* PHOTOS GALLERY — from catches or manual uploads */}
+                {(()=>{
+                  const photos=(s.catches||[]).filter(c=>c.photo&&c.photo.length>200).concat((s.photos||[]).filter(p=>p.b64));
+                  if(!photos.length)return null;
+                  return<div style={{marginBottom:8}}>
+                    <div style={{fontSize:8,color:P.txD,marginBottom:4}}>PHOTOS ({photos.length})</div>
+                    <div style={{display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>{photos.map((p,pi)=><div key={pi} style={{flexShrink:0,textAlign:"center"}}>
+                      <img src={`data:image/jpeg;base64,${p.photo||p.b64}`} alt="" style={{width:80,height:80,borderRadius:8,objectFit:"cover",border:`2px solid ${P.bd}`}}/>
+                      <div style={{fontSize:7,color:P.txD,marginTop:2}}>{p.timestamp||p.time||""}</div>
+                    </div>)}</div>
+                  </div>;
+                })()}
+                {/* CATCH DETAILS */}
+                {s.catches&&s.catches.length>0&&<div style={{marginTop:4}}>
+                  <div style={{fontSize:8,color:P.txD,marginBottom:3}}>CATCHES</div>
+                  {s.catches.map((c,ci)=><div key={ci} style={{padding:"6px 0",borderBottom:ci<s.catches.length-1?`1px solid ${P.bd}`:""}}>
+                    <div style={{display:"flex",gap:8,alignItems:"center"}}>
+                      {c.photo&&c.photo.length>200&&<img src={`data:image/jpeg;base64,${c.photo}`} alt="" style={{width:48,height:48,borderRadius:6,objectFit:"cover",flexShrink:0}}/>}
+                      <div style={{flex:1}}>
+                        <div style={{fontSize:10,color:P.tx,fontWeight:500}}>{c.species||"Unknown"}{c.weight?` — ${c.weight}lb`:""}{c.wild?` (${c.wild})`:""}</div>
+                        <div style={{fontSize:8,color:P.txD}}>{c.timestamp}{c.fly?` on ${c.fly}`:""}{c.notes?` — ${c.notes}`:""}</div>
+                      </div>
+                    </div>
+                    {/* AI ANALYSIS on archived catch */}
+                    {c.analysis&&!c.analysis.error&&!c.analysis.unusable&&<div style={{marginTop:4,padding:"5px 8px",background:P.bg,borderRadius:4,border:`1px solid ${P.bd}`}}>
+                      <div style={{fontSize:7,fontWeight:700,color:P.gn,letterSpacing:"0.1em"}}>AI ID</div>
+                      <div style={{fontSize:9,color:P.tx}}>{c.analysis.species} — {c.analysis.species_confidence} · {c.analysis.wild_stocked}</div>
+                      {c.analysis.weight_range&&<div style={{fontSize:8,color:P.txM}}>Est. {c.analysis.weight_range} · {c.analysis.condition}</div>}
+                    </div>}
+                    {c.analysis&&c.analysis.unusable&&<div style={{fontSize:8,color:P.rust,marginTop:2}}>Photo too unclear for AI identification</div>}
+                    {c.photo&&c.photo.length>200&&<button onClick={()=>analyzeArchiveCatch(s.id,ci)} disabled={archiveAnalyzing===`${s.id}-${ci}`} style={{marginTop:4,padding:"3px 8px",borderRadius:4,border:`1px solid ${archiveAnalyzing===`${s.id}-${ci}`?P.bd:P.gn}`,background:"transparent",color:archiveAnalyzing===`${s.id}-${ci}`?P.txD:P.gn,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{archiveAnalyzing===`${s.id}-${ci}`?"Analysing...":c.analysis?"Re-analyse":"🐟 AI Identify"}</button>}
+                  </div>)}
+                </div>}
+                {/* SESSION INFO */}
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginTop:6,marginBottom:4}}>
                   {s.fly&&<div style={{fontSize:10,color:P.gn}}>Fly: {s.fly}</div>}
                   {s.big&&<div style={{fontSize:10,color:P.txM}}>Biggest: {s.big}</div>}
                   {s.topHatch&&<div style={{fontSize:10,color:P.txM}}>Hatch: {s.topHatch}</div>}
@@ -1503,7 +1676,6 @@ export default function App(){
                 </div>
                 {s.notes&&<div style={{fontSize:10,color:P.txM,lineHeight:1.5,marginBottom:4}}>{s.notes}</div>}
                 {s.summary&&<div style={{padding:"6px 8px",background:P.bg,borderRadius:5,border:`1px solid ${P.bd}`,marginTop:4}}><div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:2}}>AI SUMMARY</div><div style={{fontSize:10,color:P.tx,lineHeight:1.6,fontStyle:"italic"}}>{s.summary}</div></div>}
-                {s.catches&&s.catches.length>0&&<div style={{marginTop:6}}><div style={{fontSize:8,color:P.txD,marginBottom:3}}>CATCHES</div>{s.catches.map((c,ci)=><div key={ci} style={{fontSize:9,color:P.txM,padding:"2px 0"}}>{c.timestamp}: {c.species||"?"} {c.weight?c.weight+"lb":""} {c.wild||""} {c.fly?("on "+c.fly):""}</div>)}</div>}
               </div>}
             </div>)}</div>
           </div>}
