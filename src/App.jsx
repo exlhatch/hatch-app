@@ -594,6 +594,12 @@ export default function App(){
   const[sessionTrack,setSessionTrack]=useState([]);/* GPS points [{lat,lng,time,label}] */
   const[showSessionMap,setShowSessionMap]=useState(false);
   const[recovered,setRecovered]=useState(false);
+  const[gallery,setGallery]=useState(null);/* {items:[{src,type,caption}], idx:0} */
+  const[speaking,setSpeaking]=useState(false);
+  const[listening,setListening]=useState(false);const[voiceResult,setVoiceResult]=useState("");
+  const[riverAnalysis,setRiverAnalysis]=useState(null);const[riverAnalyzing,setRiverAnalyzing]=useState(false);
+  const riverPhotoRef=typeof document!=="undefined"?document.createElement("input"):null;
+  if(riverPhotoRef){riverPhotoRef.type="file";riverPhotoRef.accept="image/*"}
   const[reviewing,setReviewing]=useState(false);/* end-of-session review screen */
   const[sessionPublic,setSessionPublic]=useState(false);
   const[analyzing,setAnalyzing]=useState(null);/* snap id being analyzed */
@@ -612,7 +618,7 @@ export default function App(){
   const flyFileRef=typeof document!=="undefined"?document.createElement("input"):null;
   if(flyFileRef){flyFileRef.type="file";flyFileRef.accept="image/*";flyFileRef.setAttribute("capture","environment")}
   const uploadRef=typeof document!=="undefined"?document.createElement("input"):null;
-  if(uploadRef){uploadRef.type="file";uploadRef.accept="image/*";uploadRef.multiple=true}
+  if(uploadRef){uploadRef.type="file";uploadRef.accept="image/*,video/*";uploadRef.multiple=true}
 
   /* EXIF timestamp extraction — reads JPEG binary for DateTimeOriginal */
   const extractExifTime=(file)=>new Promise(res=>{
@@ -663,17 +669,23 @@ export default function App(){
     reader.readAsArrayBuffer(file.slice(0,128*1024));/* only read first 128KB for EXIF */
   });
 
-  /* UPLOAD PHOTOS AFTER SESSION — uses EXIF for timestamps */
+  /* UPLOAD PHOTOS + VIDEO AFTER SESSION */
   const uploadAfterSession=()=>{
     if(!uploadRef)return;
     uploadRef.onchange=async(e)=>{
       const files=Array.from(e.target.files||[]);if(!files.length)return;
       const newSnaps=[];
       for(const file of files){
-        const[b64,exifDate]=await Promise.all([compressImg(file,800),extractExifTime(file)]);
-        const ts=exifDate?exifDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"uploaded";
-        const datePart=exifDate?exifDate.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
-        newSnaps.push({id:Date.now()+Math.floor(Math.random()*1000)+newSnaps.length,photo:b64,timestamp:ts,dateLabel:datePart,exifDate:exifDate?.toISOString()||null,species:"",weight:"",fly:"",wild:"",notes:"",analysis:null});
+        const isVideo=file.type.startsWith("video/");
+        if(isVideo){
+          const url=URL.createObjectURL(file);
+          newSnaps.push({id:Date.now()+newSnaps.length,videoUrl:url,photo:null,timestamp:"video",dateLabel:"",exifDate:null,isVideo:true,species:"",weight:"",fly:"",wild:"",notes:"",analysis:null});
+        }else{
+          const[b64,exifDate]=await Promise.all([compressImg(file,800),extractExifTime(file)]);
+          const ts=exifDate?exifDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"uploaded";
+          const datePart=exifDate?exifDate.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
+          newSnaps.push({id:Date.now()+Math.floor(Math.random()*1000)+newSnaps.length,photo:b64,timestamp:ts,dateLabel:datePart,exifDate:exifDate?.toISOString()||null,species:"",weight:"",fly:"",wild:"",notes:"",analysis:null});
+        }
       }
       setSessionSnaps(s=>[...s,...newSnaps].sort((a,b)=>{
         if(a.exifDate&&b.exifDate)return new Date(a.exifDate)-new Date(b.exifDate);
@@ -692,7 +704,7 @@ export default function App(){
   const[fDate,setFDate]=useState(()=>new Date().toISOString().slice(0,10));
   const[fPhotos,setFPhotos]=useState([]);/* base64 photos for manual log */
   const manualPhotoRef=typeof document!=="undefined"?document.createElement("input"):null;
-  if(manualPhotoRef){manualPhotoRef.type="file";manualPhotoRef.accept="image/*";manualPhotoRef.multiple=true}
+  if(manualPhotoRef){manualPhotoRef.type="file";manualPhotoRef.accept="image/*,video/*";manualPhotoRef.multiple=true}
 
   const P=light?L:D;const rv=ALL_RV.find(r=>r.id===riv)||RV[0];
 
@@ -894,6 +906,66 @@ export default function App(){
       }catch(e){setSessionSnaps(s=>s.map(sn=>sn.id===snap.id?{...sn,analysis:{error:e.message}}:sn))}
     }
     setAnalyzing(null);setAnalysingAll(false);
+  };
+
+  /* AI DESCRIBE ANY IMAGE — river scene, wildlife, handwritten notes, anything */
+  const aiDescribe=async(snapId)=>{
+    const snap=sessionSnaps.find(s=>s.id===snapId);if(!snap?.photo)return;
+    setAnalyzing(snapId);
+    try{
+      const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:snap.photo,mode:"describe"})});
+      const data=await r.json();
+      setSessionSnaps(s=>s.map(sn=>sn.id===snapId?{...sn,analysis:data,aiCaption:data.summary||data.description||""}:sn));
+    }catch(e){setSessionSnaps(s=>s.map(sn=>sn.id===snapId?{...sn,analysis:{error:e.message}}:sn))}
+    setAnalyzing(null);
+  };
+
+  /* TEXT-TO-SPEECH — read guide note aloud */
+  const speak=(text)=>{
+    if(!window.speechSynthesis)return;
+    if(speaking){window.speechSynthesis.cancel();setSpeaking(false);return}
+    const u=new SpeechSynthesisUtterance(text);
+    u.rate=0.9;u.pitch=1;u.lang="en-GB";
+    const voices=window.speechSynthesis.getVoices();
+    const british=voices.find(v=>v.lang==="en-GB"&&v.name.includes("Daniel"))||voices.find(v=>v.lang==="en-GB")||voices[0];
+    if(british)u.voice=british;
+    u.onend=()=>setSpeaking(false);
+    setSpeaking(true);window.speechSynthesis.speak(u);
+  };
+
+  /* TAP-TO-TALK — voice questions to the guide */
+  const startListening=()=>{
+    if(!window.SpeechRecognition&&!window.webkitSpeechRecognition){setVoiceResult("Voice not supported in this browser.");return}
+    const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+    const rec=new SR();rec.lang="en-GB";rec.continuous=false;rec.interimResults=false;
+    rec.onresult=async(e)=>{
+      const q=e.results[0][0].transcript;
+      setListening(false);setVoiceResult("Thinking...");
+      try{
+        const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"summary",sessionData:`You are Ephemera, a calm, expert fly fishing guide on ${rv.n} (${beat}). Water temp ${cT}°C, air ${cAir}°C, wind ${cW}mph, ${cC>70?"overcast":cC>40?"cloudy":"clear"}. Top hatch: ${topH?.cm||"olives"}. The angler asks: "${q}". Give practical, specific advice in 2-3 sentences. Calm, encouraging, British tone. If they sound frustrated, reassure them — one good cast beats twenty bad ones.`})});
+        const d=await r.json();const answer=d.summary||"I didn't catch that. Try again.";
+        setVoiceResult(answer);speak(answer);
+      }catch{setVoiceResult("Couldn't connect. Check your signal.")}
+    };
+    rec.onerror=()=>{setListening(false);setVoiceResult("Couldn't hear you. Tap and try again.")};
+    rec.onend=()=>setListening(false);
+    setListening(true);setVoiceResult("");rec.start();
+  };
+
+  /* RIVER PHOTO ANALYSIS — where to stand, cast, find fish */
+  const analyzeRiver=()=>{
+    if(!riverPhotoRef)return;
+    riverPhotoRef.onchange=async(e)=>{
+      const file=e.target.files?.[0];if(!file)return;
+      const b64=await compressImg(file,800);
+      setRiverAnalyzing(true);setRiverAnalysis(null);
+      try{
+        const r=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image:b64,mode:"river"})});
+        setRiverAnalysis(await r.json());
+      }catch(e){setRiverAnalysis({error:e.message})}
+      setRiverAnalyzing(false);riverPhotoRef.value="";
+    };
+    riverPhotoRef.click();
   };
 
   /* AI FLY ID — photo or describe */
@@ -1230,8 +1302,34 @@ export default function App(){
         {tab==="guide"&&<div>
           {/* AI GUIDE NOTE — the calm expert speaks */}
           <div style={{padding:"12px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:12}}>
-            <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn,marginBottom:4}}>TODAY'S GUIDE NOTE</div>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>TODAY'S GUIDE NOTE</div><button onClick={()=>speak(guideNote)} style={{background:"none",border:`1px solid ${speaking?P.gn:P.bd}`,borderRadius:5,padding:"3px 8px",color:speaking?P.gn:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{speaking?"◼ Stop":"🔊 Listen"}</button></div>
             <div style={{fontSize:12,color:P.tx,lineHeight:1.7}}>{guideNote}</div>
+          </div>
+
+          {/* TAP-TO-TALK — ask the guide */}
+          <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>ASK THE GUIDE</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>Tap mic, ask anything about your fishing</div></div>
+              <button onClick={startListening} style={{background:listening?P.rust:P.gn,border:"none",borderRadius:"50%",width:36,height:36,color:"#fff",fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{listening?"...":"🎙"}</button>
+            </div>
+            {voiceResult&&<div style={{marginTop:8,padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}>
+              <div style={{fontSize:11,color:P.tx,lineHeight:1.7}}>{voiceResult}</div>
+            </div>}
+          </div>
+
+          {/* RIVER ANALYSIS — photograph a stretch */}
+          <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>READ THE WATER</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>Photo a stretch — AI shows where to fish</div></div><button onClick={analyzeRiver} disabled={riverAnalyzing} style={{background:P.rust,border:"none",borderRadius:6,padding:"8px 12px",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{riverAnalyzing?"Analysing...":"📷 Analyse"}</button></div>
+            {riverAnalysis&&!riverAnalysis.error&&riverAnalysis.quality!=="unusable"&&<div style={{marginTop:10,display:"grid",gap:6}}>
+              <div style={{padding:"8px 10px",background:P.gn+"18",borderRadius:6,border:`1px solid ${P.gn}40`}}><div style={{fontSize:8,fontWeight:700,color:P.gn}}>WHERE TO STAND</div><div style={{fontSize:10,color:P.tx,marginTop:2,lineHeight:1.6}}>{riverAnalysis.where_to_stand}</div></div>
+              <div style={{padding:"8px 10px",background:P.rustS,borderRadius:6,border:`1px solid ${P.rustB}`}}><div style={{fontSize:8,fontWeight:700,color:P.rust}}>WHERE TO CAST</div><div style={{fontSize:10,color:P.tx,marginTop:2,lineHeight:1.6}}>{riverAnalysis.where_to_cast}</div></div>
+              {riverAnalysis.likely_fish_lies?.length>0&&<div style={{padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}><div style={{fontSize:8,fontWeight:700,color:P.txD}}>LIKELY FISH LIES</div>{riverAnalysis.likely_fish_lies.map((l,li)=><div key={li} style={{fontSize:9,color:P.txM,marginTop:2}}>• {l}</div>)}</div>}
+              <div style={{padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}><div style={{fontSize:8,fontWeight:700,color:P.txD}}>APPROACH</div><div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.6}}>{riverAnalysis.approach}</div></div>
+              <div style={{fontSize:10,color:P.txM,lineHeight:1.6,fontStyle:"italic"}}>{riverAnalysis.overall}</div>
+              <button onClick={()=>speak(riverAnalysis.overall+" "+riverAnalysis.where_to_stand+" "+riverAnalysis.where_to_cast)} style={{padding:"6px",borderRadius:5,border:`1px solid ${P.bd}`,background:"transparent",color:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>🔊 Read aloud</button>
+            </div>}
+            {riverAnalysis&&riverAnalysis.quality==="unusable"&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Need a clearer photo of the river. Try landscape orientation showing the full stretch.</div>}
+            {riverAnalysis?.error&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Analysis failed. Check your connection.</div>}
           </div>
           {/* SESSION ACTIVE — minimal, quick snap */}
           {onRiver&&<div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
@@ -1241,8 +1339,9 @@ export default function App(){
 
             {/* SNAP THUMBNAILS */}
             {sessionSnaps.length>0&&<div style={{marginTop:10,display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
-              {sessionSnaps.map(s=><div key={s.id} style={{flexShrink:0,textAlign:"center"}}>
-                <img src={`data:image/jpeg;base64,${s.photo}`} alt="" style={{width:48,height:48,borderRadius:6,objectFit:"cover",border:`2px solid ${P.gn}`}}/>
+              {sessionSnaps.map(s=><div key={s.id} style={{flexShrink:0,textAlign:"center"}} onClick={()=>{const items=sessionSnaps.filter(sn=>sn.photo||sn.isVideo).map(sn=>sn.isVideo?{src:sn.videoUrl,type:"video",caption:sn.timestamp}:{src:`data:image/jpeg;base64,${sn.photo}`,type:"image",caption:sn.timestamp});setGallery({items,idx:sessionSnaps.findIndex(sn=>sn.id===s.id)})}}>
+                {s.isVideo?<div style={{width:48,height:48,borderRadius:6,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${P.gn}`}}><span style={{fontSize:16}}>▶</span></div>
+                :<img src={`data:image/jpeg;base64,${s.photo}`} alt="" style={{width:48,height:48,borderRadius:6,objectFit:"cover",border:`2px solid ${P.gn}`}}/>}
                 <div style={{fontSize:7,color:P.txD,marginTop:2}}>{s.timestamp}</div>
               </div>)}
             </div>}
@@ -1256,7 +1355,7 @@ export default function App(){
 
             {/* UPLOAD PHOTOS FROM CAMERA ROLL */}
             <div style={{display:"flex",gap:6,marginBottom:12}}>
-              <button onClick={uploadAfterSession} style={{flex:1,padding:"10px",borderRadius:8,border:`1px solid ${P.gn}`,background:"transparent",color:P.gn,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📁 Add Photos from Camera Roll</button>
+              <button onClick={uploadAfterSession} style={{flex:1,padding:"10px",borderRadius:8,border:`1px solid ${P.gn}`,background:"transparent",color:P.gn,fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>📁 Add Photos & Video</button>
               <button onClick={quickSnap} style={{padding:"10px 14px",borderRadius:8,border:`1px solid ${P.bd}`,background:"transparent",color:P.txD,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>📷</button>
             </div>
             <div style={{fontSize:8,color:P.txD,marginBottom:10,lineHeight:1.5}}>Upload photos from today — timestamps are read from the image data so catches appear in the order you took them.</div>
@@ -1299,26 +1398,36 @@ export default function App(){
 
             {sessionSnaps.map((snap,idx)=><div key={snap.id} style={{background:P.c2,borderRadius:10,border:`1px solid ${P.bd}`,padding:12,marginBottom:8}}>
               <div style={{display:"flex",gap:10,marginBottom:8}}>
-                <img src={`data:image/jpeg;base64,${snap.photo}`} alt="" style={{width:72,height:72,borderRadius:8,objectFit:"cover",flexShrink:0}}/>
+                {snap.isVideo?<div style={{width:72,height:72,borderRadius:8,background:P.c1,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${P.bd}`}} onClick={()=>setGallery({items:[{src:snap.videoUrl,type:"video",caption:`Catch ${idx+1}`}],idx:0})}><span style={{fontSize:22}}>▶</span></div>
+                :<img src={`data:image/jpeg;base64,${snap.photo}`} alt="" onClick={()=>{const items=sessionSnaps.filter(s=>s.photo||s.isVideo).map((s,i)=>s.isVideo?{src:s.videoUrl,type:"video",caption:`${s.timestamp}`}:{src:`data:image/jpeg;base64,${s.photo}`,type:"image",caption:`Catch ${i+1} — ${s.timestamp}`});setGallery({items,idx:sessionSnaps.filter(s=>s.photo||s.isVideo).findIndex(s=>s.id===snap.id)})}} style={{width:72,height:72,borderRadius:8,objectFit:"cover",flexShrink:0,cursor:"pointer"}}/>}
                 <div style={{flex:1}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:P.tx}}>Catch {idx+1}</span><span style={{fontSize:9,color:P.txD}}>{snap.dateLabel?snap.dateLabel+" ":""}{snap.timestamp}{snap.exifDate?"":" ⏎"}</span></div>
 
                   {/* AI ANALYSIS RESULT */}
-                  {snap.analysis&&!snap.analysis.error&&!snap.analysis.unusable&&<div style={{marginTop:4,padding:"6px 8px",background:P.bg,borderRadius:5,border:`1px solid ${P.bd}`}}>
+                  {snap.analysis&&!snap.analysis.error&&!snap.analysis.unusable&&!snap.aiCaption&&<div style={{marginTop:4,padding:"6px 8px",background:P.bg,borderRadius:5,border:`1px solid ${P.bd}`}}>
                     <div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:2}}>AI IDENTIFICATION</div>
                     <div style={{fontSize:10,fontWeight:600,color:P.tx}}>{snap.analysis.species} — {snap.analysis.species_confidence} confidence</div>
                     <div style={{fontSize:9,color:P.txM}}>{snap.analysis.wild_stocked}: {snap.analysis.wild_notes}</div>
                     {snap.analysis.weight_range&&<div style={{fontSize:9,color:P.txM}}>Est. {snap.analysis.weight_range}</div>}
                     {snap.analysis.condition&&<div style={{fontSize:9,color:P.txM}}>Condition: {snap.analysis.condition}</div>}
                   </div>}
+                  {/* AI DESCRIPTION (non-fish image) */}
+                  {snap.aiCaption&&<div style={{marginTop:4,padding:"6px 8px",background:P.bg,borderRadius:5,border:`1px solid ${P.bd}`}}>
+                    <div style={{fontSize:8,fontWeight:700,color:P.gn,letterSpacing:"0.1em",marginBottom:2}}>AI DESCRIPTION</div>
+                    <div style={{fontSize:10,color:P.tx,lineHeight:1.5}}>{snap.aiCaption}</div>
+                    {snap.analysis?.transcription&&<div style={{marginTop:4,padding:"4px 6px",background:P.c2,borderRadius:3,border:`1px solid ${P.bd}`}}><div style={{fontSize:7,color:P.txD}}>TRANSCRIPTION</div><div style={{fontSize:10,color:P.tx,marginTop:2,lineHeight:1.5,fontStyle:"italic"}}>{snap.analysis.transcription}</div></div>}
+                  </div>}
                   {snap.analysis&&snap.analysis.unusable&&<div style={{marginTop:4,padding:"6px 8px",background:P.bg,borderRadius:5,border:`1px solid ${P.rust}40`}}>
                     <div style={{fontSize:8,fontWeight:700,color:P.rust}}>BETTER PHOTO NEEDED</div>
-                    <div style={{fontSize:9,color:P.txM}}>{snap.analysis.quality_note||"Image too blurry or unclear for identification."}</div>
+                    <div style={{fontSize:9,color:P.txM}}>{snap.analysis.quality_note||"Image too blurry or unclear."}</div>
                   </div>}
                   {snap.analysis&&snap.analysis.quality==="poor"&&!snap.analysis.unusable&&<div style={{fontSize:8,color:P.rust,marginTop:2}}>⚠ {snap.analysis.quality_note}</div>}
                   {snap.analysis&&snap.analysis.error&&<div style={{fontSize:9,color:P.rust,marginTop:4}}>Analysis failed — fill in manually</div>}
 
-                  <button onClick={()=>analyzeFish(snap.id)} disabled={analyzing===snap.id} style={{marginTop:6,padding:"5px 10px",borderRadius:5,border:`1px solid ${analyzing===snap.id?P.bd:P.gn}`,background:"transparent",color:analyzing===snap.id?P.txD:P.gn,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{analyzing===snap.id?"Analysing...":snap.analysis?"Re-analyse":"🐟 AI Identify"}</button>
+                  {!snap.isVideo&&snap.photo&&<div style={{display:"flex",gap:4,marginTop:6}}>
+                    <button onClick={()=>analyzeFish(snap.id)} disabled={analyzing===snap.id} style={{padding:"5px 8px",borderRadius:5,border:`1px solid ${analyzing===snap.id?P.bd:P.gn}`,background:"transparent",color:analyzing===snap.id?P.txD:P.gn,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{analyzing===snap.id?"...":snap.analysis&&!snap.aiCaption?"Re-ID":"🐟 Fish"}</button>
+                    <button onClick={()=>aiDescribe(snap.id)} disabled={analyzing===snap.id} style={{padding:"5px 8px",borderRadius:5,border:`1px solid ${analyzing===snap.id?P.bd:P.rust}`,background:"transparent",color:analyzing===snap.id?P.txD:P.rust,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{snap.aiCaption?"Re-describe":"📝 Describe"}</button>
+                  </div>}
                 </div>
               </div>
 
@@ -1724,6 +1833,22 @@ export default function App(){
         </div>
         {user?.betaTester&&<div style={{fontSize:8,color:P.gn,marginTop:6}}>✓ Beta tester — {user.name}</div>}
       </div>
+
+      {/* GALLERY LIGHTBOX */}
+      {gallery&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}} onClick={()=>setGallery(null)}>
+        <button onClick={()=>setGallery(null)} style={{position:"absolute",top:16,right:16,background:"none",border:"none",color:"#fff",fontSize:24,cursor:"pointer",zIndex:301}}>✕</button>
+        <div onClick={e=>e.stopPropagation()} style={{maxWidth:"90vw",maxHeight:"80vh",position:"relative"}}>
+          {gallery.items[gallery.idx]?.type==="video"?
+            <video src={gallery.items[gallery.idx].src} controls autoPlay style={{maxWidth:"90vw",maxHeight:"75vh",borderRadius:8}}/>
+            :<img src={gallery.items[gallery.idx]?.src} alt="" style={{maxWidth:"90vw",maxHeight:"75vh",borderRadius:8,objectFit:"contain"}}/>}
+        </div>
+        <div style={{color:"#fff",fontSize:11,marginTop:8,opacity:0.7}}>{gallery.items[gallery.idx]?.caption||""}</div>
+        <div style={{display:"flex",gap:12,marginTop:12}}>
+          {gallery.idx>0&&<button onClick={e=>{e.stopPropagation();setGallery(g=>({...g,idx:g.idx-1}))}} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"8px 16px",color:"#fff",fontSize:14,cursor:"pointer"}}>←</button>}
+          <span style={{color:"#fff",fontSize:10,padding:"8px 0"}}>{gallery.idx+1} / {gallery.items.length}</span>
+          {gallery.idx<gallery.items.length-1&&<button onClick={e=>{e.stopPropagation();setGallery(g=>({...g,idx:g.idx+1}))}} style={{background:"rgba(255,255,255,0.15)",border:"none",borderRadius:6,padding:"8px 16px",color:"#fff",fontSize:14,cursor:"pointer"}}>→</button>}
+        </div>
+      </div>}
 
       {/* NAV */}
       <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>{[{id:"guide",l:"Guide",i:"◉"},{id:"hatches",l:"Hatches",i:"◎"},{id:"fly",l:"Flies",i:"◈"},{id:"outlook",l:"Outlook",i:"◑"},{id:"reports",l:"Reports",i:"◇"},{id:"diagnose",l:"Diagnose",i:"⊕"}].map(n=><button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"9px 0 6px",border:"none",background:"none",color:tab===n.id?P.rust:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:13,lineHeight:1}}>{n.i}</div><div style={{fontSize:7,fontWeight:600,marginTop:2}}>{n.l}</div></button>)}</div>
