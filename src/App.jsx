@@ -472,10 +472,8 @@ function futureDayGuide(dayData,dayIdx,wt,rv,beat,method){
   const futDoy=DOY+dayIdx;
   /* Predict hatches for that day */
   const futSpp=H.map(sp=>{let sF=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sF=Math.max(0,1-((futDoy-m)/r)**2)}else if(futDoy>=sp.s-14&&futDoy<sp.s)sF=(futDoy-sp.s+14)/28;const avgT=dayData.hrs.reduce((s,h)=>s+(h.wt||wt),0)/dayData.hrs.length;let tF=0;const tm=(sp.tMn+sp.tMx)/2,tr=(sp.tMx-sp.tMn)/2;if(avgT>=sp.tMn&&avgT<=sp.tMx)tF=Math.max(0,1-((avgT-tm)/(tr*1.2))**2);else if(avgT>=sp.tMn-2)tF=Math.max(0,(avgT-sp.tMn+2)/4);const sc=Math.round(Math.max(0,Math.min(100,(sF*0.55+tF*0.35)*100)));return{...sp,score:sc,lb:sc>70?"Strong":sc>40?"Moderate":sc>15?"Sparse":"Unlikely"}}).sort((a,b)=>b.score-a.score);
-  /* Mayfly override for future days too */
-  const futDan=futSpp.find(s=>s.id==="danica");
-  const futMayfly=futDoy>=130&&futDoy<=175;
-  const topH=futMayfly&&futDan&&futDan.score>5?futDan:futSpp[0];
+  /* Top hatch for this future day */
+  const topH=futSpp[0];
   /* Avg conditions */
   const midHrs=dayData.hrs.filter(h=>h.h>=10&&h.h<=16);
   const avgWind=midHrs.length?Math.round(midHrs.reduce((s,h)=>s+(h.ws||5),0)/midHrs.length):8;
@@ -669,23 +667,22 @@ export default function App(){
     reader.readAsArrayBuffer(file.slice(0,128*1024));/* only read first 128KB for EXIF */
   });
 
-  /* UPLOAD PHOTOS + VIDEO AFTER SESSION */
+  /* UPLOAD PHOTOS AFTER SESSION */
   const uploadAfterSession=()=>{
     if(!uploadRef)return;
     uploadRef.onchange=async(e)=>{
       const files=Array.from(e.target.files||[]);if(!files.length)return;
       const newSnaps=[];
       for(const file of files){
-        const isVideo=file.type.startsWith("video/");
-        if(isVideo){
-          const url=URL.createObjectURL(file);
-          newSnaps.push({id:Date.now()+newSnaps.length,videoUrl:url,photo:null,timestamp:"video",dateLabel:"",exifDate:null,isVideo:true,species:"",weight:"",fly:"",wild:"",notes:"",analysis:null});
-        }else{
-          const[b64,exifDate]=await Promise.all([compressImg(file,800),extractExifTime(file)]);
-          const ts=exifDate?exifDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"uploaded";
-          const datePart=exifDate?exifDate.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
-          newSnaps.push({id:Date.now()+Math.floor(Math.random()*1000)+newSnaps.length,photo:b64,timestamp:ts,dateLabel:datePart,exifDate:exifDate?.toISOString()||null,species:"",weight:"",fly:"",wild:"",notes:"",analysis:null});
+        if(file.type.startsWith("video/")){
+          /* Video: just note it was taken, can't store in web app */
+          newSnaps.push({id:Date.now()+newSnaps.length,photo:null,timestamp:"video",dateLabel:"",exifDate:null,isVideo:true,species:"",weight:"",fly:"",wild:"",notes:`Video: ${file.name}`,analysis:null});
+          continue;
         }
+        const[b64,exifDate]=await Promise.all([compressImg(file,800),extractExifTime(file)]);
+        const ts=exifDate?exifDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"uploaded";
+        const datePart=exifDate?exifDate.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
+        newSnaps.push({id:Date.now()+Math.floor(Math.random()*1000)+newSnaps.length,photo:b64,timestamp:ts,dateLabel:datePart,exifDate:exifDate?.toISOString()||null,species:"",weight:"",fly:"",wild:"",notes:"",analysis:null});
       }
       setSessionSnaps(s=>[...s,...newSnaps].sort((a,b)=>{
         if(a.exifDate&&b.exifDate)return new Date(a.exifDate)-new Date(b.exifDate);
@@ -730,22 +727,31 @@ export default function App(){
   const cAir=live.wx?.current?.temperature_2m?Math.round(live.wx.current.temperature_2m):(11+(rSeed%8));
 
   const spp=useMemo(()=>pred(cT),[cT]);
-  /* Mayfly override: during season, even sparse mayfly = fish switch to it */
+  /* Top hatch is always the highest scoring species — no overrides */
   const dan=spp.find(s=>s.id==="danica");
-  const mayflyInSeason=DOY>=130&&DOY<=175;
-  const topH=mayflyInSeason&&dan&&dan.score>5?dan:spp[0];
+  const topH=spp[0];
+  const mayflyAbout=DOY>=130&&DOY<=175&&dan&&dan.score>5;
   const guideNote=useMemo(()=>{
     if(isNight)return"Rest up. The river will be there tomorrow.";
-    if(mayflyInSeason&&dan&&dan.score>5){
-      if(dan.score>50)return`Mayfly season in full swing. Fish will key on emergers even before you see duns on the surface. Try a Danica Emerger or Klinkhamer first, switch to Grey Wulff when you see them taking off the top. Best window likely ${cT>=14?"early afternoon":"midday when it warms"}.`;
-      return`Sparse mayfly expected but don't be fooled — when fish see them, they switch. Keep a Danica Emerger ready. ${spp[0]?.id!=="danica"?`${spp[0]?.cm} is also active — good backup.`:""}`;
-    }
-    if(cC>70&&cT>=11)return`Overcast and ${cT>=14?"warm":"mild"} — ideal conditions. Expect steady olive hatches. Start with ${FLYMAP[spp[0]?.id]||"a dry"} and watch for rises.`;
-    if(cW>14)return`Windy today — fish the sheltered bank with terrestrials. Ants and beetles blown onto the water. Shorter casts, bigger flies.`;
-    if(cC<30&&cT>=14)return`Bright and warm — tough dry fly conditions. Fish the shade, go fine (6X minimum), or wait for the evening rise. Emergers in the film may outperform dries.`;
-    if(cT<10)return`Cool water. Nymphing will outperform dries until it warms. PTN or Killer Bug fished slow on the bottom. Watch for the first olive hatch around midday.`;
-    return`${spp[0]?.cm||"Olives"} should be the dominant hatch. Match the size, fish the rise. ${cT>=14?"Evening could be excellent.":""}`;
-  },[spp,dan,cC,cW,cT,mayflyInSeason,isNight]);
+    const top=spp[0];const second=spp[1];
+    /* Build contextual advice based on whatever is hatching */
+    let note="";
+    if(top&&top.score>50)note=`${top.cm} hatching strongly. Match with ${FLYMAP[top.id]||"a matching pattern"}. `;
+    else if(top&&top.score>20)note=`${top.cm} activity building. Have ${FLYMAP[top.id]||"a matching pattern"} ready. `;
+    else note="Quiet hatches expected. Start with a search pattern like an Adams or PTN. ";
+    /* Mayfly context — important but not dominant */
+    if(mayflyAbout&&top.id!=="danica")note+=`Mayfly about (${dan.score}%) — fish may switch when they see them. Keep an emerger ready. `;
+    else if(mayflyAbout&&top.id==="danica")note+=`Fish will take emergers in the film before they take duns off the top. Try a Danica Emerger or Klinkhamer first. `;
+    /* Conditions */
+    if(cC>70&&cT>=11)note+=`Overcast skies should encourage hatches.`;
+    else if(cC<30&&cT>=14)note+=`Bright conditions — fish shade, go fine, or wait for evening.`;
+    else if(cW>14)note+=`Windy — fish the sheltered bank with terrestrials.`;
+    else if(cT<10)note+=`Cool water — nymphing will outperform dries until it warms.`;
+    else if(cT>=14)note+=`Evening could be excellent.`;
+    /* Second hatch */
+    if(second&&second.score>30&&second.id!==top?.id)note+=` Also watch for ${second.cm}.`;
+    return note;
+  },[spp,dan,cC,cW,cT,mayflyAbout,isNight]);
   const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
   const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;
   const cond=useMemo(()=>condScore(cW,cP,cC,cT,hIdx,rv.q,rv.bq?.[beat]),[cW,cP,cC,cT,hIdx,rv,beat]);
@@ -1339,8 +1345,8 @@ export default function App(){
 
             {/* SNAP THUMBNAILS */}
             {sessionSnaps.length>0&&<div style={{marginTop:10,display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
-              {sessionSnaps.map(s=><div key={s.id} style={{flexShrink:0,textAlign:"center"}} onClick={()=>{const items=sessionSnaps.filter(sn=>sn.photo||sn.isVideo).map(sn=>sn.isVideo?{src:sn.videoUrl,type:"video",caption:sn.timestamp}:{src:`data:image/jpeg;base64,${sn.photo}`,type:"image",caption:sn.timestamp});setGallery({items,idx:sessionSnaps.findIndex(sn=>sn.id===s.id)})}}>
-                {s.isVideo?<div style={{width:48,height:48,borderRadius:6,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${P.gn}`}}><span style={{fontSize:16}}>▶</span></div>
+              {sessionSnaps.map(s=><div key={s.id} style={{flexShrink:0,textAlign:"center"}} onClick={()=>{if(!s.photo)return;const items=sessionSnaps.filter(sn=>sn.photo).map(sn=>({src:`data:image/jpeg;base64,${sn.photo}`,type:"image",caption:sn.timestamp}));const idx=sessionSnaps.filter(sn=>sn.photo).findIndex(sn=>sn.id===s.id);if(idx>=0)setGallery({items,idx})}}>
+                {s.isVideo||!s.photo?<div style={{width:48,height:48,borderRadius:6,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${P.bd}`,fontSize:10,color:P.txD}}>🎬</div>
                 :<img src={`data:image/jpeg;base64,${s.photo}`} alt="" style={{width:48,height:48,borderRadius:6,objectFit:"cover",border:`2px solid ${P.gn}`}}/>}
                 <div style={{fontSize:7,color:P.txD,marginTop:2}}>{s.timestamp}</div>
               </div>)}
@@ -1398,8 +1404,8 @@ export default function App(){
 
             {sessionSnaps.map((snap,idx)=><div key={snap.id} style={{background:P.c2,borderRadius:10,border:`1px solid ${P.bd}`,padding:12,marginBottom:8}}>
               <div style={{display:"flex",gap:10,marginBottom:8}}>
-                {snap.isVideo?<div style={{width:72,height:72,borderRadius:8,background:P.c1,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${P.bd}`}} onClick={()=>setGallery({items:[{src:snap.videoUrl,type:"video",caption:`Catch ${idx+1}`}],idx:0})}><span style={{fontSize:22}}>▶</span></div>
-                :<img src={`data:image/jpeg;base64,${snap.photo}`} alt="" onClick={()=>{const items=sessionSnaps.filter(s=>s.photo||s.isVideo).map((s,i)=>s.isVideo?{src:s.videoUrl,type:"video",caption:`${s.timestamp}`}:{src:`data:image/jpeg;base64,${s.photo}`,type:"image",caption:`Catch ${i+1} — ${s.timestamp}`});setGallery({items,idx:sessionSnaps.filter(s=>s.photo||s.isVideo).findIndex(s=>s.id===snap.id)})}} style={{width:72,height:72,borderRadius:8,objectFit:"cover",flexShrink:0,cursor:"pointer"}}/>}
+                {snap.isVideo||!snap.photo?<div style={{width:72,height:72,borderRadius:8,background:P.c1,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${P.bd}`}}><span style={{fontSize:10,color:P.txD}}>🎬 Video</span></div>
+                :<img src={`data:image/jpeg;base64,${snap.photo}`} alt="" onClick={()=>{const items=sessionSnaps.filter(s=>s.photo).map((s,i)=>({src:`data:image/jpeg;base64,${s.photo}`,type:"image",caption:`Catch ${i+1} — ${s.timestamp}`}));const idx=sessionSnaps.filter(s=>s.photo).findIndex(s=>s.id===snap.id);if(idx>=0)setGallery({items,idx})}} style={{width:72,height:72,borderRadius:8,objectFit:"cover",flexShrink:0,cursor:"pointer"}}/>}
                 <div style={{flex:1}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:P.tx}}>Catch {idx+1}</span><span style={{fontSize:9,color:P.txD}}>{snap.dateLabel?snap.dateLabel+" ":""}{snap.timestamp}{snap.exifDate?"":" ⏎"}</span></div>
 
@@ -1838,9 +1844,7 @@ export default function App(){
       {gallery&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.92)",zIndex:300,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}} onClick={()=>setGallery(null)}>
         <button onClick={()=>setGallery(null)} style={{position:"absolute",top:16,right:16,background:"none",border:"none",color:"#fff",fontSize:24,cursor:"pointer",zIndex:301}}>✕</button>
         <div onClick={e=>e.stopPropagation()} style={{maxWidth:"90vw",maxHeight:"80vh",position:"relative"}}>
-          {gallery.items[gallery.idx]?.type==="video"?
-            <video src={gallery.items[gallery.idx].src} controls autoPlay style={{maxWidth:"90vw",maxHeight:"75vh",borderRadius:8}}/>
-            :<img src={gallery.items[gallery.idx]?.src} alt="" style={{maxWidth:"90vw",maxHeight:"75vh",borderRadius:8,objectFit:"contain"}}/>}
+          <img src={gallery.items[gallery.idx]?.src} alt="" style={{maxWidth:"90vw",maxHeight:"75vh",borderRadius:8,objectFit:"contain"}}/>
         </div>
         <div style={{color:"#fff",fontSize:11,marginTop:8,opacity:0.7}}>{gallery.items[gallery.idx]?.caption||""}</div>
         <div style={{display:"flex",gap:12,marginTop:12}}>
