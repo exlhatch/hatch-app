@@ -265,7 +265,7 @@ function saveFavs(f){localStorage.setItem(STORE_FAVS,JSON.stringify(f))}
 
 /* ── HATCH DATA ── */
 const H=[
-  {id:"danica",cm:"Mayfly",cat:"m",t:1,s:135,e:172,tMn:12,tMx:18,pk:[12,13,14,15,16],hk:"10-12 LD",sz:"20-25mm",avgS:139},
+  {id:"danica",cm:"Mayfly",cat:"m",t:1,s:135,e:172,tMn:12,tMx:18,pk:[13,14,15,16,17],hk:"10-12 LD",sz:"20-25mm",avgS:139},
   {id:"ldo",cm:"Large Dark Olive",cat:"o",t:2,s:60,e:150,tMn:7,tMx:14,pk:[10,11,12,13],hk:"14-16",sz:"10-12mm"},
   {id:"mo",cm:"Medium Olive",cat:"o",t:3,s:100,e:180,tMn:10,tMx:16,pk:[11,12,13,14],hk:"16",sz:"8-10mm"},
   {id:"bwo",cm:"Blue-winged Olive",cat:"o",t:2,s:150,e:290,tMn:12,tMx:18,pk:[17,18,19,20],hk:"14-16",sz:"9-11mm"},
@@ -433,8 +433,8 @@ function buildTimeline(hrs,wt){
     else if(hr<=12)note=hi>=5?"Strong hatch. Fish rising freely.":hi>=3?"Steady hatch developing. Good sport.":hi>=1?"Sparse activity. Pick your spots.":"Quiet. Nymph the runs.";
     else if(hr<=14)note=hi>=6?"Peak window. Best of the day.":hi>=3?"Good activity continuing.":"Lull. Try emergers in the film.";
     else if(hr<=16)note=hi>=3?"Afternoon hatch holding up.":hi>=1?"Activity fading. Fish becoming selective.":"Afternoon lull. Rest the water.";
-    else if(hr<=18)note=hi>=2?"Late activity. BWO possible.":"Waiting for the evening rise.";
-    else note=hi>=3?"Evening rise underway.":hi>=1?"Sedge chance if warm enough.":"Cooling off. Day winding down.";
+    else if(hr<=18)note=hi>=2?"Late activity. BWO possible. Watch for spinner falls.":"Waiting for the evening rise. Spinner falls can start any time.";
+    else note=hi>=3?"Evening rise underway. Spinner falls — fish sipping spent flies in the film.":hi>=1?"Sedge chance if warm enough. Try skating an Elk Hair Caddis.":"Cooling off. Day winding down.";
     const fly=hatches.length?FLYMAP[hatches[0].id]||"":"";
     return{hr,note,fly,hatches:hatches.map(h=>h.cm),hi};
   }).filter(Boolean);
@@ -456,11 +456,17 @@ function buildAntic(cW,cC,cP,wt,spp){
   else if(cC<30&&wt>=12)n.push("Bright conditions — fish the shade or wait for evening.");
   if(cP<1010)n.push("Low pressure dropping. Fish often feed harder before fronts.");
   if(cW>14)n.push("Wind dropping later could improve dry fly presentation.");
-  if(wt>=12&&spp.find(s=>s.id==="bwo"&&s.score>20))n.push("BWO possible from late afternoon if temperature holds.");
-  if(wt>=13&&spp.find(s=>s.id==="sedge"&&s.score>15))n.push("Evening sedge activity likely if it stays warm.");
+  /* Mayfly afternoon + spinner fall */
+  const dan=spp.find(s=>s.id==="danica");
+  if(dan&&dan.score>15){n.push("Mayfly most likely from early afternoon. Watch for spinner falls from 7pm — fish sipping spent flies in the film.");if(wt>=14)n.push("Warm enough for a strong hatch. Emergers first, then switch to a Grey Wulff when duns appear.")}
+  /* BWO evening */
+  if(wt>=12&&spp.find(s=>s.id==="bwo"&&s.score>20))n.push("BWO possible from late afternoon. Evening spinner fall can produce the best fishing of the day.");
+  if(wt>=13&&spp.find(s=>s.id==="sedge"&&s.score>15))n.push("Evening sedge activity likely if it stays warm. Elk Hair Caddis skated on the surface.");
+  /* Terrestrials */
+  if(cW>12&&wt>=12)n.push("Wind will blow terrestrials onto the water — try ants and beetles on the lee bank.");
   if(wt<11)n.push("Water still cool. Nymphing will outperform dries until it warms.");
   if(!n.length)n.push("Conditions settled. Fish the hatches as they come.");
-  return n.slice(0,3);
+  return n.slice(0,4);
 }
 
 /* ── 8-WEEK OUTLOOK ── */
@@ -616,7 +622,7 @@ export default function App(){
   const flyFileRef=typeof document!=="undefined"?document.createElement("input"):null;
   if(flyFileRef){flyFileRef.type="file";flyFileRef.accept="image/*";flyFileRef.setAttribute("capture","environment")}
   const uploadRef=typeof document!=="undefined"?document.createElement("input"):null;
-  if(uploadRef){uploadRef.type="file";uploadRef.accept="image/*,video/*";uploadRef.multiple=true}
+  if(uploadRef){uploadRef.type="file";uploadRef.accept="image/*";uploadRef.multiple=true}
 
   /* EXIF timestamp extraction — reads JPEG binary for DateTimeOriginal */
   const extractExifTime=(file)=>new Promise(res=>{
@@ -674,11 +680,6 @@ export default function App(){
       const files=Array.from(e.target.files||[]);if(!files.length)return;
       const newSnaps=[];
       for(const file of files){
-        if(file.type.startsWith("video/")){
-          /* Video: just note it was taken, can't store in web app */
-          newSnaps.push({id:Date.now()+newSnaps.length,photo:null,timestamp:"video",dateLabel:"",exifDate:null,isVideo:true,species:"",weight:"",fly:"",wild:"",notes:`Video: ${file.name}`,analysis:null});
-          continue;
-        }
         const[b64,exifDate]=await Promise.all([compressImg(file,800),extractExifTime(file)]);
         const ts=exifDate?exifDate.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}):"uploaded";
         const datePart=exifDate?exifDate.toLocaleDateString("en-GB",{day:"numeric",month:"short"}):"";
@@ -701,7 +702,7 @@ export default function App(){
   const[fDate,setFDate]=useState(()=>new Date().toISOString().slice(0,10));
   const[fPhotos,setFPhotos]=useState([]);/* base64 photos for manual log */
   const manualPhotoRef=typeof document!=="undefined"?document.createElement("input"):null;
-  if(manualPhotoRef){manualPhotoRef.type="file";manualPhotoRef.accept="image/*,video/*";manualPhotoRef.multiple=true}
+  if(manualPhotoRef){manualPhotoRef.type="file";manualPhotoRef.accept="image/*";manualPhotoRef.multiple=true}
 
   const P=light?L:D;const rv=ALL_RV.find(r=>r.id===riv)||RV[0];
 
@@ -1294,7 +1295,7 @@ export default function App(){
       </div>
 
       {/* TABS */}
-      <div style={{display:"flex",background:P.c1,borderBottom:`1px solid ${P.bd}`,overflowX:"auto"}}>{[{id:"guide",l:"Guide"},{id:"hatches",l:"Hatches"},{id:"fly",l:"Fly Box"},{id:"outlook",l:"Outlook"},{id:"reports",l:"Reports"},{id:"diagnose",l:"Diagnose"}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"10px 12px 8px",border:"none",borderBottom:tab===t.id?`2px solid ${P.rust}`:"2px solid transparent",background:"none",color:tab===t.id?P.rust:P.txD,fontWeight:600,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginBottom:-1}}>{t.l}</button>)}</div>
+      <div style={{display:"flex",background:P.c1,borderBottom:`1px solid ${P.bd}`,overflowX:"auto"}}>{[{id:"guide",l:"Guide"},{id:"hatches",l:"Hatches"},{id:"fly",l:"Fly Box"},{id:"outlook",l:"Outlook"},{id:"reports",l:"Reports"},{id:"tips",l:"On the River"}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"10px 12px 8px",border:"none",borderBottom:tab===t.id?`2px solid ${P.rust}`:"2px solid transparent",background:"none",color:tab===t.id?P.rust:P.txD,fontWeight:600,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginBottom:-1}}>{t.l}</button>)}</div>
 
       <div style={{padding:14}}>
 
@@ -1312,31 +1313,6 @@ export default function App(){
             <div style={{fontSize:12,color:P.tx,lineHeight:1.7}}>{guideNote}</div>
           </div>
 
-          {/* TAP-TO-TALK — ask the guide */}
-          <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>ASK THE GUIDE</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>Tap mic, ask anything about your fishing</div></div>
-              <button onClick={startListening} style={{background:listening?P.rust:P.gn,border:"none",borderRadius:"50%",width:36,height:36,color:"#fff",fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{listening?"...":"🎙"}</button>
-            </div>
-            {voiceResult&&<div style={{marginTop:8,padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}>
-              <div style={{fontSize:11,color:P.tx,lineHeight:1.7}}>{voiceResult}</div>
-            </div>}
-          </div>
-
-          {/* RIVER ANALYSIS — photograph a stretch */}
-          <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>READ THE WATER</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>Photo a stretch — AI shows where to fish</div></div><button onClick={analyzeRiver} disabled={riverAnalyzing} style={{background:P.rust,border:"none",borderRadius:6,padding:"8px 12px",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{riverAnalyzing?"Analysing...":"📷 Analyse"}</button></div>
-            {riverAnalysis&&!riverAnalysis.error&&riverAnalysis.quality!=="unusable"&&<div style={{marginTop:10,display:"grid",gap:6}}>
-              <div style={{padding:"8px 10px",background:P.gn+"18",borderRadius:6,border:`1px solid ${P.gn}40`}}><div style={{fontSize:8,fontWeight:700,color:P.gn}}>WHERE TO STAND</div><div style={{fontSize:10,color:P.tx,marginTop:2,lineHeight:1.6}}>{riverAnalysis.where_to_stand}</div></div>
-              <div style={{padding:"8px 10px",background:P.rustS,borderRadius:6,border:`1px solid ${P.rustB}`}}><div style={{fontSize:8,fontWeight:700,color:P.rust}}>WHERE TO CAST</div><div style={{fontSize:10,color:P.tx,marginTop:2,lineHeight:1.6}}>{riverAnalysis.where_to_cast}</div></div>
-              {riverAnalysis.likely_fish_lies?.length>0&&<div style={{padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}><div style={{fontSize:8,fontWeight:700,color:P.txD}}>LIKELY FISH LIES</div>{riverAnalysis.likely_fish_lies.map((l,li)=><div key={li} style={{fontSize:9,color:P.txM,marginTop:2}}>• {l}</div>)}</div>}
-              <div style={{padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}><div style={{fontSize:8,fontWeight:700,color:P.txD}}>APPROACH</div><div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.6}}>{riverAnalysis.approach}</div></div>
-              <div style={{fontSize:10,color:P.txM,lineHeight:1.6,fontStyle:"italic"}}>{riverAnalysis.overall}</div>
-              <button onClick={()=>speak(riverAnalysis.overall+" "+riverAnalysis.where_to_stand+" "+riverAnalysis.where_to_cast)} style={{padding:"6px",borderRadius:5,border:`1px solid ${P.bd}`,background:"transparent",color:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>🔊 Read aloud</button>
-            </div>}
-            {riverAnalysis&&riverAnalysis.quality==="unusable"&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Need a clearer photo of the river. Try landscape orientation showing the full stretch.</div>}
-            {riverAnalysis?.error&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Analysis failed. Check your connection.</div>}
-          </div>
           {/* SESSION ACTIVE — minimal, quick snap */}
           {onRiver&&<div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:6}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>SESSION ACTIVE — {beat}</div><div style={{fontSize:9,color:P.txD}}>{new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"})}</div></div>
@@ -1346,7 +1322,7 @@ export default function App(){
             {/* SNAP THUMBNAILS */}
             {sessionSnaps.length>0&&<div style={{marginTop:10,display:"flex",gap:6,overflowX:"auto",paddingBottom:4}}>
               {sessionSnaps.map(s=><div key={s.id} style={{flexShrink:0,textAlign:"center"}} onClick={()=>{if(!s.photo)return;const items=sessionSnaps.filter(sn=>sn.photo).map(sn=>({src:`data:image/jpeg;base64,${sn.photo}`,type:"image",caption:sn.timestamp}));const idx=sessionSnaps.filter(sn=>sn.photo).findIndex(sn=>sn.id===s.id);if(idx>=0)setGallery({items,idx})}}>
-                {s.isVideo||!s.photo?<div style={{width:48,height:48,borderRadius:6,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${P.bd}`,fontSize:10,color:P.txD}}>🎬</div>
+                {!s.photo?<div style={{width:48,height:48,borderRadius:6,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",border:`2px solid ${P.bd}`,fontSize:10,color:P.txD}}>?</div>
                 :<img src={`data:image/jpeg;base64,${s.photo}`} alt="" style={{width:48,height:48,borderRadius:6,objectFit:"cover",border:`2px solid ${P.gn}`}}/>}
                 <div style={{fontSize:7,color:P.txD,marginTop:2}}>{s.timestamp}</div>
               </div>)}
@@ -1404,7 +1380,7 @@ export default function App(){
 
             {sessionSnaps.map((snap,idx)=><div key={snap.id} style={{background:P.c2,borderRadius:10,border:`1px solid ${P.bd}`,padding:12,marginBottom:8}}>
               <div style={{display:"flex",gap:10,marginBottom:8}}>
-                {snap.isVideo||!snap.photo?<div style={{width:72,height:72,borderRadius:8,background:P.c1,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${P.bd}`}}><span style={{fontSize:10,color:P.txD}}>🎬 Video</span></div>
+                {!snap.photo?<div style={{width:72,height:72,borderRadius:8,background:P.c1,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,border:`1px solid ${P.bd}`}}><span style={{fontSize:10,color:P.txD}}>No photo</span></div>
                 :<img src={`data:image/jpeg;base64,${snap.photo}`} alt="" onClick={()=>{const items=sessionSnaps.filter(s=>s.photo).map((s,i)=>({src:`data:image/jpeg;base64,${s.photo}`,type:"image",caption:`Catch ${i+1} — ${s.timestamp}`}));const idx=sessionSnaps.filter(s=>s.photo).findIndex(s=>s.id===snap.id);if(idx>=0)setGallery({items,idx})}} style={{width:72,height:72,borderRadius:8,objectFit:"cover",flexShrink:0,cursor:"pointer"}}/>}
                 <div style={{flex:1}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><span style={{fontSize:11,fontWeight:700,color:P.tx}}>Catch {idx+1}</span><span style={{fontSize:9,color:P.txD}}>{snap.dateLabel?snap.dateLabel+" ":""}{snap.timestamp}{snap.exifDate?"":" ⏎"}</span></div>
@@ -1430,7 +1406,7 @@ export default function App(){
                   {snap.analysis&&snap.analysis.quality==="poor"&&!snap.analysis.unusable&&<div style={{fontSize:8,color:P.rust,marginTop:2}}>⚠ {snap.analysis.quality_note}</div>}
                   {snap.analysis&&snap.analysis.error&&<div style={{fontSize:9,color:P.rust,marginTop:4}}>Analysis failed — fill in manually</div>}
 
-                  {!snap.isVideo&&snap.photo&&<div style={{display:"flex",gap:4,marginTop:6}}>
+                  {snap.photo&&<div style={{display:"flex",gap:4,marginTop:6}}>
                     <button onClick={()=>analyzeFish(snap.id)} disabled={analyzing===snap.id} style={{padding:"5px 8px",borderRadius:5,border:`1px solid ${analyzing===snap.id?P.bd:P.gn}`,background:"transparent",color:analyzing===snap.id?P.txD:P.gn,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{analyzing===snap.id?"...":snap.analysis&&!snap.aiCaption?"Re-ID":"🐟 Fish"}</button>
                     <button onClick={()=>aiDescribe(snap.id)} disabled={analyzing===snap.id} style={{padding:"5px 8px",borderRadius:5,border:`1px solid ${analyzing===snap.id?P.bd:P.rust}`,background:"transparent",color:analyzing===snap.id?P.txD:P.rust,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{snap.aiCaption?"Re-describe":"📝 Describe"}</button>
                   </div>}
@@ -1706,6 +1682,29 @@ export default function App(){
 
         {/* ═══ REPORTS — with persistent sessions ═══ */}
         {tab==="reports"&&<div>
+          {/* SEASON STATS */}
+          {sessions.length>0&&(()=>{
+            const totalFish=sessions.reduce((s,sess)=>s+(sess.fish||0),0);
+            const pb=sessions.reduce((best,sess)=>{const w=parseFloat(sess.big)||0;return w>best?w:best},0);
+            const rivers={};const beats={};const flies={};
+            sessions.forEach(s=>{rivers[s.river]=(rivers[s.river]||0)+(s.fish||0);if(s.beat||s.bt)beats[s.beat||s.bt]=(beats[s.beat||s.bt]||0)+(s.fish||0);if(s.fly)flies[s.fly]=(flies[s.fly]||0)+1});
+            const favRiver=Object.entries(rivers).sort((a,b)=>b[1]-a[1])[0];
+            const favBeat=Object.entries(beats).sort((a,b)=>b[1]-a[1])[0];
+            const favFly=Object.entries(flies).sort((a,b)=>b[1]-a[1])[0];
+            return<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:14,marginBottom:14}}>
+              <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn,marginBottom:8}}>YOUR SEASON</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:8,marginBottom:10}}>
+                <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:P.tx}}>{sessions.length}</div><div style={{fontSize:8,color:P.txD}}>Sessions</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:P.gn}}>{totalFish}</div><div style={{fontSize:8,color:P.txD}}>Fish</div></div>
+                <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:P.rust}}>{pb>0?pb+"lb":"--"}</div><div style={{fontSize:8,color:P.txD}}>PB</div></div>
+              </div>
+              <div style={{display:"grid",gap:3}}>
+                {favRiver&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10}}><span style={{color:P.txD}}>Favourite river</span><span style={{color:P.tx,fontWeight:600}}>{favRiver[0]} ({favRiver[1]} fish)</span></div>}
+                {favBeat&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10}}><span style={{color:P.txD}}>Best beat</span><span style={{color:P.tx,fontWeight:600}}>{favBeat[0]} ({favBeat[1]} fish)</span></div>}
+                {favFly&&<div style={{display:"flex",justifyContent:"space-between",fontSize:10}}><span style={{color:P.txD}}>Go-to fly</span><span style={{color:P.gn,fontWeight:600}}>{favFly[0]}</span></div>}
+              </div>
+            </div>;
+          })()}
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD}}>LOG A SESSION</div><button onClick={()=>{setShowForm(!showForm);setFPhotos([])}} style={{background:P.rust,border:"none",borderRadius:6,padding:"6px 14px",color:"#fff",fontSize:10,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{showForm?"CANCEL":"+ LOG"}</button></div>
           {showForm&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:14,marginBottom:14}}><div style={{display:"grid",gap:8}}>
             {/* DATE */}
@@ -1801,10 +1800,37 @@ export default function App(){
         </div>}
 
         {/* ═══ DIAGNOSE ═══ */}
-        {tab==="diagnose"&&<div>
+        {tab==="tips"&&<div>
+          {/* READ THE WATER */}
+          <div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>READ THE WATER</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>Photo a stretch and AI shows where to fish</div></div><button onClick={analyzeRiver} disabled={riverAnalyzing} style={{background:P.rust,border:"none",borderRadius:6,padding:"8px 12px",color:"#fff",fontSize:9,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>{riverAnalyzing?"Analysing...":"📷 Analyse"}</button></div>
+            {riverAnalysis&&!riverAnalysis.error&&riverAnalysis.quality!=="unusable"&&<div style={{marginTop:10,display:"grid",gap:6}}>
+              <div style={{padding:"8px 10px",background:P.gn+"18",borderRadius:6,border:`1px solid ${P.gn}40`}}><div style={{fontSize:8,fontWeight:700,color:P.gn}}>WHERE TO STAND</div><div style={{fontSize:10,color:P.tx,marginTop:2,lineHeight:1.6}}>{riverAnalysis.where_to_stand}</div></div>
+              <div style={{padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}><div style={{fontSize:8,fontWeight:700,color:P.rust}}>WHERE TO CAST</div><div style={{fontSize:10,color:P.tx,marginTop:2,lineHeight:1.6}}>{riverAnalysis.where_to_cast}</div></div>
+              {riverAnalysis.likely_fish_lies?.length>0&&<div style={{padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}><div style={{fontSize:8,fontWeight:700,color:P.txD}}>FISH LIES</div>{riverAnalysis.likely_fish_lies.map((l,li)=><div key={li} style={{fontSize:9,color:P.txM,marginTop:2}}>• {l}</div>)}</div>}
+              <div style={{padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}><div style={{fontSize:8,fontWeight:700,color:P.txD}}>APPROACH</div><div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.6}}>{riverAnalysis.approach}</div></div>
+              <div style={{fontSize:10,color:P.txM,lineHeight:1.6,fontStyle:"italic"}}>{riverAnalysis.overall}</div>
+              <button onClick={()=>speak(riverAnalysis.overall+" "+riverAnalysis.where_to_stand+" "+riverAnalysis.where_to_cast)} style={{padding:"6px",borderRadius:5,border:`1px solid ${P.bd}`,background:"transparent",color:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>🔊 Read aloud</button>
+            </div>}
+            {riverAnalysis&&riverAnalysis.quality==="unusable"&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Need a clearer photo. Try landscape showing the full stretch.</div>}
+            {riverAnalysis?.error&&<div style={{marginTop:6,fontSize:10,color:P.rust}}>Analysis failed. Check your connection.</div>}
+          </div>
+
+          {/* ASK THE GUIDE */}
+          <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:12}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>ASK THE GUIDE</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>Tap mic, ask anything</div></div>
+              <button onClick={startListening} style={{background:listening?P.rust:P.gn,border:"none",borderRadius:"50%",width:36,height:36,color:"#fff",fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>{listening?"...":"🎙"}</button>
+            </div>
+            {voiceResult&&<div style={{marginTop:8,padding:"8px 10px",background:P.c2,borderRadius:6,border:`1px solid ${P.bd}`}}>
+              <div style={{fontSize:11,color:P.tx,lineHeight:1.7}}>{voiceResult}</div>
+            </div>}
+          </div>
+
+          {/* SCENARIOS */}
           <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.18em",color:P.txD,marginBottom:8}}>WHAT'S HAPPENING?</div>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,marginBottom:14}}>{SC.map(sc=><button key={sc.id} onClick={()=>setScenario(scenario===sc.id?null:sc.id)} style={{padding:"14px 10px",borderRadius:8,border:scenario===sc.id?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:scenario===sc.id?P.rustS:P.c1,color:scenario===sc.id?P.rust:P.tx,fontSize:11,fontWeight:600,cursor:"pointer",fontFamily:"inherit",textAlign:"left"}}><div style={{fontSize:16,marginBottom:4}}>{sc.i}</div>{sc.l}</button>)}</div>
-          {scenario&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{SC.find(s=>s.id===scenario)?.a.map((a,i)=><div key={i} style={{padding:14,borderBottom:`1px solid ${P.bd}`}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><div style={{fontSize:13,fontWeight:700,color:P.tx,flex:1}}>{a.h}</div><span style={{fontSize:14,fontWeight:700,color:a.c>=80?P.rust:P.gn}}>{a.c}%</span></div><div style={{fontSize:11,color:P.txM,lineHeight:1.7}}>{a.d}</div></div>)}</div>}
+          {scenario&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,overflow:"hidden"}}>{SC.find(s=>s.id===scenario)?.a.map((a,i)=><div key={i} style={{padding:14,borderBottom:`1px solid ${P.bd}`}}><div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}><div style={{fontSize:13,fontWeight:700,color:P.tx,flex:1}}>{a.h}</div><span style={{fontSize:14,fontWeight:700,color:a.c>=80?P.gn:P.rust}}>{a.c}%</span></div><div style={{fontSize:11,color:P.txM,lineHeight:1.7}}>{a.d}</div></div>)}</div>}
         </div>}
       </div>
 
@@ -1855,7 +1881,7 @@ export default function App(){
       </div>}
 
       {/* NAV */}
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>{[{id:"guide",l:"Guide",i:"◉"},{id:"hatches",l:"Hatches",i:"◎"},{id:"fly",l:"Flies",i:"◈"},{id:"outlook",l:"Outlook",i:"◑"},{id:"reports",l:"Reports",i:"◇"},{id:"diagnose",l:"Diagnose",i:"⊕"}].map(n=><button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"9px 0 6px",border:"none",background:"none",color:tab===n.id?P.rust:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:13,lineHeight:1}}>{n.i}</div><div style={{fontSize:7,fontWeight:600,marginTop:2}}>{n.l}</div></button>)}</div>
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>{[{id:"guide",l:"Guide",i:"◉"},{id:"hatches",l:"Hatches",i:"◎"},{id:"fly",l:"Flies",i:"◈"},{id:"outlook",l:"Outlook",i:"◑"},{id:"reports",l:"Reports",i:"◇"},{id:"tips",l:"Tips",i:"⊕"}].map(n=><button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"9px 0 6px",border:"none",background:"none",color:tab===n.id?P.rust:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:13,lineHeight:1}}>{n.i}</div><div style={{fontSize:7,fontWeight:600,marginTop:2}}>{n.l}</div></button>)}</div>
 
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
     </div>
