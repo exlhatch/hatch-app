@@ -54,16 +54,72 @@ If the image is unusable, still return the JSON with quality "unusable" and null
   "size_mm": "string — estimated size range",
   "matching_artificials": ["string — recommended fly patterns with hook sizes"],
   "identification_notes": "string — key features used: wing shape, body colour, tails, size",
-  "fishing_notes": "string — how fish typically take this species, best presentation"
+  "fishing_notes": "string — how fish typically take this species, best presentation",
+  "tie_on_now": "string — the single best artificial fly to tie on right now to match this insect, with size and specific pattern name"
 }
 UK chalkstream context. Common species: Large Dark Olive (Baetis rhodani), Medium Olive (Baetis vernus/tenax), Blue-winged Olive (Serratella ignita), Iron Blue (Baetis pumilus/niger), Pale Watery (Baetis fuscatus), Mayfly (Ephemera danica), Grannom (Brachycentrus subnubilus), various sedges (Trichoptera). Be honest about uncertainty — insect ID from photos is genuinely difficult.`;
       userContent = [
         { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
-        { type: "text", text: "Identify this insect for fly fishing purposes. What is it, what stage, and what artificial fly should I use to match it?" }
+        { type: "text", text: `Identify this insect for fly fishing purposes. What is it, what stage, and what artificial fly should I use to match it? Give me a single 'tie on now' recommendation.${req.body.observations ? '\n\nAngler observations: ' + req.body.observations : ''}` }
+      ];
+    } else if (mode === 'flybox') {
+      const conditions = req.body.conditions || 'Unknown conditions';
+      systemPrompt = `You are an expert UK chalkstream fishing guide looking at an angler's fly box. Your job is to identify the flies you can see, then recommend which ones to use RIGHT NOW based on current conditions. Respond in ONLY valid JSON (no markdown, no backticks):
+{
+  "quality": "good" | "poor" | "unusable",
+  "quality_note": "string — if poor/unusable, explain what's wrong",
+  "flies_identified": [
+    {"name": "string — pattern name", "size_estimate": "string — hook size", "type": "dry" | "emerger" | "nymph" | "streamer" | "buzzer" | "unknown", "quantity": "string — rough count", "condition": "good" | "worn" | "unclear"}
+  ],
+  "tie_on_now": {"name": "string — the specific fly from their box to tie on first", "reason": "string — why this fly right now"},
+  "backup": {"name": "string — second choice from their box", "reason": "string — when to switch to this"},
+  "missing": ["string — flies they should add to their box for these conditions"],
+  "box_notes": "string — overall assessment of their fly box for current conditions. What's good, what's lacking, any advice on organisation",
+  "fishing_plan": "string — suggested order: start with X, switch to Y if Z happens"
+}
+Be specific about which flies you can actually see. Don't guess patterns you can't identify. If the photo is unclear, say so. Current conditions: ${conditions}`;
+      userContent = [
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
+        { type: "text", text: `Here's my fly box. Current conditions: ${conditions}. Which fly should I tie on right now? What's my plan for the session?` }
       ];
     } else if (mode === 'summary') {
       systemPrompt = `You are a concise, knowledgeable fishing guide writing a brief session summary. Write in a warm, understated British tone. 2-3 sentences maximum. Mention highlights, patterns noticed, and one piece of advice for next time.`;
       userContent = [{ type: "text", text: req.body.sessionData }];
+    } else if (mode === 'describe') {
+      systemPrompt = `You are a fly fishing companion describing what you see in a photo. This could be a fish, a river scene, wildlife, a handwritten fishing diary entry, flies on the water, tackle, or anything the angler photographed during their session. Respond in ONLY valid JSON (no markdown, no backticks):
+{
+  "type": "fish" | "river_scene" | "wildlife" | "handwritten_notes" | "tackle" | "fly_insect" | "other",
+  "description": "string — 1-2 sentence natural description of what's in the image",
+  "summary": "string — short caption suitable for a photo log",
+  "fishing_relevance": "string — if relevant to fishing, brief note on what it means (e.g. rising fish, good holding water, hatch activity). null if not relevant",
+  "transcription": "string — if handwritten notes are visible, transcribe them as accurately as possible. null if no text",
+  "quality": "good" | "poor" | "unusable"
+}
+Be natural and observant. Notice details an angler would care about.`;
+      userContent = [
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
+        { type: "text", text: "Describe this image from a fishing session. If it contains handwritten notes, transcribe them." }
+      ];
+    } else if (mode === 'river') {
+      systemPrompt = `You are an expert fly fishing guide analysing a photograph of a river or stream. The angler wants to know where to stand, where to cast, and where fish are likely to be holding. Respond in ONLY valid JSON (no markdown, no backticks):
+{
+  "quality": "good" | "poor" | "unusable",
+  "quality_note": "string — if poor/unusable, explain",
+  "water_type": "riffle" | "pool" | "glide" | "run" | "pocket_water" | "tail" | "bend" | "mixed",
+  "where_to_stand": "string — specific advice on positioning relative to features visible in the photo",
+  "where_to_cast": "string — specific target areas, seams, lies, structure",
+  "likely_fish_lies": ["string — each likely holding spot described"],
+  "approach": "string — how to approach without spooking fish",
+  "casting_advice": "string — type of cast, direction, distance",
+  "fly_suggestion": "string — what to try based on the water type",
+  "hazards": "string — overhanging trees, wading depth, current strength, anything to watch",
+  "overall": "string — 2-3 sentence guide briefing for this piece of water"
+}
+Think like a guide walking a client to a pool for the first time. Be specific about what you can see.`;
+      userContent = [
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
+        { type: "text", text: "Analyse this piece of river. Where should I stand? Where should I cast? Where are the fish likely to be? How should I approach it?" }
+      ];
     } else {
       return res.status(400).json({ error: 'Invalid mode' });
     }
@@ -77,7 +133,7 @@ UK chalkstream context. Common species: Large Dark Olive (Baetis rhodani), Mediu
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
+        max_tokens: mode === 'summary' ? 512 : 1500,
         system: systemPrompt,
         messages: [{ role: 'user', content: userContent }]
       })
