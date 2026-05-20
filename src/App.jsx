@@ -1201,35 +1201,36 @@ export default function App(){
       <style>{`*{box-sizing:border-box;margin:0}html{-webkit-text-size-adjust:100%}input,textarea{font-family:inherit;-webkit-appearance:none}input:focus,textarea:focus{outline:none}::-webkit-scrollbar{height:4px}::-webkit-scrollbar-thumb{background:${P.bd};border-radius:2px}`}</style>
 
       {/* HEADER */}
-      <div style={{background:P.c1,padding:"14px 14px 10px",borderBottom:`1px solid ${P.bd}`}}>
+      <div style={{background:P.c1,padding:"12px 14px",borderBottom:`1px solid ${P.bd}`}}>
         <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:8}}><Logo s={28}/><Wordmark w={100} dark={!light}/></div>
+          <span style={{color:P.tx,fontSize:13,fontWeight:500,letterSpacing:"0.15em"}}>EPHEMERA</span>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <button onClick={()=>setLight(!light)} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{light?"◐":"☀"}</button>
-            <button onClick={logout} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{user.name.split(" ")[0]} ✕</button>
+            <div onClick={logout} style={{width:26,height:26,borderRadius:13,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:P.txM,fontWeight:600,cursor:"pointer",border:`1px solid ${P.bd}`}}>{user.name[0]}</div>
           </div>
         </div>
-        <button onClick={()=>{setPick(!pick);setRiverSearch("");setRegionFilter("")}} style={{width:"100%",background:P.c2,border:`1px solid ${P.bd}`,borderRadius:7,padding:"9px 12px",color:P.tx,fontSize:11,fontWeight:600,fontFamily:"inherit",cursor:"pointer",display:"flex",justifyContent:"space-between"}}><span>{rv.n}{beat?" / "+beat:""}</span><span style={{color:P.txD}}>{pick?"−":"+"}</span></button>
-        {pick&&<div style={{marginTop:6,background:P.c2,borderRadius:7,padding:10,border:`1px solid ${P.bd}`}}>
 
-          {/* FAVOURITES — quick access */}
-          {favs.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:8,marginBottom:8,borderBottom:`1px solid ${P.bd}`}}>
-            {favs.map(fid=>{const fr=ALL_RV.find(r=>r.id===fid);if(!fr)return null;return<button key={fid} onClick={()=>{setRiv(fid);setPick(false)}} style={{flexShrink:0,padding:"5px 10px",borderRadius:5,border:riv===fid?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:riv===fid?P.gn+"18":"transparent",color:riv===fid?P.gn:P.tx,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>{fr.n.replace("River ","")}</button>})}
-          </div>}
+        {/* RIVER SEARCH + NEAR ME */}
+        <div style={{display:"flex",gap:6}}>
+          <div onClick={()=>{setPick(!pick);setRiverSearch("");setRegionFilter("")}} style={{flex:1,background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 12px",color:pick?P.tx:P.txM,fontSize:12,cursor:"pointer"}}>{pick?"Search...":rv.n+(beat?" / "+beat:"")}</div>
+          <button onClick={()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;let best=ALL_RV[0],bestD=999;ALL_RV.forEach(r=>{const d=Math.sqrt((r.lat-lat)**2+(r.lng-lng)**2);if(d<bestD){bestD=d;best=r}});setRiv(best.id);setPick(false)},()=>{},{enableHighAccuracy:true,timeout:8000})}} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 10px",color:P.txM,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Near me</button>
+        </div>
 
-          {/* SEARCH + REGION in one row */}
-          <div style={{display:"flex",gap:6,marginBottom:8}}>
-            <input value={riverSearch} onChange={e=>setRiverSearch(e.target.value)} placeholder="Search rivers..." style={{flex:1,background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"7px 10px",color:P.tx,fontSize:11,fontFamily:"inherit"}}/>
-            <select value={regionFilter} onChange={e=>setRegionFilter(e.target.value)} style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"7px 8px",color:P.tx,fontSize:10,fontFamily:"inherit",minWidth:90}}>
+        {/* PICKER DROPDOWN */}
+        {pick&&<div style={{marginTop:6,background:P.c2,borderRadius:8,padding:10,border:`1px solid ${P.bd}`}}>
+          <input value={riverSearch} onChange={e=>setRiverSearch(e.target.value)} placeholder="Search rivers..." autoFocus style={{width:"100%",background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",marginBottom:8}}/>
+          <div style={{display:"flex",gap:4,marginBottom:8}}>
+            <select value={regionFilter} onChange={e=>setRegionFilter(e.target.value)} style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 8px",color:P.tx,fontSize:10,fontFamily:"inherit",flex:1}}>
               <option value="">All rivers</option>
               <option value="chalk">Chalkstreams</option>
               <option value="Stillwater">Stillwater</option>
               {REGIONS.filter(r=>r!=="Stillwater").map(rg=><option key={rg} value={rg}>{rg}</option>)}
             </select>
           </div>
-
-          {/* RIVER LIST — compact */}
-          <div style={{maxHeight:200,overflowY:"auto"}}>
+          {favs.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:6,marginBottom:6,borderBottom:`1px solid ${P.bd}`}}>
+            {favs.map(fid=>{const fr=ALL_RV.find(r=>r.id===fid);if(!fr)return null;return<button key={fid} onClick={()=>{setRiv(fid);setPick(false)}} style={{flexShrink:0,padding:"4px 10px",borderRadius:5,border:riv===fid?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:riv===fid?P.gn+"18":"transparent",color:riv===fid?P.gn:P.tx,fontSize:10,fontWeight:500,cursor:"pointer",fontFamily:"inherit"}}>{fr.n.replace("River ","")}</button>})}
+          </div>}
+          <div style={{maxHeight:180,overflowY:"auto"}}>
           {(()=>{
             let rivers=ALL_RV;
             if(regionFilter==="chalk")rivers=rivers.filter(r=>r.premium);
@@ -1244,27 +1245,27 @@ export default function App(){
             </div>);
           })()}
           </div>
-
-          {/* BEATS — horizontal strip */}
           {rv.b&&rv.b.length>1&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`}}>
             <div style={{display:"flex",gap:4,overflowX:"auto"}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setPick(false)}} style={{flexShrink:0,padding:"5px 10px",borderRadius:5,border:beat===b?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:beat===b?P.gn+"18":"transparent",color:beat===b?P.gn:P.txD,fontSize:9,fontWeight:beat===b?700:400,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
           </div>}
         </div>}
       </div>
 
-      {/* HERO — fishing score + conditions at a glance */}
+      {/* HERO — score + guide note */}
       <div style={{background:P.c1,padding:"16px 14px",borderBottom:`1px solid ${P.bd}`}}>
-        <div style={{display:"flex",alignItems:"center",gap:14}}>
-          <div style={{textAlign:"center",minWidth:60}}>
-            <div style={{fontSize:48,fontWeight:700,color:cond.clr,lineHeight:1}}>{Math.round(cond.pct/10)}</div>
-            <div style={{fontSize:8,fontWeight:600,color:cond.clr,marginTop:3,letterSpacing:"0.1em"}}>{cond.pct>=75?"EXCELLENT":cond.pct>=55?"GOOD":cond.pct>=35?"FAIR":"TOUGH"}</div>
-            {delta&&<div style={{fontSize:9,fontWeight:600,color:delta.d>0?P.gn:P.rust,marginTop:4}}>{delta.d>0?"↑":"↓"} {Math.abs(Math.round(delta.d/10)*10)/10} vs yesterday</div>}
-          </div>
-          <div style={{flex:1,borderLeft:`1px solid ${P.bd}`,paddingLeft:14}}>
-            <div style={{fontSize:13,fontWeight:600,color:P.tx,lineHeight:1.4}}>{topH&&topH.score>10?`${topH.cm} ${topH.score>50?"hatching":"expected"}`:isNight?"Night fishing":"Quiet hatches"}</div>
-            <div style={{fontSize:10,color:P.txM,marginTop:4}}>{cAir}° air · {cT}° water · {cW}mph {windDir(cWD)}</div>
-            <div style={{fontSize:10,color:P.txM,marginTop:2}}>{cC>70?"Overcast":cC>40?"Cloudy":"Clear skies"}{(cond.pct>=55&&!isNight)?" — good conditions":""}
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+          <div style={{flex:1}}>
+            <div style={{fontSize:9,color:P.txD,letterSpacing:"0.08em"}}>TODAY</div>
+            <div style={{fontSize:13,color:P.tx,fontWeight:500,marginTop:6,lineHeight:1.5}}>{guideNote.split(".").slice(0,2).join(".")+"."}</div>
+            <div style={{display:"flex",gap:12,marginTop:8}}>
+              <span style={{fontSize:10,color:P.txM}}>Water {cT}°</span>
+              <span style={{fontSize:10,color:P.txM}}>Wind {cW}mph</span>
+              <span style={{fontSize:10,color:P.txM}}>{cC>70?"Overcast":cC>40?"Cloudy":"Clear"}</span>
             </div>
+          </div>
+          <div style={{textAlign:"center",paddingLeft:14}}>
+            <div style={{fontSize:44,fontWeight:700,color:cond.clr,lineHeight:1}}>{Math.round(cond.pct/10)}</div>
+            <div style={{fontSize:9,color:P.txD}}>/10</div>
           </div>
         </div>
       </div>
@@ -1318,10 +1319,24 @@ export default function App(){
 
         {/* ═══ GUIDE ═══ */}
         {tab==="guide"&&<div>
-          {/* AI GUIDE NOTE — the calm expert speaks */}
-          <div style={{padding:"12px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>TODAY'S GUIDE NOTE</div><button onClick={()=>speak(guideNote)} style={{background:"none",border:`1px solid ${speaking?P.gn:P.bd}`,borderRadius:5,padding:"3px 8px",color:speaking?P.gn:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{speaking?"◼ Stop":"🔊 Listen"}</button></div>
-            <div style={{fontSize:12,color:P.tx,lineHeight:1.7}}>{guideNote}</div>
+          {/* GUIDE NOTE + LISTEN */}
+          <div style={{padding:"14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}>
+            <div style={{fontSize:13,color:P.tx,lineHeight:1.6}}>{guideNote}</div>
+            <button onClick={()=>speak(guideNote)} style={{marginTop:8,background:"none",border:`1px solid ${speaking?P.gn:P.bd}`,borderRadius:6,padding:"5px 12px",color:speaking?P.gn:P.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>{speaking?"Stop":"Listen to guide note"}</button>
+          </div>
+
+          {/* TIE ON + BEST WINDOW — accent cards */}
+          <div style={{display:"flex",gap:8,marginBottom:10}}>
+            <div style={{flex:1,background:P.gn+"18",border:`1px solid ${P.gn}30`,borderRadius:10,padding:12}}>
+              <div style={{fontSize:8,color:P.gn,letterSpacing:"0.08em",fontWeight:600}}>TIE ON</div>
+              <div style={{fontSize:15,fontWeight:600,color:P.tx,marginTop:4}}>{FLYMAP[topH?.id]||"Adams #16"}</div>
+              <div style={{fontSize:10,color:P.gn,marginTop:2}}>{topH?.cm||"Olives"}</div>
+            </div>
+            <div style={{flex:1,background:P.rust+"18",border:`1px solid ${P.rust}30`,borderRadius:10,padding:12}}>
+              <div style={{fontSize:8,color:P.rust,letterSpacing:"0.08em",fontWeight:600}}>BEST WINDOW</div>
+              <div style={{fontSize:15,fontWeight:600,color:P.tx,marginTop:4}}>{nowWin?.cur?.hr?nowWin.cur.hr+":00":"Afternoon"}</div>
+              <div style={{fontSize:10,color:P.rust,marginTop:2}}>{nowWin?.cur?.note?.split(".")[0]||"Peak activity"}</div>
+            </div>
           </div>
 
           {/* SESSION ACTIVE — minimal, quick snap */}
