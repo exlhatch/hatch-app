@@ -1252,10 +1252,21 @@ export default function App(){
         </div>}
       </div>
 
-      {/* SCORE BAR — 3 second answer */}
-      <div style={{background:P.c1,padding:"14px",borderBottom:`1px solid ${P.bd}`,display:"flex",alignItems:"center",gap:14}}>
-        <div style={{textAlign:"center"}}><div style={{fontSize:38,fontWeight:700,color:cond.clr,lineHeight:1}}>{cond.pct}</div><div style={{fontSize:8,fontWeight:700,color:cond.clr,marginTop:2}}>{cond.label}</div>{delta&&<div style={{fontSize:9,fontWeight:700,color:delta.d>0?P.gn:P.rust,marginTop:3}}>{delta.d>0?"▲":"▼"} {Math.abs(delta.d)}</div>}</div>
-        <div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:P.tx}}>{cond.why}</div>{delta&&<div style={{fontSize:9,color:delta.d>0?P.gn:P.txD,marginTop:2}}>{delta.txt}</div>}<div style={{fontSize:10,color:P.txM,marginTop:3}}>{cAir}° air / {cT}° water / {cW}mph {windDir(cWD)} / {cC>70?"Overcast":cC>40?"Cloud":"Clear"}</div></div>
+      {/* HERO — fishing score + conditions at a glance */}
+      <div style={{background:P.c1,padding:"16px 14px",borderBottom:`1px solid ${P.bd}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
+          <div style={{textAlign:"center",minWidth:60}}>
+            <div style={{fontSize:48,fontWeight:700,color:cond.clr,lineHeight:1}}>{Math.round(cond.pct/10)}</div>
+            <div style={{fontSize:8,fontWeight:600,color:cond.clr,marginTop:3,letterSpacing:"0.1em"}}>{cond.pct>=75?"EXCELLENT":cond.pct>=55?"GOOD":cond.pct>=35?"FAIR":"TOUGH"}</div>
+            {delta&&<div style={{fontSize:9,fontWeight:600,color:delta.d>0?P.gn:P.rust,marginTop:4}}>{delta.d>0?"↑":"↓"} {Math.abs(Math.round(delta.d/10)*10)/10} vs yesterday</div>}
+          </div>
+          <div style={{flex:1,borderLeft:`1px solid ${P.bd}`,paddingLeft:14}}>
+            <div style={{fontSize:13,fontWeight:600,color:P.tx,lineHeight:1.4}}>{topH&&topH.score>10?`${topH.cm} ${topH.score>50?"hatching":"expected"}`:isNight?"Night fishing":"Quiet hatches"}</div>
+            <div style={{fontSize:10,color:P.txM,marginTop:4}}>{cAir}° air · {cT}° water · {cW}mph {windDir(cWD)}</div>
+            <div style={{fontSize:10,color:P.txM,marginTop:2}}>{cC>70?"Overcast":cC>40?"Cloudy":"Clear skies"}{(cond.pct>=55&&!isNight)?" — good conditions":""}
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* SESSION MODE BAR */}
@@ -1442,14 +1453,21 @@ export default function App(){
           {/* NIGHTTIME */}
           {isNight&&<div style={{padding:"16px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:12,textAlign:"center"}}><div style={{fontSize:22,marginBottom:6}}>☾</div><div style={{fontSize:14,fontWeight:700,color:P.tx}}>Night fishing</div><div style={{fontSize:11,color:P.txM,marginTop:4,lineHeight:1.6}}>No hatch activity. Rest up — the river will be here tomorrow.</div></div>}
 
-          {/* HATCH OF THE DAY — dominates */}
-          {!isNight&&topH&&topH.score>5&&<div style={{background:P.rustS,borderRadius:12,border:`1px solid ${P.rustB}`,padding:16,marginBottom:12}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.15em",color:P.rust}}>HATCH OF THE DAY</div><div style={{fontSize:22,fontWeight:700,color:P.tx,marginTop:6}}>{topH.cm}</div><div style={{fontSize:13,color:P.rust,fontWeight:600,marginTop:4}}>{FLYMAP[topH.id]||"Match the hatch"}</div><div style={{fontSize:9,color:P.txD,marginTop:2,fontStyle:"italic"}}>{FLYCONF[topH.id]||""}</div></div><div style={{textAlign:"center"}}><div style={{fontSize:38,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{topH.score}</div><div style={{fontSize:9,color:hC(topH.score),marginTop:2}}>{topH.lb}</div></div></div>
-            {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{marginTop:10,fontSize:10,color:P.txM}}>Also active: {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>`${s.cm} ${s.score}%`).join(" · ")}</div>}
+          {/* HATCH OF THE DAY */}
+          {!isNight&&topH&&topH.score>5&&<div style={{background:P.c1,borderRadius:12,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.15em",color:P.txD}}>HATCH OF THE DAY</div>
+                <div style={{fontSize:20,fontWeight:700,color:P.tx,marginTop:4}}>{topH.cm}</div>
+                <div style={{fontSize:12,color:P.gn,fontWeight:600,marginTop:3}}>{FLYMAP[topH.id]||"Match the hatch"}</div>
+              </div>
+              <div style={{textAlign:"center"}}><div style={{fontSize:32,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{Math.round(topH.score/10)}</div><div style={{fontSize:8,color:hC(topH.score),marginTop:2}}>/10</div></div>
+            </div>
+            {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{marginTop:8,fontSize:10,color:P.txM}}>Also active: {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>s.cm).join(", ")}</div>}
           </div>}
 
           {/* APPROACH */}
-          <div onClick={()=>toggle("rig")} style={{background:P.rustS,borderRadius:ex.rig?"12px 12px 0 0":12,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:ex.rig?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>RECOMMENDED APPROACH</div><div style={{fontSize:16,fontWeight:700,color:P.tx,marginTop:4}}>{rig.a}</div><div style={{fontSize:10,color:P.txM,marginTop:2,fontStyle:"italic"}}>{rig.why}</div></div><div style={{textAlign:"center",flexShrink:0,marginLeft:10}}><div style={{fontSize:20,fontWeight:700,color:P.rust}}>{rig.c}%</div></div></div>
+          <div onClick={()=>toggle("rig")} style={{background:P.c1,borderRadius:ex.rig?"12px 12px 0 0":12,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:ex.rig?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>APPROACH</div><div style={{fontSize:15,fontWeight:700,color:P.tx,marginTop:4}}>{rig.a}</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>{rig.fly}</div></div><span style={{color:P.txD,fontSize:11}}>{ex.rig?"−":"+"}</span></div>
           {ex.rig&&<div style={{background:P.rustS,borderRadius:"0 0 12px 12px",border:`1px solid ${P.rustB}`,borderTop:"none",padding:14,marginBottom:10}}>
             <div style={{display:"flex",gap:3,marginBottom:10}}>{METHODS.map(m=><button key={m.id} onClick={e=>{e.stopPropagation();setMethod(m.id)}} style={{padding:"5px 9px",borderRadius:5,border:method===m.id?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:method===m.id?P.c2:"transparent",color:method===m.id?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{m.l}</button>)}</div>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>{[{l:"Rod",v:rig.rod},{l:"Leader",v:rig.ldr},{l:"Tippet",v:rig.tip},{l:"Fly",v:rig.fly}].map((r,i)=><div key={i} style={{padding:"5px 7px",background:P.c2,borderRadius:4}}><div style={{fontSize:6,color:P.txD,letterSpacing:"0.1em"}}>{r.l.toUpperCase()}</div><div style={{fontSize:10,fontWeight:600,color:i===3?P.rust:P.tx,marginTop:2}}>{r.v}</div></div>)}</div>
@@ -1478,7 +1496,7 @@ export default function App(){
           {/* 7-DAY */}
           {wxDays.length>0&&<><div onClick={()=>toggle("7d")} style={{background:P.c1,borderRadius:ex["7d"]?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex["7d"]?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>7-DAY OUTLOOK</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Compare days</div></div><span style={{color:P.txD,fontSize:11}}>{ex["7d"]?"−":"+"}</span></div>
           {ex["7d"]&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",overflow:"hidden",marginBottom:10}}>
-            <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*68}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"8px 4px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:sc>=75?P.rustS:gDay===i?P.c2:"transparent",cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.rust:P.tx}}>{d.dn}</div><div style={{fontSize:14,fontWeight:700,color:scClr(sc),marginTop:3}}>{sc}</div><div style={{fontSize:7,color:scClr(sc)}}>{scLb(sc)}</div><div style={{fontSize:10,fontWeight:600,color:P.tx,marginTop:2}}>{d.aH||"--"}°/{d.aL||"--"}°</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.txD}}>{d.rain}mm</div>}</div>})}</div></div>
+            <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*68}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));const s10=Math.round(sc/10);return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"8px 4px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:gDay===i?P.c2:"transparent",cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.gn:P.tx}}>{d.dn}</div><div style={{fontSize:18,fontWeight:700,color:scClr(sc),marginTop:3}}>{s10}</div><div style={{fontSize:7,color:P.txD}}>/10</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>{d.aH||"--"}°</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.rust}}>🌧</div>}</div>})}</div></div>
             {gDay>=0&&wxDays[gDay]&&(()=>{
               const fg=futureDayGuide(wxDays[gDay],gDay,cT,rv,beat,method);
               if(!fg)return null;
@@ -1492,9 +1510,9 @@ export default function App(){
                 {fg.topH&&fg.topH.score>5&&<div style={{background:P.rustS,borderRadius:8,border:`1px solid ${P.rustB}`,padding:"10px 12px",marginBottom:8}}>
                   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                     <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>EXPECTED HATCH</div><div style={{fontSize:16,fontWeight:700,color:P.tx,marginTop:3}}>{fg.topH.cm}</div><div style={{fontSize:11,color:P.rust,fontWeight:600,marginTop:2}}>{FLYMAP[fg.topH.id]||"Match the hatch"}</div><div style={{fontSize:8,color:P.txD,fontStyle:"italic"}}>{FLYCONF[fg.topH.id]||""}</div></div>
-                    <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:hC(fg.topH.score),lineHeight:1}}>{fg.topH.score}</div><div style={{fontSize:8,color:hC(fg.topH.score)}}>{fg.topH.lb}</div></div>
+                    <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:hC(fg.topH.score),lineHeight:1}}>{Math.round(fg.topH.score/10)}</div><div style={{fontSize:8,color:hC(fg.topH.score)}}>/10</div></div>
                   </div>
-                  {fg.futSpp.filter(s=>s.score>15&&s.id!==fg.topH.id).length>0&&<div style={{marginTop:6,fontSize:9,color:P.txM}}>Also likely: {fg.futSpp.filter(s=>s.score>15&&s.id!==fg.topH.id).slice(0,3).map(s=>`${s.cm} ${s.score}%`).join(" · ")}</div>}
+                  {fg.futSpp.filter(s=>s.score>15&&s.id!==fg.topH.id).length>0&&<div style={{marginTop:6,fontSize:9,color:P.txM}}>Also likely: {fg.futSpp.filter(s=>s.score>15&&s.id!==fg.topH.id).slice(0,3).map(s=>s.cm).join(", ")}</div>}
                 </div>}
 
                 {/* RECOMMENDED APPROACH */}
@@ -1513,8 +1531,7 @@ export default function App(){
                     <span style={{fontSize:10,color:P.tx}}>{sp.cm}</span>
                     <span style={{fontSize:9,color:P.gn,fontWeight:600}}>{FLYMAP[sp.id]||"General pattern"}</span>
                   </div>)}
-                  {fg.avgWind>12&&<div style={{fontSize:9,color:P.rust,marginTop:4}}>Windy — pack terrestrials: Black Ant, Beetle, Hawthorn</div>}
-                  {fg.avgCloud<30&&fg.avgWt>=14&&<div style={{fontSize:9,color:P.txM,marginTop:4}}>Bright + warm — bring small stuff: Last Hope #18, CDC Shuttlecock #20</div>}
+                  {fg.avgWind>12&&<div style={{fontSize:9,color:P.rust,marginTop:4}}>Windy — pack terrestrials</div>}
                 </div>
 
                 {/* BEST WINDOW */}
