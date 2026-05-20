@@ -1253,7 +1253,7 @@ export default function App(){
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div style={{flex:1}}>
               <div style={{fontSize:9,color:P.txD,letterSpacing:"0.08em"}}>TODAY</div>
-              <div style={{fontSize:13,color:P.tx,fontWeight:500,marginTop:6,lineHeight:1.5}}>{guideNote.split(".").slice(0,2).join(".")+"."}</div>
+              <div style={{fontSize:14,color:P.tx,fontWeight:500,marginTop:6,lineHeight:1.6}}>{guideNote.split(".").slice(0,2).join(".")+"."}</div>
             </div>
             <div style={{textAlign:"center",paddingLeft:16}}>
               <div style={{fontSize:44,fontWeight:700,color:cond.clr,lineHeight:1}}>{Math.round(cond.pct/10)}</div>
@@ -1317,21 +1317,21 @@ export default function App(){
         {tab==="guide"&&<div>
           {/* GUIDE NOTE + LISTEN */}
           <div style={{padding:"14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}>
-            <div style={{fontSize:13,color:P.tx,lineHeight:1.6}}>{guideNote}</div>
+            <div style={{fontSize:14,color:P.tx,lineHeight:1.7}}>{guideNote}</div>
             <button onClick={()=>speak(guideNote)} style={{marginTop:8,background:"none",border:`1px solid ${speaking?P.gn:P.bd}`,borderRadius:6,padding:"5px 12px",color:speaking?P.gn:P.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>{speaking?"Stop":"Listen to guide note"}</button>
           </div>
 
           {/* TIE ON + BEST WINDOW — accent cards */}
           <div style={{display:"flex",gap:8,marginBottom:10}}>
-            <div style={{flex:1,background:P.gn+"18",border:`1px solid ${P.gn}30`,borderRadius:10,padding:12}}>
-              <div style={{fontSize:8,color:P.gn,letterSpacing:"0.08em",fontWeight:600}}>TIE ON</div>
-              <div style={{fontSize:15,fontWeight:600,color:P.tx,marginTop:4}}>{FLYMAP[topH?.id]||"Adams #16"}</div>
-              <div style={{fontSize:10,color:P.gn,marginTop:2}}>{topH?.cm||"Olives"}</div>
+            <div style={{flex:1,background:P.gn+"18",border:`1px solid ${P.gn}30`,borderRadius:10,padding:"14px"}}>
+              <div style={{fontSize:9,color:P.gn,letterSpacing:"0.08em",fontWeight:600}}>TIE ON</div>
+              <div style={{fontSize:16,fontWeight:600,color:P.tx,marginTop:4}}>{FLYMAP[topH?.id]||"Adams #16"}</div>
+              <div style={{fontSize:11,color:P.gn,marginTop:3}}>{topH?.cm||"Olives"}</div>
             </div>
-            <div style={{flex:1,background:P.rust+"18",border:`1px solid ${P.rust}30`,borderRadius:10,padding:12}}>
-              <div style={{fontSize:8,color:P.rust,letterSpacing:"0.08em",fontWeight:600}}>BEST WINDOW</div>
-              <div style={{fontSize:15,fontWeight:600,color:P.tx,marginTop:4}}>{nowWin?.cur?.hr?nowWin.cur.hr+":00":"Afternoon"}</div>
-              <div style={{fontSize:10,color:P.rust,marginTop:2}}>{nowWin?.cur?.note?.split(".")[0]||"Peak activity"}</div>
+            <div style={{flex:1,background:P.rust+"18",border:`1px solid ${P.rust}30`,borderRadius:10,padding:"14px"}}>
+              <div style={{fontSize:9,color:P.rust,letterSpacing:"0.08em",fontWeight:600}}>BEST WINDOW</div>
+              <div style={{fontSize:16,fontWeight:600,color:P.tx,marginTop:4}}>{nowWin?.cur?.hr?nowWin.cur.hr+":00":"Afternoon"}</div>
+              <div style={{fontSize:11,color:P.rust,marginTop:3}}>{nowWin?.cur?.note?.split(".")[0]||"Peak activity"}</div>
             </div>
           </div>
 
@@ -1461,173 +1461,20 @@ export default function App(){
             <button onClick={saveSession} style={{width:"100%",marginTop:10,padding:"12px",borderRadius:8,border:"none",background:P.gn,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>SAVE SESSION</button>
           </div>}
 
-          {/* NIGHTTIME */}
-          {isNight&&<div style={{padding:"16px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:12,textAlign:"center"}}><div style={{fontSize:22,marginBottom:6}}>☾</div><div style={{fontSize:14,fontWeight:700,color:P.tx}}>Night fishing</div><div style={{fontSize:11,color:P.txM,marginTop:4,lineHeight:1.6}}>No hatch activity. Rest up — the river will be here tomorrow.</div></div>}
-
-          {/* HATCH OF THE DAY */}
-          {!isNight&&topH&&topH.score>5&&<div style={{background:P.c1,borderRadius:12,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:10}}>
-            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-              <div>
-                <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.15em",color:P.txD}}>HATCH OF THE DAY</div>
-                <div style={{fontSize:20,fontWeight:700,color:P.tx,marginTop:4}}>{topH.cm}</div>
-                <div style={{fontSize:12,color:P.gn,fontWeight:600,marginTop:3}}>{FLYMAP[topH.id]||"Match the hatch"}</div>
-              </div>
-              <div style={{textAlign:"center"}}><div style={{fontSize:32,fontWeight:700,color:hC(topH.score),lineHeight:1}}>{Math.round(topH.score/10)}</div><div style={{fontSize:8,color:hC(topH.score),marginTop:2}}>/10</div></div>
-            </div>
-            {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{marginTop:8,fontSize:10,color:P.txM}}>Also active: {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>s.cm).join(", ")}</div>}
+          {/* 7-DAY STRIP */}
+          {wxDays.length>0&&!onRiver&&!reviewing&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:10}}>
+            <div style={{fontSize:9,fontWeight:600,letterSpacing:"0.1em",color:P.txD,marginBottom:8}}>THIS WEEK</div>
+            <div style={{display:"flex",gap:4}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));const s10=Math.round(sc/10);return<div key={i} onClick={()=>setGDay(gDay===i?-1:i)} style={{flex:1,textAlign:"center",padding:"6px 2px",background:gDay===i?P.gn+"18":i===0?P.gn+"08":"transparent",borderRadius:6,cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.gn:P.txM}}>{d.dn}</div><div style={{fontSize:16,fontWeight:700,color:scClr(sc),marginTop:2}}>{s10}</div></div>})}</div>
+            {gDay>=0&&wxDays[gDay]&&(()=>{const fg=futureDayGuide(wxDays[gDay],gDay,cT,rv,beat,method);if(!fg)return null;return<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${P.bd}`}}>
+              <div style={{fontSize:14,fontWeight:700,color:P.tx,marginBottom:4}}>{wxDays[gDay].df}</div>
+              <div style={{fontSize:11,color:P.txM,marginBottom:8}}>{wxDays[gDay].aH||"--"}° / Wind {fg.avgWind}mph / {fg.avgCloud>70?"Overcast":"Cloudy"}</div>
+              {fg.topH&&fg.topH.score>5&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px",background:P.gn+"12",borderRadius:8,marginBottom:8}}><div><div style={{fontSize:15,fontWeight:700,color:P.tx}}>{fg.topH.cm}</div><div style={{fontSize:12,color:P.gn,fontWeight:600,marginTop:2}}>{FLYMAP[fg.topH.id]||"Match the hatch"}</div></div><div style={{fontSize:24,fontWeight:700,color:hC(fg.topH.score)}}>{Math.round(fg.topH.score/10)}</div></div>}
+              <div style={{padding:"10px",background:P.c2,borderRadius:8,marginBottom:6}}><div style={{fontSize:14,fontWeight:600,color:P.tx}}>{fg.rig.a}</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>{fg.rig.fly}</div></div>
+              {fg.futSpp.filter(s=>s.score>15).slice(0,3).map(sp=><div key={sp.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:11}}><span style={{color:P.tx}}>{sp.cm}</span><span style={{color:P.gn,fontWeight:600}}>{FLYMAP[sp.id]||""}</span></div>)}
+            </div>})()}
           </div>}
-
-          {/* APPROACH */}
-          <div onClick={()=>toggle("rig")} style={{background:P.c1,borderRadius:ex.rig?"12px 12px 0 0":12,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:ex.rig?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>APPROACH</div><div style={{fontSize:15,fontWeight:700,color:P.tx,marginTop:4}}>{rig.a}</div><div style={{fontSize:10,color:P.txM,marginTop:2}}>{rig.fly}</div></div><span style={{color:P.txD,fontSize:11}}>{ex.rig?"−":"+"}</span></div>
-          {ex.rig&&<div style={{background:P.rustS,borderRadius:"0 0 12px 12px",border:`1px solid ${P.rustB}`,borderTop:"none",padding:14,marginBottom:10}}>
-            <div style={{display:"flex",gap:3,marginBottom:10}}>{METHODS.map(m=><button key={m.id} onClick={e=>{e.stopPropagation();setMethod(m.id)}} style={{padding:"5px 9px",borderRadius:5,border:method===m.id?`1px solid ${P.rust}`:`1px solid ${P.bd}`,background:method===m.id?P.c2:"transparent",color:method===m.id?P.rust:P.txD,fontSize:9,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{m.l}</button>)}</div>
-            <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4}}>{[{l:"Rod",v:rig.rod},{l:"Leader",v:rig.ldr},{l:"Tippet",v:rig.tip},{l:"Fly",v:rig.fly}].map((r,i)=><div key={i} style={{padding:"5px 7px",background:P.c2,borderRadius:4}}><div style={{fontSize:6,color:P.txD,letterSpacing:"0.1em"}}>{r.l.toUpperCase()}</div><div style={{fontSize:10,fontWeight:600,color:i===3?P.rust:P.tx,marginTop:2}}>{r.v}</div></div>)}</div>
-            <div style={{marginTop:6,padding:"6px 7px",background:P.c2,borderRadius:4}}><div style={{fontSize:6,color:P.txD}}>GUIDE TIP</div><div style={{fontSize:10,color:P.txM,marginTop:2,lineHeight:1.5}}>{rig.guide}</div></div>
-          </div>}
-
-          {/* ANTICIPATION */}
-          <div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}>
-            <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:6}}>LOOKING AHEAD</div>
-            {antic.map((n,i)=><div key={i} style={{fontSize:11,color:P.txM,lineHeight:1.6,marginBottom:2}}>{n}</div>)}
-          </div>
-
-          {/* RIGHT NOW — always visible */}
-          {nowWin&&nowWin.cur&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:10}}>
-            <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:6}}>RIGHT NOW</div>
-            <div style={{display:"flex",gap:10,alignItems:"center"}}><div style={{fontSize:14,fontWeight:700,color:nowWin.cur.hi>=3?P.gn:nowWin.cur.hi>=1?P.rust:P.txD}}>{nowWin.cur.hr}:00</div><div style={{flex:1}}><div style={{fontSize:12,fontWeight:600,color:P.tx}}>{nowWin.cur.note}</div>{nowWin.cur.fly&&<div style={{fontSize:9,color:P.gn,marginTop:2}}>{nowWin.cur.hatches.join(", ")} → {nowWin.cur.fly}</div>}</div></div>
-            {nowWin.nxt&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`,display:"flex",gap:10,alignItems:"center",opacity:0.7}}><div style={{fontSize:12,fontWeight:700,color:nowWin.nxt.hi>=3?P.gn:P.txD}}>{nowWin.nxt.hr}:00</div><div style={{flex:1}}><div style={{fontSize:11,color:P.txM}}>{nowWin.nxt.note}</div></div></div>}
-          </div>}
-
-          {/* FULL TIMELINE — collapsible */}
-          {timeline.length>0&&<><div onClick={()=>toggle("tl")} style={{background:P.c1,borderRadius:ex.tl?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex.tl?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>TODAY ON THE RIVER</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Full day timeline</div></div><span style={{color:P.txD,fontSize:11}}>{ex.tl?"−":"+"}</span></div>
-          {ex.tl&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",padding:"6px 14px 10px",marginBottom:10}}>
-            {timeline.map((e,i)=><div key={i} style={{display:"flex",gap:10,padding:"7px 0",borderBottom:i<timeline.length-1?`1px solid ${P.bd}`:""}}><div style={{width:32,textAlign:"right",flexShrink:0}}><div style={{fontSize:12,fontWeight:700,color:e.hi>=3?P.gn:e.hi>=1?P.rust:P.txD}}>{e.hr}:00</div></div><div style={{flex:1}}><div style={{fontSize:11,color:P.tx,lineHeight:1.5}}>{e.note}</div>{e.fly&&<div style={{fontSize:9,color:P.gn,marginTop:1}}>{e.hatches.join(", ")} → {e.fly}</div>}</div></div>)}
-          </div>}</>}
-
-          {/* 7-DAY */}
-          {/* 7-DAY — always visible inline strip */}
-          {wxDays.length>0&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10,overflow:"hidden"}}>
-            <div style={{padding:"10px 14px 0"}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>THIS WEEK</div></div>
-            <div style={{padding:"8px 4px",overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*46}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));const s10=Math.round(sc/10);return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"6px 2px",textAlign:"center",background:gDay===i?P.gn+"18":i===0?P.gn+"08":"transparent",borderRadius:6,cursor:"pointer"}}><div style={{fontSize:8,fontWeight:600,color:i===0?P.gn:P.txM}}>{d.dn}</div><div style={{fontSize:16,fontWeight:700,color:scClr(sc),marginTop:2}}>{s10}</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.rust}}>rain</div>}</div>})}</div></div>
-            {gDay>=0&&wxDays[gDay]&&(()=>{
-              const fg=futureDayGuide(wxDays[gDay],gDay,cT,rv,beat,method);
-              if(!fg)return null;
-              return<div style={{borderTop:`1px solid ${P.bd}`,padding:"12px"}}>
-                {/* DAY HEADER */}
-                <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-                  <div><div style={{fontSize:13,fontWeight:700,color:P.tx}}>{wxDays[gDay].df}</div><div style={{fontSize:9,color:P.txM}}>{wxDays[gDay].aH||"--"}°/{wxDays[gDay].aL||"--"}° · Wind {fg.avgWind}mph · {fg.avgCloud>70?"Overcast":fg.avgCloud>40?"Cloudy":"Clear"}{(wxDays[gDay].rain||0)>0?` · ${wxDays[gDay].rain}mm rain`:""}</div></div>
-                </div>
-
-                {/* HATCH OF THE DAY */}
-                {fg.topH&&fg.topH.score>5&&<div style={{background:P.rustS,borderRadius:8,border:`1px solid ${P.rustB}`,padding:"10px 12px",marginBottom:8}}>
-                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                    <div><div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.rust}}>EXPECTED HATCH</div><div style={{fontSize:16,fontWeight:700,color:P.tx,marginTop:3}}>{fg.topH.cm}</div><div style={{fontSize:11,color:P.rust,fontWeight:600,marginTop:2}}>{FLYMAP[fg.topH.id]||"Match the hatch"}</div><div style={{fontSize:8,color:P.txD,fontStyle:"italic"}}>{FLYCONF[fg.topH.id]||""}</div></div>
-                    <div style={{textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:hC(fg.topH.score),lineHeight:1}}>{Math.round(fg.topH.score/10)}</div><div style={{fontSize:8,color:hC(fg.topH.score)}}>/10</div></div>
-                  </div>
-                  {fg.futSpp.filter(s=>s.score>15&&s.id!==fg.topH.id).length>0&&<div style={{marginTop:6,fontSize:9,color:P.txM}}>Also likely: {fg.futSpp.filter(s=>s.score>15&&s.id!==fg.topH.id).slice(0,3).map(s=>s.cm).join(", ")}</div>}
-                </div>}
-
-                {/* RECOMMENDED APPROACH */}
-                <div style={{background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,padding:"10px 12px",marginBottom:8}}>
-                  <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>RECOMMENDED APPROACH</div>
-                  <div style={{fontSize:14,fontWeight:700,color:P.tx,marginTop:3}}>{fg.rig.a}</div>
-                  <div style={{fontSize:9,color:P.txM,fontStyle:"italic",marginTop:2}}>{fg.rig.why}</div>
-                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:3,marginTop:6}}>{[{l:"Rod",v:fg.rig.rod},{l:"Leader",v:fg.rig.ldr},{l:"Tippet",v:fg.rig.tip},{l:"Fly",v:fg.rig.fly}].map((r,ri)=><div key={ri} style={{padding:"4px 6px",background:P.c1,borderRadius:3}}><div style={{fontSize:6,color:P.txD}}>{r.l.toUpperCase()}</div><div style={{fontSize:9,fontWeight:600,color:ri===3?P.gn:P.tx,marginTop:1}}>{r.v}</div></div>)}</div>
-                  <div style={{marginTop:4,padding:"4px 6px",background:P.c1,borderRadius:3}}><div style={{fontSize:6,color:P.txD}}>GUIDE TIP</div><div style={{fontSize:9,color:P.txM,marginTop:1,lineHeight:1.5}}>{fg.rig.guide}</div></div>
-                </div>
-
-                {/* FLIES TO HAVE READY */}
-                <div style={{background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,padding:"10px 12px",marginBottom:8}}>
-                  <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:4}}>FLIES TO HAVE READY</div>
-                  {fg.futSpp.filter(s=>s.score>15).slice(0,4).map(sp=><div key={sp.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 0",borderBottom:`1px solid ${P.bd}`}}>
-                    <span style={{fontSize:10,color:P.tx}}>{sp.cm}</span>
-                    <span style={{fontSize:9,color:P.gn,fontWeight:600}}>{FLYMAP[sp.id]||"General pattern"}</span>
-                  </div>)}
-                  {fg.avgWind>12&&<div style={{fontSize:9,color:P.rust,marginTop:4}}>Windy — pack terrestrials</div>}
-                </div>
-
-                {/* BEST WINDOW */}
-                {fg.bestHr.hr>0&&<div style={{background:P.gn+"18",borderRadius:8,border:`1px solid ${P.gn}40`,padding:"10px 12px",marginBottom:8}}>
-                  <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.gn}}>BEST WINDOW</div>
-                  <div style={{fontSize:14,fontWeight:700,color:P.tx,marginTop:3}}>Around {fg.bestHr.hr}:00</div>
-                  <div style={{fontSize:10,color:P.txM,marginTop:2}}>{fg.bestHr.note}</div>
-                  {fg.bestHr.fly&&<div style={{fontSize:10,color:P.gn,marginTop:2}}>Tie on: {fg.bestHr.fly}</div>}
-                </div>}
-
-                {/* ANTICIPATION */}
-                {fg.antic.length>0&&<div style={{background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,padding:"10px 12px",marginBottom:8}}>
-                  <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:4}}>LOOKING AHEAD</div>
-                  {fg.antic.map((n,ni)=><div key={ni} style={{fontSize:10,color:P.txM,lineHeight:1.5,marginBottom:2}}>{n}</div>)}
-                </div>}
-
-                {/* TIMELINE */}
-                <div style={{background:P.c2,borderRadius:8,border:`1px solid ${P.bd}`,padding:"10px 12px"}}>
-                  <div style={{fontSize:8,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:4}}>HOW THE DAY UNFOLDS</div>
-                  {fg.tl.map((e,ti)=><div key={ti} style={{display:"flex",gap:8,padding:"4px 0",borderBottom:ti<fg.tl.length-1?`1px solid ${P.bd}`:""}}>
-                    <span style={{fontSize:10,fontWeight:700,color:e.hi>=3?P.gn:e.hi>=1?P.rust:P.txD,minWidth:30}}>{e.hr}:00</span>
-                    <span style={{fontSize:10,color:P.txM,flex:1}}>{e.note}</span>
-                    {e.fly&&<span style={{fontSize:8,color:P.gn,flexShrink:0}}>{e.fly}</span>}
-                  </div>)}
-                </div>
-              </div>;
-            })()}
-          </div>}
-
-          {/* RIVER PERSONALITY */}
-          <div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:4}}>{rv.n.toUpperCase()}</div><div style={{fontSize:11,color:P.txM,lineHeight:1.7,fontStyle:"italic"}}>{rv.p}</div></div>
-
-          {/* BEAT MAP — Google Maps */}
-          {rv.b&&rv.b.length>0&&<><div onClick={()=>{
-            if(!ex.gmap){
-              toggle("gmap");
-              if(!mapsKey)fetch("/api/maps-key").then(r=>r.json()).then(d=>{if(d.key){setMapsKey(d.key);if(!document.getElementById("gmaps-script")){const s=document.createElement("script");s.id="gmaps-script";s.src=`https://maps.googleapis.com/maps/api/js?key=${d.key}`;s.onload=()=>setMapsLoaded(true);document.head.appendChild(s)}else setMapsLoaded(true)}}).catch(()=>{});
-              else setMapsLoaded(true);
-            }else toggle("gmap");
-          }} style={{background:P.c1,borderRadius:ex.gmap?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex.gmap?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>BEAT MAP</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>{rv.b.length} beats on {rv.n}</div></div><span style={{color:P.txD,fontSize:11}}>{ex.gmap?"−":"+"}</span></div>
-          {ex.gmap&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",marginBottom:10,overflow:"hidden"}}>
-            <div id="eph-gmap" style={{height:280,width:"100%"}} ref={el=>{
-              if(!el||el.dataset.init||!mapsLoaded||!window.google)return;
-              el.dataset.init="1";
-              const map=new window.google.maps.Map(el,{center:{lat:rv.lat,lng:rv.lng},zoom:12,disableDefaultUI:true,zoomControl:true,styles:[{featureType:"water",stylers:[{color:"#c8d7d4"}]},{featureType:"landscape",stylers:[{color:"#e8e4dc"}]},{featureType:"road",stylers:[{visibility:"simplified"},{color:"#d4d0c8"}]},{featureType:"poi",stylers:[{visibility:"off"}]}]});
-              const bounds=new window.google.maps.LatLngBounds();
-              let hasMarkers=false;
-              (rv.b||[]).forEach((b,i)=>{
-                const key=`${riv}:${b}`;
-                const loc=BL[key];
-                if(!loc)return;/* skip beats without coordinates */
-                hasMarkers=true;
-                const pos={lat:loc.lat,lng:loc.lng};
-                bounds.extend(pos);
-                const marker=new window.google.maps.Marker({position:pos,map,title:b,label:{text:String(i+1),color:"#fff",fontSize:"10px",fontWeight:"700"},icon:{path:window.google.maps.SymbolPath.CIRCLE,scale:12,fillColor:"#C36A3D",fillOpacity:1,strokeColor:"#fff",strokeWeight:2}});
-                const info=new window.google.maps.InfoWindow({content:`<div style="font-family:Barlow,sans-serif;padding:4px"><strong>${b}</strong><br><span style="font-size:11px;color:#666">${rv.n}${rv.bq&&rv.bq[b]?` · Quality: ${rv.bq[b]}/10`:""}</span></div>`});
-                marker.addListener("click",()=>info.open(map,marker));
-              });
-              if(hasMarkers&&rv.b.length>1)map.fitBounds(bounds,{padding:40});
-            }}/>
-            {/* BEAT LIST */}
-            <div style={{padding:"8px 12px",borderTop:`1px solid ${P.bd}`}}>
-              {rv.b.map((b,i)=><div key={b} onClick={()=>{setBeat(b)}} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"4px 0",borderBottom:i<rv.b.length-1?`1px solid ${P.bd}`:"",cursor:"pointer"}}>
-                <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:18,height:18,borderRadius:9,background:beat===b?"#C36A3D":"transparent",border:beat===b?"none":`1px solid ${P.bd}`,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:8,fontWeight:700,color:beat===b?"#fff":P.txD}}>{i+1}</span></div><span style={{fontSize:11,fontWeight:beat===b?700:400,color:beat===b?P.tx:P.txM}}>{b}</span></div>
-                {rv.bq&&rv.bq[b]&&<span style={{fontSize:9,color:rv.bq[b]>=8?P.gn:rv.bq[b]>=6?P.rust:P.txD,fontWeight:600}}>{rv.bq[b]}/10</span>}
-              </div>)}
-            </div>
-          </div>}</>}
-
-          {/* HATCH OBSERVATIONS — user reports what they see */}
-          {onRiver&&spp.filter(s=>s.score>5).length>0&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:10}}>
-            <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:6}}>WHAT ARE YOU SEEING?</div>
-            <div style={{fontSize:9,color:P.txM,marginBottom:8}}>Help improve predictions — tap what you've observed today</div>
-            {spp.filter(s=>s.score>5).map(sp=><div key={sp.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"5px 0",borderBottom:`1px solid ${P.bd}`}}>
-              <span style={{fontSize:11,color:P.tx,fontWeight:500}}>{sp.cm}</span>
-              <div style={{display:"flex",gap:3}}>
-                {[{v:"yes",l:"Yes",c:P.gn},{v:"no",l:"No",c:P.rust},{v:"unsure",l:"?",c:P.txD}].map(o=><button key={o.v} onClick={()=>setHatchObs(h=>({...h,[sp.id]:h[sp.id]===o.v?"":o.v}))} style={{padding:"3px 8px",borderRadius:3,border:hatchObs[sp.id]===o.v?`1px solid ${o.c}`:`1px solid ${P.bd}`,background:hatchObs[sp.id]===o.v?o.c+"18":"transparent",color:hatchObs[sp.id]===o.v?o.c:P.txD,fontSize:8,fontWeight:600,cursor:"pointer",fontFamily:"inherit",minWidth:28,textAlign:"center"}}>{o.l}</button>)}
-              </div>
-            </div>)}
-          </div>}
-
-          {/* MAYFLY TRACKER */}
-          {dan&&<div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>MAYFLY TRACKER</div><div style={{fontSize:13,fontWeight:700,color:ds.c,marginTop:3}}>{ds.s}</div><div style={{fontSize:9,color:P.txD,marginTop:2}}>Avg May 18-22 / Peak Jun 1-7</div></div><div style={{fontSize:22,fontWeight:700,color:P.rust}}>{dan.score}%</div></div>}
         </div>}
+
 
         {/* ═══ HATCHES — active now / expected later + FLY ID ═══ */}
         {tab==="hatches"&&<div>
