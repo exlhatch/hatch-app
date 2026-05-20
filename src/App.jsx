@@ -586,6 +586,8 @@ export default function App(){
   const[regionFilter,setRegionFilter]=useState("");
   const[favs,setFavs]=useState(()=>getFavs());
   const toggleFav=(id)=>{const nf=favs.includes(id)?favs.filter(f=>f!==id):[...favs,id];setFavs(nf);saveFavs(nf)};
+  const[advanced,setAdvanced]=useState(false);
+  const[customBeat,setCustomBeat]=useState("");
 
   /* SESSION TRACKING — quick snap, log later */
   const[sessions,setSessions]=useState(()=>getSessions());
@@ -1242,7 +1244,13 @@ export default function App(){
             </div>);
           })()}</div>
           {rv.b&&rv.b.length>1&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`}}>
-            <div style={{display:"flex",gap:4,overflowX:"auto"}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setPick(false)}} style={{flexShrink:0,padding:"5px 10px",borderRadius:5,border:beat===b?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:beat===b?P.gn+"18":"transparent",color:beat===b?P.gn:P.txD,fontSize:9,fontWeight:beat===b?700:400,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
+            <div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEAT</div>
+            <div style={{display:"flex",gap:4,overflowX:"auto",marginBottom:6}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setCustomBeat("");setPick(false)}} style={{flexShrink:0,padding:"5px 10px",borderRadius:5,border:beat===b&&!customBeat?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:beat===b&&!customBeat?P.gn+"18":"transparent",color:beat===b&&!customBeat?P.gn:P.txD,fontSize:9,fontWeight:beat===b&&!customBeat?700:400,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
+            <input value={customBeat} onChange={e=>{setCustomBeat(e.target.value);if(e.target.value)setBeat(e.target.value)}} placeholder="Or type your beat name..." style={{width:"100%",background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"7px 10px",color:P.tx,fontSize:11,fontFamily:"inherit"}}/>
+          </div>}
+          {(!rv.b||rv.b.length<=1)&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`}}>
+            <div style={{fontSize:8,color:P.txD,marginBottom:4}}>BEAT / SECTION</div>
+            <input value={customBeat||beat} onChange={e=>{setCustomBeat(e.target.value);setBeat(e.target.value)}} placeholder="Type your beat or section name..." style={{width:"100%",background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"7px 10px",color:P.tx,fontSize:11,fontFamily:"inherit"}}/>
           </div>}
         </div>}
       </div>
@@ -1315,13 +1323,13 @@ export default function App(){
 
         {/* ═══ GUIDE ═══ */}
         {tab==="guide"&&<div>
-          {/* GUIDE NOTE + LISTEN */}
+          {/* GUIDE NOTE */}
           <div style={{padding:"14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}>
             <div style={{fontSize:14,color:P.tx,lineHeight:1.7}}>{guideNote}</div>
-            <button onClick={()=>speak(guideNote)} style={{marginTop:8,background:"none",border:`1px solid ${speaking?P.gn:P.bd}`,borderRadius:6,padding:"5px 12px",color:speaking?P.gn:P.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>{speaking?"Stop":"Listen to guide note"}</button>
+            <button onClick={()=>speak(guideNote)} style={{marginTop:8,background:"none",border:`1px solid ${speaking?P.gn:P.bd}`,borderRadius:6,padding:"5px 12px",color:speaking?P.gn:P.txD,fontSize:10,cursor:"pointer",fontFamily:"inherit"}}>{speaking?"Stop":"Listen"}</button>
           </div>
 
-          {/* TIE ON + BEST WINDOW — accent cards */}
+          {/* TIE ON + BEST WINDOW */}
           <div style={{display:"flex",gap:8,marginBottom:10}}>
             <div style={{flex:1,background:P.gn+"18",border:`1px solid ${P.gn}30`,borderRadius:10,padding:"14px"}}>
               <div style={{fontSize:9,color:P.gn,letterSpacing:"0.08em",fontWeight:600}}>TIE ON</div>
@@ -1334,6 +1342,81 @@ export default function App(){
               <div style={{fontSize:11,color:P.rust,marginTop:3}}>{nowWin?.cur?.note?.split(".")[0]||"Peak activity"}</div>
             </div>
           </div>
+
+          {/* HATCH OF THE DAY */}
+          {!isNight&&topH&&topH.score>5&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+              <div>
+                <div style={{fontSize:9,color:P.txD,letterSpacing:"0.1em",fontWeight:600}}>HATCH OF THE DAY</div>
+                <div style={{fontSize:18,fontWeight:700,color:P.tx,marginTop:4}}>{topH.cm}</div>
+                <div style={{fontSize:12,color:P.gn,fontWeight:600,marginTop:2}}>{FLYMAP[topH.id]||"Match the hatch"}</div>
+              </div>
+              <div style={{fontSize:28,fontWeight:700,color:hC(topH.score)}}>{Math.round(topH.score/10)}<span style={{fontSize:12,color:P.txD}}>/10</span></div>
+            </div>
+            {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{marginTop:8,fontSize:11,color:P.txM}}>Also active: {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>s.cm).join(", ")}</div>}
+          </div>}
+
+          {/* HATCH OF THE WEEK */}
+          {!isNight&&spp.filter(s=>s.score>10).length>0&&<div onClick={()=>toggle("hotw")} style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:10,cursor:"pointer"}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center"}}><div style={{fontSize:9,color:P.txD,letterSpacing:"0.1em",fontWeight:600}}>WHAT'S HATCHING THIS WEEK</div><span style={{color:P.txD,fontSize:11}}>{ex.hotw?"−":"+"}</span></div>
+            {ex.hotw&&<div style={{marginTop:8}}>{spp.filter(s=>s.score>5).slice(0,6).map(sp=><div key={sp.id} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"6px 0",borderBottom:`1px solid ${P.bd}`}}>
+              <div><div style={{fontSize:13,fontWeight:600,color:P.tx}}>{sp.cm}</div><div style={{fontSize:10,color:P.gn,marginTop:1}}>{FLYMAP[sp.id]||""}</div></div>
+              <div style={{fontSize:16,fontWeight:700,color:hC(sp.score)}}>{Math.round(sp.score/10)}</div>
+            </div>)}</div>}
+          </div>}
+
+          {/* 10-DAY FORECAST */}
+          {wxDays.length>0&&!onRiver&&!reviewing&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:10}}>
+            <div style={{fontSize:9,fontWeight:600,letterSpacing:"0.1em",color:P.txD,marginBottom:10}}>UPCOMING</div>
+            <div style={{display:"flex",gap:3}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));const s10=Math.round(sc/10);return<div key={i} onClick={()=>setGDay(gDay===i?-1:i)} style={{flex:1,textAlign:"center",padding:"8px 2px",background:gDay===i?P.gn+"18":i===0?P.gn+"08":"transparent",borderRadius:6,cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.gn:P.txM}}>{d.dn}</div><div style={{fontSize:18,fontWeight:700,color:scClr(sc),marginTop:3}}>{s10}</div><div style={{fontSize:8,color:P.txD,marginTop:1}}>{d.aH||"--"}°</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.rust}}>rain</div>}</div>})}</div>
+
+            {/* EXPANDED DAY PLAN */}
+            {gDay>=0&&wxDays[gDay]&&(()=>{const fg=futureDayGuide(wxDays[gDay],gDay,cT,rv,beat,method);if(!fg)return null;return<div style={{marginTop:12,paddingTop:12,borderTop:`1px solid ${P.bd}`}}>
+              <div style={{fontSize:15,fontWeight:700,color:P.tx,marginBottom:2}}>{wxDays[gDay].df}</div>
+              <div style={{fontSize:11,color:P.txM,marginBottom:10}}>{wxDays[gDay].aH||"--"}°/{wxDays[gDay].aL||"--"}° · {fg.avgWind}mph · {fg.avgCloud>70?"Overcast":fg.avgCloud>40?"Cloudy":"Clear"}</div>
+
+              {fg.topH&&fg.topH.score>5&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px 12px",background:P.gn+"12",borderRadius:8,marginBottom:8}}>
+                <div><div style={{fontSize:16,fontWeight:700,color:P.tx}}>{fg.topH.cm}</div><div style={{fontSize:12,color:P.gn,fontWeight:600,marginTop:2}}>{FLYMAP[fg.topH.id]||"Match the hatch"}</div></div>
+                <div style={{fontSize:24,fontWeight:700,color:hC(fg.topH.score)}}>{Math.round(fg.topH.score/10)}</div>
+              </div>}
+
+              <div style={{padding:"10px 12px",background:P.c2,borderRadius:8,marginBottom:8}}>
+                <div style={{fontSize:14,fontWeight:600,color:P.tx}}>{fg.rig.a}</div>
+                <div style={{fontSize:11,color:P.txM,marginTop:2}}>{fg.rig.fly}</div>
+              </div>
+
+              <div style={{fontSize:9,fontWeight:600,color:P.txD,letterSpacing:"0.08em",marginBottom:4}}>FLIES TO HAVE READY</div>
+              {fg.futSpp.filter(s=>s.score>15).slice(0,4).map(sp=><div key={sp.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:11}}><span style={{color:P.tx}}>{sp.cm}</span><span style={{color:P.gn,fontWeight:600}}>{FLYMAP[sp.id]||""}</span></div>)}
+
+              {/* ADVANCED DETAIL — toggle */}
+              {advanced&&<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${P.bd}`}}>
+                <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginBottom:8}}>{[{l:"Rod",v:fg.rig.rod},{l:"Leader",v:fg.rig.ldr},{l:"Tippet",v:fg.rig.tip},{l:"Fly",v:fg.rig.fly}].map((r,ri)=><div key={ri} style={{padding:"5px 8px",background:P.c1,borderRadius:4}}><div style={{fontSize:7,color:P.txD}}>{r.l.toUpperCase()}</div><div style={{fontSize:10,fontWeight:600,color:ri===3?P.gn:P.tx,marginTop:1}}>{r.v}</div></div>)}</div>
+                {fg.antic.length>0&&<div style={{marginBottom:6}}>{fg.antic.map((n,ni)=><div key={ni} style={{fontSize:10,color:P.txM,lineHeight:1.6}}>{n}</div>)}</div>}
+                <div style={{fontSize:9,fontWeight:600,color:P.txD,letterSpacing:"0.08em",marginBottom:4}}>HOURLY TIMELINE</div>
+                {fg.tl.map((e,ti)=><div key={ti} style={{display:"flex",gap:8,padding:"3px 0",borderBottom:ti<fg.tl.length-1?`1px solid ${P.bd}`:""}}>
+                  <span style={{fontSize:10,fontWeight:700,color:e.hi>=3?P.gn:e.hi>=1?P.rust:P.txD,minWidth:28}}>{e.hr}:00</span>
+                  <span style={{fontSize:10,color:P.txM,flex:1}}>{e.note}</span>
+                </div>)}
+              </div>}
+            </div>})()}
+          </div>}
+
+          {/* ADVANCED TOGGLE */}
+          {!onRiver&&!reviewing&&<div style={{display:"flex",justifyContent:"center",marginBottom:10}}>
+            <button onClick={()=>setAdvanced(!advanced)} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 16px",color:advanced?P.gn:P.txD,fontSize:10,fontWeight:500,cursor:"pointer",fontFamily:"inherit"}}>{advanced?"Simple mode":"Advanced"}</button>
+          </div>}
+
+          {/* ADVANCED: approach detail + river info */}
+          {advanced&&!onRiver&&!reviewing&&<>
+            <div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:10}}>
+              <div style={{fontSize:9,color:P.txD,letterSpacing:"0.1em",fontWeight:600,marginBottom:4}}>APPROACH</div>
+              <div style={{fontSize:15,fontWeight:700,color:P.tx}}>{rig.a}</div>
+              <div style={{fontSize:11,color:P.txM,marginTop:2,fontStyle:"italic"}}>{rig.why}</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:4,marginTop:8}}>{[{l:"Rod",v:rig.rod},{l:"Leader",v:rig.ldr},{l:"Tippet",v:rig.tip},{l:"Fly",v:rig.fly}].map((r,ri)=><div key={ri} style={{padding:"5px 8px",background:P.c2,borderRadius:4}}><div style={{fontSize:7,color:P.txD}}>{r.l.toUpperCase()}</div><div style={{fontSize:10,fontWeight:600,color:ri===3?P.gn:P.tx,marginTop:1}}>{r.v}</div></div>)}</div>
+              <div style={{marginTop:6,padding:"5px 8px",background:P.c2,borderRadius:4}}><div style={{fontSize:7,color:P.txD}}>GUIDE TIP</div><div style={{fontSize:10,color:P.txM,marginTop:1,lineHeight:1.6}}>{rig.guide}</div></div>
+            </div>
+            <div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}><div style={{fontSize:9,fontWeight:600,letterSpacing:"0.1em",color:P.txD,marginBottom:4}}>{rv.n.toUpperCase()}</div><div style={{fontSize:11,color:P.txM,lineHeight:1.7,fontStyle:"italic"}}>{rv.p}</div></div>
+          </>}
 
           {/* SESSION ACTIVE — minimal, quick snap */}
           {onRiver&&<div style={{background:P.rustS,borderRadius:10,border:`1px solid ${P.rustB}`,padding:"12px 14px",marginBottom:12}}>
@@ -1459,19 +1542,6 @@ export default function App(){
             </div>}
 
             <button onClick={saveSession} style={{width:"100%",marginTop:10,padding:"12px",borderRadius:8,border:"none",background:P.gn,color:"#fff",fontSize:12,fontWeight:700,cursor:"pointer",fontFamily:"inherit"}}>SAVE SESSION</button>
-          </div>}
-
-          {/* 7-DAY STRIP */}
-          {wxDays.length>0&&!onRiver&&!reviewing&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"10px 14px",marginBottom:10}}>
-            <div style={{fontSize:9,fontWeight:600,letterSpacing:"0.1em",color:P.txD,marginBottom:8}}>THIS WEEK</div>
-            <div style={{display:"flex",gap:4}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));const s10=Math.round(sc/10);return<div key={i} onClick={()=>setGDay(gDay===i?-1:i)} style={{flex:1,textAlign:"center",padding:"6px 2px",background:gDay===i?P.gn+"18":i===0?P.gn+"08":"transparent",borderRadius:6,cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.gn:P.txM}}>{d.dn}</div><div style={{fontSize:16,fontWeight:700,color:scClr(sc),marginTop:2}}>{s10}</div></div>})}</div>
-            {gDay>=0&&wxDays[gDay]&&(()=>{const fg=futureDayGuide(wxDays[gDay],gDay,cT,rv,beat,method);if(!fg)return null;return<div style={{marginTop:10,paddingTop:10,borderTop:`1px solid ${P.bd}`}}>
-              <div style={{fontSize:14,fontWeight:700,color:P.tx,marginBottom:4}}>{wxDays[gDay].df}</div>
-              <div style={{fontSize:11,color:P.txM,marginBottom:8}}>{wxDays[gDay].aH||"--"}° / Wind {fg.avgWind}mph / {fg.avgCloud>70?"Overcast":"Cloudy"}</div>
-              {fg.topH&&fg.topH.score>5&&<div style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"10px",background:P.gn+"12",borderRadius:8,marginBottom:8}}><div><div style={{fontSize:15,fontWeight:700,color:P.tx}}>{fg.topH.cm}</div><div style={{fontSize:12,color:P.gn,fontWeight:600,marginTop:2}}>{FLYMAP[fg.topH.id]||"Match the hatch"}</div></div><div style={{fontSize:24,fontWeight:700,color:hC(fg.topH.score)}}>{Math.round(fg.topH.score/10)}</div></div>}
-              <div style={{padding:"10px",background:P.c2,borderRadius:8,marginBottom:6}}><div style={{fontSize:14,fontWeight:600,color:P.tx}}>{fg.rig.a}</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>{fg.rig.fly}</div></div>
-              {fg.futSpp.filter(s=>s.score>15).slice(0,3).map(sp=><div key={sp.id} style={{display:"flex",justifyContent:"space-between",padding:"4px 0",fontSize:11}}><span style={{color:P.tx}}>{sp.cm}</span><span style={{color:P.gn,fontWeight:600}}>{FLYMAP[sp.id]||""}</span></div>)}
-            </div>})()}
           </div>}
         </div>}
 
