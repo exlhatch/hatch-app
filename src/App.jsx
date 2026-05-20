@@ -1201,37 +1201,34 @@ export default function App(){
       <style>{`*{box-sizing:border-box;margin:0}html{-webkit-text-size-adjust:100%}input,textarea{font-family:inherit;-webkit-appearance:none}input:focus,textarea:focus{outline:none}::-webkit-scrollbar{height:4px}::-webkit-scrollbar-thumb{background:${P.bd};border-radius:2px}`}</style>
 
       {/* HEADER */}
-      <div style={{background:P.c1,padding:"12px 14px",borderBottom:`1px solid ${P.bd}`}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:10}}>
-          <span style={{color:P.tx,fontSize:13,fontWeight:500,letterSpacing:"0.15em"}}>EPHEMERA</span>
+      <div style={{background:P.c1,padding:"14px 14px 12px",borderBottom:`1px solid ${P.bd}`}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}><Logo s={28}/><Wordmark w={100} dark={!light}/></div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
-            <button onClick={()=>setLight(!light)} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:5,padding:"3px 7px",color:P.txD,fontSize:8,cursor:"pointer",fontFamily:"inherit"}}>{light?"◐":"☀"}</button>
-            <div onClick={logout} style={{width:26,height:26,borderRadius:13,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:P.txM,fontWeight:600,cursor:"pointer",border:`1px solid ${P.bd}`}}>{user.name[0]}</div>
+            <button onClick={()=>setLight(!light)} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:6,padding:"4px 8px",color:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{light?"◐":"☀"}</button>
+            <div onClick={logout} style={{width:28,height:28,borderRadius:14,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:P.txM,fontWeight:600,cursor:"pointer",border:`1px solid ${P.bd}`}}>{user.name[0]}</div>
           </div>
         </div>
 
         {/* RIVER SEARCH + NEAR ME */}
         <div style={{display:"flex",gap:6}}>
-          <div onClick={()=>{setPick(!pick);setRiverSearch("");setRegionFilter("")}} style={{flex:1,background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 12px",color:pick?P.tx:P.txM,fontSize:12,cursor:"pointer"}}>{pick?"Search...":rv.n+(beat?" / "+beat:"")}</div>
-          <button onClick={()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;let best=ALL_RV[0],bestD=999;ALL_RV.forEach(r=>{const d=Math.sqrt((r.lat-lat)**2+(r.lng-lng)**2);if(d<bestD){bestD=d;best=r}});setRiv(best.id);setPick(false)},()=>{},{enableHighAccuracy:true,timeout:8000})}} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 10px",color:P.txM,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Near me</button>
+          <div onClick={()=>{setPick(!pick);setRiverSearch("");setRegionFilter("")}} style={{flex:1,background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 12px",fontSize:12,color:P.txM,cursor:"pointer"}}>{rv.n+(beat?" / "+beat:"")}</div>
+          <button onClick={()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;let best=ALL_RV[0],bestD=999;ALL_RV.forEach(r=>{const d=Math.sqrt((r.lat-lat)**2+(r.lng-lng)**2);if(d<bestD){bestD=d;best=r}});setRiv(best.id);setPick(false)},()=>{},{enableHighAccuracy:true,timeout:8000})}} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 12px",color:P.txM,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Near me</button>
         </div>
 
-        {/* PICKER DROPDOWN */}
-        {pick&&<div style={{marginTop:6,background:P.c2,borderRadius:8,padding:10,border:`1px solid ${P.bd}`}}>
+        {/* PICKER */}
+        {pick&&<div style={{marginTop:8,background:P.c2,borderRadius:8,padding:10,border:`1px solid ${P.bd}`}}>
           <input value={riverSearch} onChange={e=>setRiverSearch(e.target.value)} placeholder="Search rivers..." autoFocus style={{width:"100%",background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",color:P.tx,fontSize:12,fontFamily:"inherit",marginBottom:8}}/>
           <div style={{display:"flex",gap:4,marginBottom:8}}>
             <select value={regionFilter} onChange={e=>setRegionFilter(e.target.value)} style={{background:P.c1,border:`1px solid ${P.bd}`,borderRadius:6,padding:"6px 8px",color:P.tx,fontSize:10,fontFamily:"inherit",flex:1}}>
-              <option value="">All rivers</option>
-              <option value="chalk">Chalkstreams</option>
-              <option value="Stillwater">Stillwater</option>
+              <option value="">All rivers</option><option value="chalk">Chalkstreams</option><option value="Stillwater">Stillwater</option>
               {REGIONS.filter(r=>r!=="Stillwater").map(rg=><option key={rg} value={rg}>{rg}</option>)}
             </select>
           </div>
           {favs.length>0&&<div style={{display:"flex",gap:4,overflowX:"auto",paddingBottom:6,marginBottom:6,borderBottom:`1px solid ${P.bd}`}}>
             {favs.map(fid=>{const fr=ALL_RV.find(r=>r.id===fid);if(!fr)return null;return<button key={fid} onClick={()=>{setRiv(fid);setPick(false)}} style={{flexShrink:0,padding:"4px 10px",borderRadius:5,border:riv===fid?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:riv===fid?P.gn+"18":"transparent",color:riv===fid?P.gn:P.tx,fontSize:10,fontWeight:500,cursor:"pointer",fontFamily:"inherit"}}>{fr.n.replace("River ","")}</button>})}
           </div>}
-          <div style={{maxHeight:180,overflowY:"auto"}}>
-          {(()=>{
+          <div style={{maxHeight:180,overflowY:"auto"}}>{(()=>{
             let rivers=ALL_RV;
             if(regionFilter==="chalk")rivers=rivers.filter(r=>r.premium);
             else if(regionFilter)rivers=rivers.filter(r=>r.rg===regionFilter);
@@ -1243,29 +1240,30 @@ export default function App(){
               <span style={{flex:1,fontSize:11,fontWeight:riv===r.id?700:400,color:riv===r.id?P.gn:P.tx}}>{r.n}</span>
               <span style={{fontSize:8,color:r.premium?P.gn:P.txD,flexShrink:0}}>{r.premium?"●":r.rg||""}</span>
             </div>);
-          })()}
-          </div>
+          })()}</div>
           {rv.b&&rv.b.length>1&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${P.bd}`}}>
             <div style={{display:"flex",gap:4,overflowX:"auto"}}>{rv.b.map(b=><button key={b} onClick={()=>{setBeat(b);setPick(false)}} style={{flexShrink:0,padding:"5px 10px",borderRadius:5,border:beat===b?`1px solid ${P.gn}`:`1px solid ${P.bd}`,background:beat===b?P.gn+"18":"transparent",color:beat===b?P.gn:P.txD,fontSize:9,fontWeight:beat===b?700:400,cursor:"pointer",fontFamily:"inherit"}}>{b}</button>)}</div>
           </div>}
         </div>}
       </div>
 
-      {/* HERO — score + guide note */}
-      <div style={{background:P.c1,padding:"16px 14px",borderBottom:`1px solid ${P.bd}`}}>
-        <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
-          <div style={{flex:1}}>
-            <div style={{fontSize:9,color:P.txD,letterSpacing:"0.08em"}}>TODAY</div>
-            <div style={{fontSize:13,color:P.tx,fontWeight:500,marginTop:6,lineHeight:1.5}}>{guideNote.split(".").slice(0,2).join(".")+"."}</div>
-            <div style={{display:"flex",gap:12,marginTop:8}}>
-              <span style={{fontSize:10,color:P.txM}}>Water {cT}°</span>
-              <span style={{fontSize:10,color:P.txM}}>Wind {cW}mph</span>
-              <span style={{fontSize:10,color:P.txM}}>{cC>70?"Overcast":cC>40?"Cloudy":"Clear"}</span>
+      {/* HERO CARD — score + guide + conditions (Design 2 dark card) */}
+      <div style={{padding:"12px 14px",background:P.bg}}>
+        <div style={{background:P.c1,borderRadius:12,border:`1px solid ${P.bd}`,padding:"16px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,color:P.txD,letterSpacing:"0.08em"}}>TODAY</div>
+              <div style={{fontSize:13,color:P.tx,fontWeight:500,marginTop:6,lineHeight:1.5}}>{guideNote.split(".").slice(0,2).join(".")+"."}</div>
+            </div>
+            <div style={{textAlign:"center",paddingLeft:16}}>
+              <div style={{fontSize:44,fontWeight:700,color:cond.clr,lineHeight:1}}>{Math.round(cond.pct/10)}</div>
+              <div style={{fontSize:9,color:P.txD}}>/10</div>
             </div>
           </div>
-          <div style={{textAlign:"center",paddingLeft:14}}>
-            <div style={{fontSize:44,fontWeight:700,color:cond.clr,lineHeight:1}}>{Math.round(cond.pct/10)}</div>
-            <div style={{fontSize:9,color:P.txD}}>/10</div>
+          <div style={{display:"flex",gap:12,marginTop:12,paddingTop:10,borderTop:`1px solid ${P.bd}`}}>
+            <div><span style={{fontSize:10,color:P.txD}}>Water </span><span style={{fontSize:10,color:P.tx}}>{cT}°</span></div>
+            <div><span style={{fontSize:10,color:P.txD}}>Wind </span><span style={{fontSize:10,color:P.tx}}>{cW}mph</span></div>
+            <div><span style={{fontSize:10,color:P.txD}}>Cloud </span><span style={{fontSize:10,color:P.tx}}>{cC}%</span></div>
           </div>
         </div>
       </div>
@@ -1273,7 +1271,7 @@ export default function App(){
       {/* SESSION MODE BAR */}
       <div style={{background:onRiver?P.rustS:P.c2,padding:!onRiver&&!reviewing?"12px 14px":"8px 14px",borderBottom:`1px solid ${onRiver?P.rustB:P.bd}`}}>
         {!onRiver&&!reviewing?<div>
-          <button onClick={startSession} style={{width:"100%",background:P.gn,border:"none",borderRadius:8,padding:"14px",color:"#fff",fontSize:13,fontWeight:700,cursor:"pointer",fontFamily:"inherit",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>🎣 Start Fishing Session</button>
+          <button onClick={startSession} style={{width:"100%",background:P.gn,border:"none",borderRadius:10,padding:"14px",color:"#fff",fontSize:13,fontWeight:600,cursor:"pointer",fontFamily:"inherit"}}>Start fishing session</button>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:6}}>
             <div style={{fontSize:8,color:P.txD}}>Tracks time, catches, and conditions</div>
             <div style={{display:"flex",alignItems:"center",gap:4,cursor:"pointer"}} onClick={()=>setSessionPublic(!sessionPublic)}>
@@ -1307,8 +1305,6 @@ export default function App(){
       </div>
 
       {/* TABS */}
-      <div style={{display:"flex",background:P.c1,borderBottom:`1px solid ${P.bd}`,overflowX:"auto"}}>{[{id:"guide",l:"Guide"},{id:"hatches",l:"Hatches"},{id:"fly",l:"Fly Box"},{id:"outlook",l:"Outlook"},{id:"reports",l:"Reports"},{id:"tips",l:"On the River"}].map(t=><button key={t.id} onClick={()=>setTab(t.id)} style={{padding:"10px 12px 8px",border:"none",borderBottom:tab===t.id?`2px solid ${P.rust}`:"2px solid transparent",background:"none",color:tab===t.id?P.rust:P.txD,fontWeight:600,fontSize:10,cursor:"pointer",fontFamily:"inherit",flexShrink:0,marginBottom:-1}}>{t.l}</button>)}</div>
-
       <div style={{padding:14}}>
 
         {/* SESSION RECOVERY BANNER */}
@@ -1509,9 +1505,10 @@ export default function App(){
           </div>}</>}
 
           {/* 7-DAY */}
-          {wxDays.length>0&&<><div onClick={()=>toggle("7d")} style={{background:P.c1,borderRadius:ex["7d"]?"10px 10px 0 0":10,border:`1px solid ${P.bd}`,padding:"12px 14px",marginBottom:ex["7d"]?0:10,cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}><div><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>7-DAY OUTLOOK</div><div style={{fontSize:11,color:P.txM,marginTop:2}}>Compare days</div></div><span style={{color:P.txD,fontSize:11}}>{ex["7d"]?"−":"+"}</span></div>
-          {ex["7d"]&&<div style={{background:P.c1,borderRadius:"0 0 10px 10px",border:`1px solid ${P.bd}`,borderTop:"none",overflow:"hidden",marginBottom:10}}>
-            <div style={{overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*68}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));const s10=Math.round(sc/10);return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"8px 4px",textAlign:"center",borderRight:i<wxDays.length-1?`1px solid ${P.bd}`:"",background:gDay===i?P.c2:"transparent",cursor:"pointer"}}><div style={{fontSize:9,fontWeight:600,color:i===0?P.gn:P.tx}}>{d.dn}</div><div style={{fontSize:18,fontWeight:700,color:scClr(sc),marginTop:3}}>{s10}</div><div style={{fontSize:7,color:P.txD}}>/10</div><div style={{fontSize:9,color:P.txM,marginTop:2}}>{d.aH||"--"}°</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.rust}}>🌧</div>}</div>})}</div></div>
+          {/* 7-DAY — always visible inline strip */}
+          {wxDays.length>0&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10,overflow:"hidden"}}>
+            <div style={{padding:"10px 14px 0"}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD}}>THIS WEEK</div></div>
+            <div style={{padding:"8px 4px",overflowX:"auto"}}><div style={{display:"flex",minWidth:wxDays.length*46}}>{wxDays.map((d,i)=>{const futDoy=DOY+i;const pjH=H.reduce((s,sp)=>{if(futDoy<sp.s-10||futDoy>sp.e+10)return s;let sf=0;if(futDoy>=sp.s&&futDoy<=sp.e){const m=(sp.s+sp.e)/2,r=(sp.e-sp.s)/2;sf=Math.max(0,1-((futDoy-m)/r)**2)}return s+sf*(sp.t===1?30:sp.t===2?12:5)},0);let sc=0;sc+=Math.min(30,pjH*0.30);const avg=((d.aH||14)+(d.aL||8))/2;sc+=avg>=13?15:avg>=10?10:5;sc+=(d.rain||0)<2?7:4;sc+=(d.windMax||8)<=10?15:(d.windMax||8)<=18?7:2;sc+=7+Math.round((rv.q||5)*1.5);sc=Math.round(Math.min(100,sc));const s10=Math.round(sc/10);return<div key={i} onClick={e=>{e.stopPropagation();setGDay(gDay===i?-1:i)}} style={{flex:1,padding:"6px 2px",textAlign:"center",background:gDay===i?P.gn+"18":i===0?P.gn+"08":"transparent",borderRadius:6,cursor:"pointer"}}><div style={{fontSize:8,fontWeight:600,color:i===0?P.gn:P.txM}}>{d.dn}</div><div style={{fontSize:16,fontWeight:700,color:scClr(sc),marginTop:2}}>{s10}</div>{(d.rain||0)>0&&<div style={{fontSize:7,color:P.rust}}>rain</div>}</div>})}</div></div>
             {gDay>=0&&wxDays[gDay]&&(()=>{
               const fg=futureDayGuide(wxDays[gDay],gDay,cT,rv,beat,method);
               if(!fg)return null;
@@ -1574,7 +1571,7 @@ export default function App(){
                 </div>
               </div>;
             })()}
-          </div>}</>}
+          </div>}
 
           {/* RIVER PERSONALITY */}
           <div style={{padding:"10px 14px",background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,marginBottom:10}}><div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:P.txD,marginBottom:4}}>{rv.n.toUpperCase()}</div><div style={{fontSize:11,color:P.txM,lineHeight:1.7,fontStyle:"italic"}}>{rv.p}</div></div>
@@ -1913,7 +1910,7 @@ export default function App(){
       </div>}
 
       {/* NAV */}
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>{[{id:"guide",l:"Guide",i:"◉"},{id:"hatches",l:"Hatches",i:"◎"},{id:"fly",l:"Flies",i:"◈"},{id:"outlook",l:"Outlook",i:"◑"},{id:"reports",l:"Reports",i:"◇"},{id:"tips",l:"Tips",i:"⊕"}].map(n=><button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"9px 0 6px",border:"none",background:"none",color:tab===n.id?P.rust:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:13,lineHeight:1}}>{n.i}</div><div style={{fontSize:7,fontWeight:600,marginTop:2}}>{n.l}</div></button>)}</div>
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>{[{id:"guide",l:"Guide"},{id:"hatches",l:"Hatches"},{id:"fly",l:"Flies"},{id:"reports",l:"Log"},{id:"tips",l:"Tips"}].map(n=><button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"10px 0 7px",border:"none",background:"none",color:tab===n.id?P.gn:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}><div style={{fontSize:9,fontWeight:tab===n.id?700:500}}>{n.l}</div></button>)}</div>
 
       <style>{`@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}`}</style>
     </div>
