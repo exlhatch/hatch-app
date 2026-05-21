@@ -737,24 +737,59 @@ export default function App(){
   const guideNote=useMemo(()=>{
     if(isNight)return"Rest up. The river will be there tomorrow.";
     const top=spp[0];const second=spp[1];
-    /* Build contextual advice based on whatever is hatching */
-    let note="";
-    if(top&&top.score>50)note=`${top.cm} hatching strongly. Match with ${FLYMAP[top.id]||"a matching pattern"}. `;
-    else if(top&&top.score>20)note=`${top.cm} activity building. Have ${FLYMAP[top.id]||"a matching pattern"} ready. `;
-    else note="Quiet hatches expected. Start with a search pattern like an Adams or PTN. ";
-    /* Mayfly context — important but not dominant */
-    if(mayflyAbout&&top.id!=="danica")note+=`Mayfly about (${dan.score}%) — fish may switch when they see them. Keep an emerger ready. `;
-    else if(mayflyAbout&&top.id==="danica")note+=`Fish will take emergers in the film before they take duns off the top. Try a Danica Emerger or Klinkhamer first. `;
-    /* Conditions */
-    if(cC>70&&cT>=11)note+=`Overcast skies should encourage hatches.`;
-    else if(cC<30&&cT>=14)note+=`Bright conditions — fish shade, go fine, or wait for evening.`;
-    else if(cW>14)note+=`Windy — fish the sheltered bank with terrestrials.`;
-    else if(cT<10)note+=`Cool water — nymphing will outperform dries until it warms.`;
-    else if(cT>=14)note+=`Evening could be excellent.`;
-    /* Second hatch */
-    if(second&&second.score>30&&second.id!==top?.id)note+=` Also watch for ${second.cm}.`;
-    return note;
-  },[spp,dan,cC,cW,cT,mayflyAbout,isNight]);
+    const hr=new Date().getHours();
+    const riverShort=rv.n.replace("River ","");
+
+    /* GREETING — time of day */
+    let note=hr<10?`Morning. `
+      :hr<13?`Good timing. `
+      :hr<17?`Afternoon. `
+      :`Evening session. `;
+
+    /* RIVER + BEAT CONTEXT */
+    if(rv.p&&rv.p.length>20)note+=`${riverShort}${beat?" at "+beat:""} — `;
+
+    /* HATCH BRIEFING — what's happening and what to do about it */
+    if(top&&top.score>60){
+      note+=`${top.cm} should be hatching well today. Start with ${FLYMAP[top.id]||"a matching pattern"} and work upstream to rising fish. `;
+    }else if(top&&top.score>30){
+      note+=`${top.cm} activity expected, though it may take until ${cC>50?"late morning":"the cloud builds"} to really get going. Have ${FLYMAP[top.id]||"a matching pattern"} tied on and ready. `;
+    }else if(top&&top.score>10){
+      note+=`Hatches look sparse today. Start with a search pattern — an Adams or F Fly in the film — and watch the water. When you see a rise, match what's coming off. `;
+    }else{
+      note+=`Not much hatching expected. Nymph the deeper runs with a PTN or Hare's Ear. Stay patient — it only takes one hatch to change the day. `;
+    }
+
+    /* MAYFLY CONTEXT */
+    if(mayflyAbout&&top.id!=="danica"&&dan.score>10)note+=`Mayfly are about — even a sparse hatch can switch fish on completely. Keep a Danica Emerger or Grey Wulff in your box. They tend to appear from early afternoon. `;
+
+    /* BEST APPROACH */
+    if(cC<30&&cT>=14)note+=`It's bright, so keep low, stay back from the bank, and use the longest tippet you're comfortable with. Fish the shade under overhanging trees — that's where they'll be comfortable feeding. `;
+    else if(cC>70)note+=`The cloud cover is ideal. Fish should feed confidently through the day. You can get closer to the water than on a bright day, but still tread carefully. `;
+
+    if(cW>14)note+=`The wind will make casting tricky — shorten up and punch into it. Fish the sheltered bank. On the upside, terrestrials get blown onto the water on days like this — try a Black Ant or Beetle. `;
+    else if(cW<5)note+=`Calm conditions — beautiful for dry fly, but the fish can see everything. Fine tippet and gentle presentations. `;
+
+    /* TEMPERATURE + COMFORT */
+    if(cAir>=22)note+=`It's warm out there — drink plenty of water and wear a hat. The fishing might slow in the heat of the afternoon, so make the most of the morning and evening. `;
+    else if(cAir>=17)note+=`Pleasant temperature for being on the water. `;
+    else if(cAir>=12)note+=`Layers today — it can feel cool by the water even when the forecast says mild. `;
+    else if(cAir<10)note+=`Cold one. Dress warm, keep moving between pools, and don't expect much before ${cC>50?"midday":"the sun gets on the water"}. A hot drink in the bag is worth its weight. `;
+
+    if(cAir>=18&&cC<40)note+=`Sun's strong — sunscreen and polaroids. `;
+
+    /* WATER TEMP */
+    if(cT>=16)note+=`Water temperature is up — fish will be active but may be more selective. Match the size carefully. `;
+    else if(cT<9)note+=`Water's still cold — stick to nymphs fished slow and deep. The afternoon should bring the best chance of a hatch. `;
+
+    /* SECOND HATCH */
+    if(second&&second.score>25&&second.id!==top?.id)note+=`Also watch for ${second.cm} — could be your backup if the ${top.cm} don't show. `;
+
+    /* EVENING PROSPECT */
+    if(cT>=12&&hr<16)note+=`If you can stay into the evening, do. The last hour of light often produces the best fishing. `;
+
+    return note.trim();
+  },[spp,dan,cC,cW,cT,cAir,mayflyAbout,isNight,rv,beat]);
   const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
   const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;
   const cond=useMemo(()=>condScore(cW,cP,cC,cT,hIdx,rv.q,rv.bq?.[beat]),[cW,cP,cC,cT,hIdx,rv,beat]);
@@ -1330,18 +1365,23 @@ export default function App(){
           </div>
 
           {/* TIE ON + BEST WINDOW */}
-          <div style={{display:"flex",gap:8,marginBottom:10}}>
+          {!isNight&&<div style={{display:"flex",gap:8,marginBottom:10}}>
             <div style={{flex:1,background:P.gn+"18",border:`1px solid ${P.gn}30`,borderRadius:10,padding:"14px"}}>
               <div style={{fontSize:9,color:P.gn,letterSpacing:"0.08em",fontWeight:600}}>TIE ON</div>
               <div style={{fontSize:16,fontWeight:600,color:P.tx,marginTop:4}}>{FLYMAP[topH?.id]||"Adams #16"}</div>
               <div style={{fontSize:11,color:P.gn,marginTop:3}}>{topH?.cm||"Olives"}</div>
             </div>
             <div style={{flex:1,background:P.rust+"18",border:`1px solid ${P.rust}30`,borderRadius:10,padding:"14px"}}>
-              <div style={{fontSize:9,color:P.rust,letterSpacing:"0.08em",fontWeight:600}}>BEST WINDOW</div>
-              <div style={{fontSize:16,fontWeight:600,color:P.tx,marginTop:4}}>{nowWin?.cur?.hr?nowWin.cur.hr+":00":"Afternoon"}</div>
-              <div style={{fontSize:11,color:P.rust,marginTop:3}}>{nowWin?.cur?.note?.split(".")[0]||"Peak activity"}</div>
+              <div style={{fontSize:9,color:P.rust,letterSpacing:"0.08em",fontWeight:600}}>BEST TIME TO FISH</div>
+              {(()=>{
+                const best=timeline.reduce((a,e)=>e.hi>a.hi?e:a,{hi:0,hr:12});
+                const bestEnd=timeline.filter(e=>e.hi>=best.hi-1&&e.hr>=best.hr).pop();
+                const window=best.hr===bestEnd?.hr?`Around ${best.hr}:00`:`${best.hr}:00 to ${bestEnd?.hr||best.hr+2}:00`;
+                const reason=cT>=12&&best.hr>=17?"Evening rise":cC>50&&best.hr>=11&&best.hr<=14?"Midday hatch window":best.hr>=13?"Afternoon hatch":"Late morning";
+                return<><div style={{fontSize:16,fontWeight:600,color:P.tx,marginTop:4}}>{window}</div><div style={{fontSize:11,color:P.rust,marginTop:3}}>{reason}</div></>;
+              })()}
             </div>
-          </div>
+          </div>}
 
           {/* HATCH OF THE DAY */}
           {!isNight&&topH&&topH.score>5&&<div style={{background:P.c1,borderRadius:10,border:`1px solid ${P.bd}`,padding:"14px",marginBottom:10}}>
