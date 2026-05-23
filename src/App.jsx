@@ -739,57 +739,55 @@ export default function App(){
     const top=spp[0];const second=spp[1];
     const hr=new Date().getHours();
     const riverShort=rv.n.replace("River ","");
+    const isMayflySeason=DOY>=135&&DOY<=175;
+    const mayflyPeak=DOY>=140&&DOY<=165;
+    /* Mayfly hatch strength: combine water temp, cloud, wind, pressure, season timing */
+    const mayflyStr=isMayflySeason&&dan?Math.round(Math.min(10,dan.score/10*(cT>=13?1.2:cT>=11?1:0.6)*(cC>50?1.2:cC>30?1:0.7)*(cW<12?1:0.7)*(cP<1015?1.1:1))):0;
 
-    /* GREETING — time of day */
-    let note=hr<10?`Morning. `
-      :hr<13?`Good timing. `
-      :hr<17?`Afternoon. `
-      :`Evening session. `;
+    let note=hr<10?"Morning. ":hr<13?"Good timing. ":hr<17?"Afternoon. ":"Evening session. ";
+    note+=`${riverShort}${beat?" at "+beat:""}. `;
 
-    /* RIVER + BEAT CONTEXT */
-    if(rv.p&&rv.p.length>20)note+=`${riverShort}${beat?" at "+beat:""} — `;
+    /* === MAYFLY SEASON === */
+    if(isMayflySeason&&dan&&dan.score>5){
+      if(mayflyPeak)note+=`It's mayfly time. The biggest event of the chalkstream year. `;
+      else note+=`Early mayfly season. The first duns are starting to show. `;
 
-    /* HATCH BRIEFING — what's happening and what to do about it */
-    if(top&&top.score>60){
-      note+=`${top.cm} should be hatching well today. Start with ${FLYMAP[top.id]||"a matching pattern"} and work upstream to rising fish. `;
-    }else if(top&&top.score>30){
-      note+=`${top.cm} activity expected, though it may take until ${cC>50?"late morning":"the cloud builds"} to really get going. Have ${FLYMAP[top.id]||"a matching pattern"} tied on and ready. `;
-    }else if(top&&top.score>10){
-      note+=`Hatches look sparse today. Start with a search pattern — an Adams or F Fly in the film — and watch the water. When you see a rise, match what's coming off. `;
+      /* Time-specific mayfly tactics */
+      if(hr<11)note+=`Mayfly nymphs will be stirring in the silt. Fish a weighted mayfly nymph slow and deep through the morning. The duns usually start appearing after midday${cC>50?", maybe earlier with this cloud":""}. `;
+      else if(hr<14)note+=`Watch the water carefully now. The first duns should start appearing. Trout often take emergers in the film before they commit to duns off the top. Start with a Danica Emerger or Klinkhamer. When you see confident splashy rises, switch to a Grey Wulff or Shadow Mayfly. `;
+      else if(hr<17)note+=`This is prime time. ${mayflyStr>=7?"The hatch should be in full swing.":mayflyStr>=4?"The hatch is building.":"A few mayfly about."} Fish are looking up and abandoning their usual caution. Emergers and cripples often outfish the upright duns. Match the size, get a good drag-free drift, and hold your nerve on the take. `;
+      else note+=`Evening spinner fall territory. Female mayfly return to lay eggs then die spent on the surface, wings splayed in that classic crucifix posture. Fish gorge on them. Try a Spent Gnat or Sherry Spinner fished dead in the film. Some of the biggest trout of the year come to spent mayfly at dusk. `;
+
+      /* Hatch strength prediction */
+      if(mayflyStr>=8)note+=`Conditions are ideal for a strong hatch today. Overcast, mild water, low wind. Should be a memorable day. `;
+      else if(mayflyStr>=5)note+=`Decent conditions for the hatch. `;
+      else if(mayflyStr<4&&mayflyStr>0)note+=`Conditions aren't ideal but mayfly still come off in all weathers. Stay ready. `;
     }else{
-      note+=`Not much hatching expected. Nymph the deeper runs with a PTN or Hare's Ear. Stay patient — it only takes one hatch to change the day. `;
+      /* === NON-MAYFLY SEASON === */
+      if(top&&top.score>60)note+=`${top.cm} should be hatching well. Start with ${FLYMAP[top.id]||"a matching pattern"} and work upstream to rising fish. `;
+      else if(top&&top.score>30)note+=`${top.cm} activity expected${cC>50?"":", once the cloud builds"}. Have ${FLYMAP[top.id]||"a matching pattern"} ready. `;
+      else if(top&&top.score>10)note+=`Hatches look sparse. Start with a search pattern and watch the water. `;
+      else note+=`Not much hatching expected. Nymph the deeper runs. Stay patient. `;
+
+      if(cC<30&&cT>=14)note+=`Bright conditions. Keep low, stay back, fine tippet. Fish the shade. `;
+      else if(cC>70)note+=`Cloud cover is ideal. Fish should feed confidently. `;
+      if(cW>14)note+=`Wind making presentation tough. Shorten up, try a Black Ant or Beetle on the lee bank. `;
     }
 
-    /* MAYFLY CONTEXT */
-    if(mayflyAbout&&top.id!=="danica"&&dan.score>10)note+=`Mayfly are about — even a sparse hatch can switch fish on completely. Keep a Danica Emerger or Grey Wulff in your box. They tend to appear from early afternoon. `;
-
-    /* BEST APPROACH */
-    if(cC<30&&cT>=14)note+=`It's bright, so keep low, stay back from the bank, and use the longest tippet you're comfortable with. Fish the shade under overhanging trees — that's where they'll be comfortable feeding. `;
-    else if(cC>70)note+=`The cloud cover is ideal. Fish should feed confidently through the day. You can get closer to the water than on a bright day, but still tread carefully. `;
-
-    if(cW>14)note+=`The wind will make casting tricky — shorten up and punch into it. Fish the sheltered bank. On the upside, terrestrials get blown onto the water on days like this — try a Black Ant or Beetle. `;
-    else if(cW<5)note+=`Calm conditions — beautiful for dry fly, but the fish can see everything. Fine tippet and gentle presentations. `;
-
-    /* TEMPERATURE + COMFORT */
-    if(cAir>=22)note+=`It's warm out there — drink plenty of water and wear a hat. The fishing might slow in the heat of the afternoon, so make the most of the morning and evening. `;
-    else if(cAir>=17)note+=`Pleasant temperature for being on the water. `;
-    else if(cAir>=12)note+=`Layers today — it can feel cool by the water even when the forecast says mild. `;
-    else if(cAir<10)note+=`Cold one. Dress warm, keep moving between pools, and don't expect much before ${cC>50?"midday":"the sun gets on the water"}. A hot drink in the bag is worth its weight. `;
-
-    if(cAir>=18&&cC<40)note+=`Sun's strong — sunscreen and polaroids. `;
-
-    /* WATER TEMP */
-    if(cT>=16)note+=`Water temperature is up — fish will be active but may be more selective. Match the size carefully. `;
-    else if(cT<9)note+=`Water's still cold — stick to nymphs fished slow and deep. The afternoon should bring the best chance of a hatch. `;
+    /* WEATHER + COMFORT — always relevant */
+    if(cAir>=24)note+=`Very warm. Drink plenty of water, wear a hat, and take breaks in the shade. Fishing may slow in the heat. `;
+    else if(cAir>=20)note+=`Warm day. Stay hydrated and wear sunscreen. `;
+    else if(cAir<8)note+=`Cold one. Dress warm and keep moving between pools. Hot drink in the bag. `;
+    if(cAir>=18&&cC<40)note+=`Sunscreen and polaroids essential. `;
 
     /* SECOND HATCH */
-    if(second&&second.score>25&&second.id!==top?.id)note+=`Also watch for ${second.cm} — could be your backup if the ${top.cm} don't show. `;
+    if(!isMayflySeason&&second&&second.score>25)note+=`Also watch for ${second.cm}. `;
 
-    /* EVENING PROSPECT */
-    if(cT>=12&&hr<16)note+=`If you can stay into the evening, do. The last hour of light often produces the best fishing. `;
+    /* EVENING */
+    if(cT>=12&&hr<16)note+=`If you can stay for the evening, do. The last hour of light often produces the best fishing of the day. `;
 
     return note.trim();
-  },[spp,dan,cC,cW,cT,cAir,mayflyAbout,isNight,rv,beat]);
+  },[spp,dan,cC,cW,cT,cP,cAir,mayflyAbout,isNight,rv,beat]);
   const actIds=spp.filter(s=>s.score>10).map(s=>s.id);
   const hIdx=spp.reduce((s,h)=>s+h.score*(h.t===1?3:h.t===2?1.5:0.8),0)/spp.reduce((s,h)=>s+100*(h.t===1?3:h.t===2?1.5:0.8),0)*100;
   const cond=useMemo(()=>condScore(cW,cP,cC,cT,hIdx,rv.q,rv.bq?.[beat]),[cW,cP,cC,cT,hIdx,rv,beat]);
@@ -1394,6 +1392,27 @@ export default function App(){
               <div style={{fontSize:28,fontWeight:700,color:hC(topH.score)}}>{Math.round(topH.score/10)}<span style={{fontSize:12,color:P.txD}}>/10</span></div>
             </div>
             {spp.filter(s=>s.score>15&&s.id!==topH.id).length>0&&<div style={{marginTop:8,fontSize:11,color:P.txM}}>Also active: {spp.filter(s=>s.score>15&&s.id!==topH.id).slice(0,3).map(s=>s.cm).join(", ")}</div>}
+          </div>}
+
+          {/* MAYFLY STRENGTH — during season only */}
+          {DOY>=135&&DOY<=175&&dan&&dan.score>5&&<div style={{background:"#C36A3D12",borderRadius:10,border:`1px solid #C36A3D30`,padding:"14px",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:8}}>
+              <div style={{fontSize:9,fontWeight:600,letterSpacing:"0.1em",color:P.rust}}>MAYFLY SEASON</div>
+              <div style={{fontSize:9,color:P.txD}}>{DOY<145?"Building":DOY<160?"Peak":DOY<170?"Tailing":"Final days"}</div>
+            </div>
+            {/* Strength bar */}
+            {(()=>{const str=Math.round(Math.min(10,dan.score/10*(cT>=13?1.2:cT>=11?1:0.6)*(cC>50?1.2:cC>30?1:0.7)*(cW<12?1:0.7)));return<div>
+              <div style={{display:"flex",gap:2,marginBottom:6}}>{Array.from({length:10}).map((_,i)=><div key={i} style={{flex:1,height:6,borderRadius:3,background:i<str?P.rust:P.bd}}/>)}</div>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:10}}>
+                <span style={{color:P.rust,fontWeight:600}}>Hatch strength: {str}/10</span>
+                <span style={{color:P.txD}}>{str>=8?"Exceptional":str>=6?"Strong":str>=4?"Moderate":"Light"}</span>
+              </div>
+              <div style={{fontSize:10,color:P.txM,marginTop:6,lineHeight:1.6}}>
+                {str>=7?"Conditions are ideal. Overcast, warm water, low wind. Expect a memorable hatch from early afternoon with spinner falls into the evening."
+                :str>=4?`Decent conditions. ${cT>=13?"Water temp is good.":"Water could be warmer."} ${cC>50?"Cloud cover will help.":"Brighter conditions may push the hatch later."} Duns from 1-2pm, spinners from 7pm.`
+                :"Conditions aren't ideal but mayfly still emerge in all weathers. They tend to come off in shorter bursts. Stay ready and watch for the first rise."}
+              </div>
+            </div>})()}
           </div>}
 
           {/* HATCH OF THE WEEK */}
