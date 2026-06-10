@@ -124,26 +124,35 @@ export default function App(){
     const pwHash=await hashPw(authPw);const email=authEmail.trim().toLowerCase();
     const existing=await sbSelect("signups",`email=eq.${encodeURIComponent(email)}&select=email`);
     if(existing&&existing.length>0){setAuthErr("Email already registered. Try signing in.");return}
-    const ok=await sbInsert("signups",{name:authName.trim(),email,pw_hash:pwHash,newsletter:optNewsletter,beta_tester:optBeta,confirmed:false,beta_code:BETA_CODE});
-    if(!ok){setAuthErr("Signup failed — check your connection and try again.");return}
-    const code=String(100000+Math.floor(((email.length*7+authName.length*13)%900000))).slice(0,6);
+    const code=String(100000+Math.floor(((email.length*7+authName.trim().length*13)%900000))).slice(0,6);
     const u={name:authName.trim(),email,pwHash,joined:new Date().toISOString(),newsletter:optNewsletter,betaTester:optBeta,confirmed:false,confirmCode:code};
     setUser(u);setUserState(u);setAuthStep("confirm");setAuthErr("");
+    sbInsert("signups",{name:authName.trim(),email,pw_hash:pwHash,newsletter:optNewsletter,beta_tester:optBeta,confirmed:false,beta_code:BETA_CODE});
   };
   const signIn=async()=>{
     if(!authEmail.trim()||!authPw){setAuthErr("Email and password required.");return}
     setAuthErr("Signing in...");
     const email=authEmail.trim().toLowerCase();const pwHash=await hashPw(authPw);
     const rows=await sbSelect("signups",`email=eq.${encodeURIComponent(email)}&select=*`);
-    if(!rows||rows.length===0){setAuthErr("No account found. Create one first.");return}
-    const row=rows[0];
-    if(row.pw_hash!==pwHash){setAuthErr("Wrong password.");return}
-    const u={name:row.name,email:row.email,pwHash:row.pw_hash,joined:row.created_at,newsletter:row.newsletter,betaTester:row.beta_tester,confirmed:row.confirmed};
-    setUser(u);setUserState(u);
-    if(!row.confirmed){setAuthStep("confirm");u.confirmCode=String(100000+Math.floor(((email.length*7+row.name.length*13)%900000))).slice(0,6);setUser(u);setUserState(u)}
-    setAuthErr("");
-    const remoteSessions=await sbSelect("sessions",`user_email=eq.${encodeURIComponent(email)}&order=created_at.desc&limit=50`);
-    if(remoteSessions&&remoteSessions.length>0){const mapped=remoteSessions.map(s=>({id:s.id,d:new Date(s.created_at).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(s.created_at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),river:s.river,beat:s.beat,fish:s.fish||0,big:s.biggest,fly:s.best_fly,notes:s.notes,rating:s.rating,dur:s.duration||"",user:s.user_name,score:s.score,topHatch:s.top_hatch}));setSessions(mapped);saveSessions(mapped)}
+    if(rows&&rows.length>0){
+      const row=rows[0];
+      if(row.pw_hash!==pwHash){setAuthErr("Wrong password.");return}
+      const u={name:row.name,email:row.email,pwHash:row.pw_hash,joined:row.created_at,newsletter:row.newsletter,betaTester:row.beta_tester,confirmed:row.confirmed};
+      setUser(u);setUserState(u);
+      if(!row.confirmed){setAuthStep("confirm");u.confirmCode=String(100000+Math.floor(((email.length*7+row.name.length*13)%900000))).slice(0,6);setUser(u);setUserState(u)}
+      setAuthErr("");
+      const remoteSessions=await sbSelect("sessions",`user_email=eq.${encodeURIComponent(email)}&order=created_at.desc&limit=50`);
+      if(remoteSessions&&remoteSessions.length>0){const mapped=remoteSessions.map(s=>({id:s.id,d:new Date(s.created_at).toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"}),time:new Date(s.created_at).toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"}),river:s.river,beat:s.beat,fish:s.fish||0,big:s.biggest,fly:s.best_fly,notes:s.notes,rating:s.rating,dur:s.duration||"",user:s.user_name,score:s.score,topHatch:s.top_hatch}));setSessions(mapped);saveSessions(mapped)}
+    }else{
+      /* Supabase unreachable or account not found — check localStorage cache */
+      const cached=getUser();
+      if(cached&&cached.email===email&&cached.pwHash===pwHash){
+        setUserState(cached);setAuthErr("");
+        if(!cached.confirmed)setAuthStep("confirm");
+      }else{
+        setAuthErr("No account found. Create one first, or check your connection.");
+      }
+    }
   };
   const confirmAccount=async()=>{
     if(confirmCode===user?.confirmCode||confirmCode==="000000"){
