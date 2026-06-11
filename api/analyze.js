@@ -14,7 +14,9 @@ export default async function handler(req, res) {
   if (!key) return res.status(500).json({ error: 'API key not configured' });
 
   try {
-    const { image, mode } = req.body; // mode: 'fish' | 'fly' | 'summary'
+    const body = req.body || {};
+    const { image, mode } = body;
+    if (!mode) return res.status(400).json({ error: 'No mode specified' });
     if (!image && mode !== 'summary') return res.status(400).json({ error: 'No image provided' });
 
     let systemPrompt, userContent;
@@ -60,10 +62,10 @@ If the image is unusable, still return the JSON with quality "unusable" and null
 UK chalkstream context. Common species: Large Dark Olive (Baetis rhodani), Medium Olive (Baetis vernus/tenax), Blue-winged Olive (Serratella ignita), Iron Blue (Baetis pumilus/niger), Pale Watery (Baetis fuscatus), Mayfly (Ephemera danica), Grannom (Brachycentrus subnubilus), various sedges (Trichoptera). Be honest about uncertainty — insect ID from photos is genuinely difficult.`;
       userContent = [
         { type: "image", source: { type: "base64", media_type: "image/jpeg", data: image } },
-        { type: "text", text: `Identify this insect for fly fishing purposes. What is it, what stage, and what artificial fly should I use to match it? Give me a single 'tie on now' recommendation.${req.body.observations ? '\n\nAngler observations: ' + req.body.observations : ''}` }
+        { type: "text", text: `Identify this insect for fly fishing purposes. What is it, what stage, and what artificial fly should I use to match it? Give me a single 'tie on now' recommendation.${body.observations ? '\n\nAngler observations: ' + body.observations : ''}` }
       ];
     } else if (mode === 'flybox') {
-      const conditions = req.body.conditions || 'Unknown conditions';
+      const conditions = body.conditions || 'Unknown conditions';
       systemPrompt = `You are an expert UK chalkstream fishing guide looking at an angler's fly box. Your job is to identify the flies you can see, then recommend which ones to use RIGHT NOW based on current conditions. Respond in ONLY valid JSON (no markdown, no backticks):
 {
   "quality": "good" | "poor" | "unusable",
@@ -84,7 +86,7 @@ Be specific about which flies you can actually see. Don't guess patterns you can
       ];
     } else if (mode === 'summary') {
       systemPrompt = `You are a concise, knowledgeable fishing guide writing a brief session summary. Write in a warm, understated British tone. 2-3 sentences maximum. Mention highlights, patterns noticed, and one piece of advice for next time.`;
-      userContent = [{ type: "text", text: req.body.sessionData }];
+      userContent = [{ type: "text", text: body.sessionData }];
     } else if (mode === 'describe') {
       systemPrompt = `You are a fly fishing companion describing what you see in a photo. This could be a fish, a river scene, wildlife, a handwritten fishing diary entry, flies on the water, tackle, or anything the angler photographed during their session. Respond in ONLY valid JSON (no markdown, no backticks):
 {
@@ -140,7 +142,11 @@ Think like a guide walking a client to a pool for the first time. Be specific ab
     });
 
     const data = await response.json();
-    if (!response.ok) return res.status(response.status).json({ error: data.error?.message || 'API error' });
+    if (!response.ok) {
+      const msg = data.error?.message || JSON.stringify(data.error) || 'API error';
+      console.error('Anthropic API error:', response.status, msg);
+      return res.status(response.status).json({ error: msg, status: response.status });
+    }
 
     const text = data.content?.map(b => b.text || '').join('') || '';
 
@@ -158,6 +164,7 @@ Think like a guide walking a client to a pool for the first time. Be specific ab
     }
 
   } catch (err) {
+    console.error('analyze handler error:', err);
     return res.status(500).json({ error: err.message || 'Server error' });
   }
 }
