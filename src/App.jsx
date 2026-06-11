@@ -957,6 +957,7 @@ export default function App(){
         posts={posts} loadingPosts={loadingPosts}
         onCreatePost={createPost} onDeletePost={deletePost}
         currentRv={rv} cT={cT} cAir={cAir} cW={cW} cHumidity={cHumidity}
+        sessionSnaps={sessionSnaps}
       />}
 
       <div style={{padding:tab==="map"||tab==="feed"?0:14}}>
