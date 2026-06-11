@@ -493,12 +493,19 @@ export default function App(){
     setCustomRv({id:"__custom",n:name||"My Location",lat,lng,territory,q:5,b:[]});
   };
 
+  function parsePostImages(p){
+    if(p.images){try{const a=JSON.parse(p.images);if(Array.isArray(a))return{...p,images:a}}catch{}}
+    return{...p,images:p.image?[p.image]:[]};
+  }
+
   const loadPosts=useCallback(async()=>{
     setLoadingPosts(true);
     try{
       const remote=await sbSelect("posts","is_public=eq.true&order=created_at.desc&limit=60");
-      if(remote&&remote.length>0){setPosts(remote);cachePosts(remote)}
-      else{const local=getCachedPosts();if(local.length>0)setPosts(local)}
+      if(remote&&remote.length>0){
+        const parsed=remote.map(parsePostImages);
+        setPosts(parsed);cachePosts(parsed);
+      }else{const local=getCachedPosts();if(local.length>0)setPosts(local)}
     }catch{const local=getCachedPosts();if(local.length>0)setPosts(local)}
     setLoadingPosts(false);
   },[]);
@@ -506,7 +513,8 @@ export default function App(){
   const createPost=async(post)=>{
     const newPost={...post,created_at:post.created_at||new Date().toISOString()};
     setPosts(p=>{const np=[newPost,...p];cachePosts(np);return np});
-    sbInsert("posts",newPost);
+    const sbPost={...newPost,images:newPost.images?.length?JSON.stringify(newPost.images):null};
+    sbInsert("posts",sbPost);
   };
 
   const deletePost=async(postId)=>{
@@ -957,7 +965,7 @@ export default function App(){
         posts={posts} loadingPosts={loadingPosts}
         onCreatePost={createPost} onDeletePost={deletePost}
         currentRv={rv} cT={cT} cAir={cAir} cW={cW} cHumidity={cHumidity}
-        sessionSnaps={sessionSnaps}
+        sessionSnaps={sessionSnaps} sessions={sessions}
       />}
 
       <div style={{padding:tab==="map"||tab==="feed"?0:14}}>
