@@ -231,7 +231,7 @@ export default function FeedTab({P,user,posts,loadingPosts,onCreatePost,onDelete
                     <div style={{display:"flex",alignItems:"center",gap:9}}>
                       <div style={{width:34,height:34,borderRadius:17,background:"rgba(122,158,126,0.4)",border:"2px solid rgba(255,255,255,0.4)",backdropFilter:"blur(6px)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:700,color:"#fff",flexShrink:0}}>{(post.user_name||"A")[0].toUpperCase()}</div>
                       <div>
-                        <div style={{fontSize:13,fontWeight:700,color:"#fff",textShadow:"0 1px 6px rgba(0,0,0,0.6)"}}>{post.user_name||"Anon"}</div>
+                        <div style={{fontSize:13,fontWeight:700,color:"#fff",textShadow:"0 1px 6px rgba(0,0,0,0.6)"}}>{post.user_name||"Anon"}{post.username&&<span style={{fontWeight:400,fontSize:11,opacity:0.75}}> @{post.username}</span>}</div>
                         <div style={{fontSize:10,color:"rgba(255,255,255,0.7)"}}>{post.river_name||"Unknown water"}{post.beat?" / "+post.beat:""} · {ago(post.created_at)}</div>
                       </div>
                     </div>
@@ -254,7 +254,7 @@ export default function FeedTab({P,user,posts,loadingPosts,onCreatePost,onDelete
                 <div style={{display:"flex",alignItems:"center",gap:10}}>
                   <div style={{width:38,height:38,borderRadius:19,background:P.gn+"25",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:700,color:P.gn,flexShrink:0}}>{(post.user_name||"A")[0].toUpperCase()}</div>
                   <div>
-                    <div style={{fontSize:13,fontWeight:700,color:P.tx}}>{post.user_name||"Anon"}</div>
+                    <div style={{fontSize:13,fontWeight:700,color:P.tx}}>{post.user_name||"Anon"}{post.username&&<span style={{fontWeight:400,fontSize:11,color:P.gn}}> @{post.username}</span>}</div>
                     <div style={{fontSize:10,color:P.txD}}>{post.river_name||"Unknown water"}{post.beat?" / "+post.beat:""} · {ago(post.created_at)}</div>
                   </div>
                 </div>
@@ -272,6 +272,13 @@ export default function FeedTab({P,user,posts,loadingPosts,onCreatePost,onDelete
                 <button onClick={()=>openComments(post.id)} style={{background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:5,color:P.txD,fontFamily:"inherit",padding:0}}>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
                   {commentCount>0&&<span style={{fontSize:12,color:P.txM,fontWeight:600}}>{commentCount}</span>}
+                </button>
+                <button onClick={()=>{
+                  const txt=[post.species?`${post.species}${post.weight?` - ${post.weight}lb`:""}.`:"",post.caption||"",post.river_name?`\n${post.river_name}${post.beat?` - ${post.beat}`:""}`:"",(post.instagram_handle?`\n@${post.instagram_handle} on `:`\nPosted on `)+"Ephemera"].filter(Boolean).join(" ").trim();
+                  if(navigator.share){navigator.share({title:"Ephemera",text:txt,url:"https://hatch-app-tau.vercel.app"}).catch(()=>{})}
+                  else if(navigator.clipboard){navigator.clipboard.writeText(txt).then(()=>alert("Caption copied")).catch(()=>{})}
+                }} style={{background:"none",border:"none",cursor:"pointer",color:P.txD,fontFamily:"inherit",padding:0,display:"flex",alignItems:"center"}}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
                 </button>
               </div>
               <button onClick={()=>toggleSave(post.id)} style={{background:"none",border:"none",cursor:"pointer",color:isSaved?P.gn:P.txD,fontFamily:"inherit",padding:0}}>

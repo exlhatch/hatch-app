@@ -110,11 +110,14 @@ export default function App(){
   const[user,setUserState]=useState(()=>getUser());
   const[authStep,setAuthStep]=useState("beta");
   const[authName,setAuthName]=useState("");const[authEmail,setAuthEmail]=useState("");
+  const[authUsername,setAuthUsername]=useState("");
   const[authPw,setAuthPw]=useState("");const[authPw2,setAuthPw2]=useState("");
   const[betaCode,setBetaCode]=useState("");const[betaErr,setBetaErr]=useState("");
   const[authErr,setAuthErr]=useState("");
   const[optNewsletter,setOptNewsletter]=useState(true);const[optBeta,setOptBeta]=useState(true);
   const[confirmCode,setConfirmCode]=useState("");const[confirmErr,setConfirmErr]=useState("");
+  const[showProfile,setShowProfile]=useState(false);
+  const[editIg,setEditIg]=useState("");const[igSaved,setIgSaved]=useState(false);
   const[resetSent,setResetSent]=useState(false);
   const[showFeedback,setShowFeedback]=useState(false);
   const[fbRating,setFbRating]=useState(0);const[fbBest,setFbBest]=useState("");
@@ -122,6 +125,8 @@ export default function App(){
 
   const register=async()=>{
     if(!authName.trim()||!authEmail.trim()){setAuthErr("Name and email required.");return}
+    const uname=authUsername.trim().toLowerCase().replace(/[^a-z0-9_]/g,"");
+    if(uname.length<3||uname.length>20){setAuthErr("Username must be 3-20 characters (letters, numbers, underscore).");return}
     if(authPw.length<6){setAuthErr("Password must be 6+ characters.");return}
     if(authPw!==authPw2){setAuthErr("Passwords don't match.");return}
     if(!authEmail.includes("@")){setAuthErr("Enter a valid email.");return}
@@ -129,10 +134,13 @@ export default function App(){
     const pwHash=await hashPw(authPw);const email=authEmail.trim().toLowerCase();
     const existing=await sbSelect("signups",`email=eq.${encodeURIComponent(email)}&select=email`);
     if(existing&&existing.length>0){setAuthErr("Email already registered. Try signing in.");return}
+    const takenUn=await sbSelect("signups",`username=eq.${encodeURIComponent(uname)}&select=username`);
+    if(takenUn&&takenUn.length>0){setAuthErr(`@${uname} is already taken. Try another.`);return}
     const code=String(100000+Math.floor(((email.length*7+authName.trim().length*13)%900000))).slice(0,6);
-    const u={name:authName.trim(),email,pwHash,joined:new Date().toISOString(),newsletter:optNewsletter,betaTester:optBeta,confirmed:false,confirmCode:code};
+    const u={name:authName.trim(),email,username:uname,pwHash,joined:new Date().toISOString(),newsletter:optNewsletter,betaTester:optBeta,confirmed:false,confirmCode:code};
     setUser(u);setUserState(u);setAuthStep("confirm");setAuthErr("");
-    sbInsert("signups",{name:authName.trim(),email,pw_hash:pwHash,newsletter:optNewsletter,beta_tester:optBeta,confirmed:false,beta_code:BETA_CODE});
+    sbInsert("signups",{name:authName.trim(),email,username:uname,pw_hash:pwHash,newsletter:optNewsletter,beta_tester:optBeta,confirmed:false,beta_code:BETA_CODE});
+    fetch("/api/notify",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:authName.trim(),email,username:uname,newsletter:optNewsletter,betaTester:optBeta})}).catch(()=>{});
   };
   const signIn=async()=>{
     if(!authEmail.trim()||!authPw){setAuthErr("Email and password required.");return}
@@ -142,7 +150,7 @@ export default function App(){
     if(rows&&rows.length>0){
       const row=rows[0];
       if(row.pw_hash!==pwHash){setAuthErr("Wrong password.");return}
-      const u={name:row.name,email:row.email,pwHash:row.pw_hash,joined:row.created_at,newsletter:row.newsletter,betaTester:row.beta_tester,confirmed:row.confirmed};
+      const u={name:row.name,email:row.email,username:row.username||"",instagramHandle:row.instagram_handle||"",pwHash:row.pw_hash,joined:row.created_at,newsletter:row.newsletter,betaTester:row.beta_tester,confirmed:row.confirmed};
       setUser(u);setUserState(u);
       if(!row.confirmed){setAuthStep("confirm");u.confirmCode=String(100000+Math.floor(((email.length*7+row.name.length*13)%900000))).slice(0,6);setUser(u);setUserState(u)}
       setAuthErr("");
@@ -179,6 +187,13 @@ export default function App(){
     if(!ok){setAuthErr("Reset failed. Try again or email ephemeraguideapp@gmail.com");return}
     setResetSent(true);setAuthErr("");
   };
+  const saveIgHandle=async()=>{
+    const handle=editIg.trim().replace(/^@/,"").toLowerCase().replace(/[^a-z0-9._]/g,"");
+    const u={...user,instagramHandle:handle};setUser(u);setUserState(u);
+    await sbUpdate("signups",`email=eq.${encodeURIComponent(user.email)}`,{instagram_handle:handle});
+    setIgSaved(true);setTimeout(()=>setIgSaved(false),2500);
+  };
+
   const submitFeedback=async()=>{
     await sbInsert("feedback",{user_email:user?.email,user_name:user?.name,rating:fbRating,best:fbBest,worse:fbWorse,feature:fbFeature});
     setFbSubmitted(true);
@@ -511,7 +526,7 @@ export default function App(){
   },[]);
 
   const createPost=async(post)=>{
-    const newPost={...post,created_at:post.created_at||new Date().toISOString()};
+    const newPost={...post,username:user?.username||"",instagram_handle:user?.instagramHandle||"",created_at:post.created_at||new Date().toISOString()};
     setPosts(p=>{const np=[newPost,...p];cachePosts(np);return np});
     const sbPost={...newPost,images:newPost.images?.length?JSON.stringify(newPost.images):null};
     sbInsert("posts",sbPost);
@@ -795,6 +810,14 @@ export default function App(){
         <div style={{fontSize:9,fontWeight:700,letterSpacing:"0.12em",color:D.txD,marginBottom:12}}>CREATE YOUR ACCOUNT</div>
         <div style={{display:"grid",gap:10}}>
           <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>FULL NAME</div><input value={authName} onChange={e=>{setAuthName(e.target.value);setAuthErr("")}} placeholder="Your name" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
+          <div>
+            <div style={{fontSize:8,color:D.txD,marginBottom:4}}>USERNAME</div>
+            <div style={{display:"flex",alignItems:"center",background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",gap:2}}>
+              <span style={{color:D.txD,fontSize:14}}>@</span>
+              <input value={authUsername} onChange={e=>{setAuthUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g,""));setAuthErr("")}} placeholder="yourhandle" maxLength={20} style={{flex:1,background:"none",border:"none",color:D.tx,fontSize:14,fontFamily:"inherit"}}/>
+            </div>
+            <div style={{fontSize:9,color:D.txD,marginTop:3}}>3-20 characters. Letters, numbers, underscore.</div>
+          </div>
           <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>EMAIL</div><input value={authEmail} onChange={e=>{setAuthEmail(e.target.value);setAuthErr("")}} placeholder="you@example.com" type="email" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
           <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>PASSWORD</div><input value={authPw} onChange={e=>{setAuthPw(e.target.value);setAuthErr("")}} placeholder="6+ characters" type="password" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
           <div><div style={{fontSize:8,color:D.txD,marginBottom:4}}>CONFIRM PASSWORD</div><input value={authPw2} onChange={e=>{setAuthPw2(e.target.value);setAuthErr("")}} placeholder="Confirm" type="password" style={{background:D.c2,border:`1px solid ${D.bd}`,borderRadius:6,padding:"10px 12px",color:D.tx,fontSize:14,fontFamily:"inherit",width:"100%"}}/></div>
@@ -840,9 +863,35 @@ export default function App(){
           <div style={{display:"flex",alignItems:"center",gap:8}}><Logo s={28}/><Wordmark w={100} dark={!light}/></div>
           <div style={{display:"flex",alignItems:"center",gap:6}}>
             <button onClick={()=>setLight(!light)} style={{background:"none",border:`1px solid ${P.bd}`,borderRadius:6,padding:"4px 8px",color:P.txD,fontSize:9,cursor:"pointer",fontFamily:"inherit"}}>{light?"◐":"☀"}</button>
-            <div onClick={logout} style={{width:28,height:28,borderRadius:14,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:P.txM,fontWeight:600,cursor:"pointer",border:`1px solid ${P.bd}`}}>{user.name[0]}</div>
+            <div onClick={()=>{setShowProfile(p=>!p);setEditIg(user.instagramHandle||"");setIgSaved(false)}} style={{width:28,height:28,borderRadius:14,background:P.c2,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,color:P.txM,fontWeight:600,cursor:"pointer",border:`1px solid ${P.bd}`}}>{user.name[0]}</div>
           </div>
         </div>
+
+        {/* PROFILE DROPDOWN */}
+        {showProfile&&(
+          <div style={{background:P.c2,borderRadius:10,border:`1px solid ${P.bd}`,padding:"14px 14px 12px",marginBottom:10}}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:12}}>
+              <div>
+                <div style={{fontSize:14,fontWeight:700,color:P.tx}}>{user.name}</div>
+                {user.username&&<div style={{fontSize:11,color:P.gn,marginTop:1}}>@{user.username}</div>}
+                <div style={{fontSize:10,color:P.txD,marginTop:2}}>{user.email}</div>
+              </div>
+              <button onClick={()=>setShowProfile(false)} style={{background:"none",border:"none",color:P.txD,fontSize:14,cursor:"pointer",padding:"2px 4px"}}>✕</button>
+            </div>
+            <div style={{marginBottom:10}}>
+              <div style={{fontSize:8,color:P.txD,marginBottom:4,fontWeight:600,letterSpacing:"0.1em"}}>INSTAGRAM HANDLE</div>
+              <div style={{display:"flex",gap:6}}>
+                <div style={{flex:1,display:"flex",alignItems:"center",background:P.bg,border:`1px solid ${P.bd}`,borderRadius:6,padding:"8px 10px",gap:4}}>
+                  <span style={{color:P.txD,fontSize:13}}>@</span>
+                  <input value={editIg} onChange={e=>setEditIg(e.target.value.replace(/^@/,"").replace(/\s/g,""))} placeholder="yourhandle" style={{flex:1,background:"none",border:"none",color:P.tx,fontSize:13,fontFamily:"inherit"}}/>
+                </div>
+                <button onClick={saveIgHandle} style={{background:igSaved?P.gn:P.rust,border:"none",borderRadius:6,padding:"8px 14px",color:"#fff",fontSize:11,fontWeight:700,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>{igSaved?"Saved":"Save"}</button>
+              </div>
+              {user.instagramHandle&&<div style={{fontSize:9,color:P.txD,marginTop:4}}>Links to instagram.com/{user.instagramHandle}</div>}
+            </div>
+            <button onClick={()=>{setShowProfile(false);logout()}} style={{width:"100%",padding:"8px",borderRadius:6,border:`1px solid ${P.bd}`,background:"none",color:P.txD,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>Sign out</button>
+          </div>
+        )}
 
         {/* RIVER SEARCH + NEAR ME */}
         <div style={{display:"flex",gap:6}}>
