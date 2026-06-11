@@ -1,6 +1,6 @@
 import {useState,useMemo,useEffect,useCallback} from "react";
 import {D,L} from "./lib/theme.js";
-import {SB_URL,SB_KEY,sbInsert,sbSelect,sbUpdate} from "./lib/supabase.js";
+import {SB_URL,SB_KEY,sbInsert,sbSelect,sbUpdate,sbDelete} from "./lib/supabase.js";
 import {fetchWx,fetchEA} from "./lib/api.js";
 import {DOY,HOUR,isNight,simT,scClr,scLb,hC,pred,hInt,hatchesAtHr,condScore,danSt,whatChanged,buildTimeline,nowWindow,buildAntic,genLR,buildRig,fmtDur} from "./lib/scoring.js";
 import {getHatches,FLYMAP,FLYCONF,CC} from "./data/hatches.js";
@@ -14,6 +14,8 @@ import HatchesTab from "./components/Hatches/HatchesTab.jsx";
 import FlyBoxTab from "./components/FlyBox/FlyBoxTab.jsx";
 import LogTab from "./components/Log/LogTab.jsx";
 import TipsTab from "./components/Tips/TipsTab.jsx";
+import MapHome from "./components/Map/MapHome.jsx";
+import FeedTab from "./components/Feed/FeedTab.jsx";
 
 /* ── REGISTER SERVICE WORKER ── */
 if(typeof window!=="undefined"&&"serviceWorker"in navigator){
@@ -35,6 +37,9 @@ function getPrefs(){try{return JSON.parse(localStorage.getItem(STORE_PREFS))||{}
 function savePrefs(p){localStorage.setItem(STORE_PREFS,JSON.stringify(p))}
 function getFavs(){try{return JSON.parse(localStorage.getItem(STORE_FAVS))||[]}catch{return[]}}
 function saveFavs(f){localStorage.setItem(STORE_FAVS,JSON.stringify(f))}
+const STORE_POSTS="eph_posts";
+function getCachedPosts(){try{return JSON.parse(localStorage.getItem(STORE_POSTS))||[]}catch{return[]}}
+function cachePosts(p){try{localStorage.setItem(STORE_POSTS,JSON.stringify(p.slice(0,60)))}catch{}}
 async function hashPw(pw){const enc=new TextEncoder().encode(pw+"eph_salt_2026");const buf=await crypto.subtle.digest("SHA-256",enc);return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("")}
 
 /* ── ALL RIVERS — UK + USA + NZ ── */
@@ -182,7 +187,7 @@ export default function App(){
   /* CORE STATE */
   const[riv,setRiv]=useState(()=>getPrefs().lastRiver||"test");
   const[beat,setBeat]=useState(()=>getPrefs().lastBeat||"Stockbridge");
-  const[tab,setTab]=useState("guide");const[pick,setPick]=useState(false);const[gDay,setGDay]=useState(-1);
+  const[tab,setTab]=useState("map");const[pick,setPick]=useState(false);const[gDay,setGDay]=useState(-1);
   const[live,setLive]=useState({});const[light,setLight]=useState(()=>getPrefs().light||false);
   const[scenario,setScenario]=useState(null);const[method,setMethod]=useState("dry");
   const[flyT,setFlyT]=useState("dry");const[openFly,setOpenFly]=useState(null);
@@ -194,6 +199,7 @@ export default function App(){
   const toggleFav=(id)=>{const nf=favs.includes(id)?favs.filter(f=>f!==id):[...favs,id];setFavs(nf);saveFavs(nf)};
   const[advanced,setAdvanced]=useState(false);
   const[customBeat,setCustomBeat]=useState("");
+  const[customRv,setCustomRv]=useState(null);
 
   /* SESSION STATE */
   const[sessions,setSessions]=useState(()=>getSessions());
@@ -223,6 +229,8 @@ export default function App(){
   const[archiveOverview,setArchiveOverview]=useState("");const[archiveLoading,setArchiveLoading]=useState(false);
   const[expandedSession,setExpandedSession]=useState(null);
   const[hatchObs,setHatchObs]=useState({});
+  const[posts,setPosts]=useState(()=>getCachedPosts());
+  const[loadingPosts,setLoadingPosts]=useState(false);
   const[mapsKey,setMapsKey]=useState(null);const[mapsLoaded,setMapsLoaded]=useState(false);
   const fileRef=typeof document!=="undefined"?document.createElement("input"):null;
   if(fileRef){fileRef.type="file";fileRef.accept="image/*";fileRef.setAttribute("capture","environment")}
@@ -323,7 +331,7 @@ export default function App(){
   if(manualPhotoRef){manualPhotoRef.type="file";manualPhotoRef.accept="image/*";manualPhotoRef.multiple=true}
 
   const P=light?L:D;
-  const rv=ALL_RV.find(r=>r.id===riv)||UK_RIVERS[0];
+  const rv=customRv||ALL_RV.find(r=>r.id===riv)||UK_RIVERS[0];
 
   /* SAVE PREFS */
   useEffect(()=>{savePrefs({lastRiver:riv,lastBeat:beat,light})},[riv,beat,light]);
@@ -334,8 +342,25 @@ export default function App(){
   useEffect(()=>{const i=setInterval(doFetch,onRiver?3e5:9e5);return()=>clearInterval(i)},[doFetch,onRiver]);
   useEffect(()=>{setBeat(rv.b?.[0]||"")},[riv]);
 
+  /* LOAD GOOGLE MAPS */
+  useEffect(()=>{
+    if(mapsLoaded||window.google)return;
+    fetch("/api/maps-key").then(r=>r.json()).then(d=>{
+      const key=d.key||d.GOOGLE_MAPS_KEY;if(!key)return;
+      setMapsKey(key);
+      const s=document.createElement("script");
+      s.src=`https://maps.googleapis.com/maps/api/js?key=${key}`;
+      s.async=true;s.defer=true;
+      s.onload=()=>setMapsLoaded(true);
+      document.head.appendChild(s);
+    }).catch(()=>{});
+  },[]);
+
   /* SESSION TIMER */
   useEffect(()=>{if(!onRiver)return;const i=setInterval(()=>setSessionTick(t=>t+1),60000);return()=>clearInterval(i)},[onRiver]);
+
+  /* LOAD POSTS WHEN FEED TAB OPENS */
+  useEffect(()=>{if(tab==="feed")loadPosts()},[tab]);
 
   /* HATCH ARRAY — changes with territory */
   const H=useMemo(()=>getHatches(rv?.territory||"uk"),[rv?.territory]);
@@ -347,6 +372,7 @@ export default function App(){
   const cP=live.wx?.current?.pressure_msl?Math.round(live.wx.current.pressure_msl):(1008+(rSeed%18));
   const cC=live.wx?.current?.cloud_cover??(30+(rSeed%50));
   const cAir=live.wx?.current?.temperature_2m?Math.round(live.wx.current.temperature_2m):(11+(rSeed%8));
+  const cHumidity=live.wx?.current?.relative_humidity_2m??70;
 
   const spp=useMemo(()=>pred(H,cT),[H,cT]);
   const dan=spp.find(s=>s.id==="danica");
@@ -459,6 +485,34 @@ export default function App(){
     if(!navigator.geolocation){res(null);return}
     navigator.geolocation.getCurrentPosition(pos=>res({lat:pos.coords.latitude,lng:pos.coords.longitude}),()=>res(null),{enableHighAccuracy:true,timeout:8000});
   });
+
+  const onFishHere=(lat,lng,name)=>{
+    let territory="uk";
+    if(lng<-30)territory="usa";
+    else if(lat<-20)territory="nz";
+    setCustomRv({id:"__custom",n:name||"My Location",lat,lng,territory,q:5,b:[]});
+  };
+
+  const loadPosts=useCallback(async()=>{
+    setLoadingPosts(true);
+    try{
+      const remote=await sbSelect("posts","is_public=eq.true&order=created_at.desc&limit=60");
+      if(remote&&remote.length>0){setPosts(remote);cachePosts(remote)}
+      else{const local=getCachedPosts();if(local.length>0)setPosts(local)}
+    }catch{const local=getCachedPosts();if(local.length>0)setPosts(local)}
+    setLoadingPosts(false);
+  },[]);
+
+  const createPost=async(post)=>{
+    const newPost={...post,created_at:post.created_at||new Date().toISOString()};
+    setPosts(p=>{const np=[newPost,...p];cachePosts(np);return np});
+    sbInsert("posts",newPost);
+  };
+
+  const deletePost=async(postId)=>{
+    setPosts(p=>{const np=p.filter(x=>x.id!==postId);cachePosts(np);return np});
+    sbDelete("posts",`id=eq.${postId}`);
+  };
 
   const quickSnap=()=>{
     if(!fileRef)return;
@@ -785,7 +839,7 @@ export default function App(){
         {/* RIVER SEARCH + NEAR ME */}
         <div style={{display:"flex",gap:6}}>
           <div onClick={()=>{setPick(!pick);setRiverSearch("");setRegionFilter("")}} style={{flex:1,background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 12px",fontSize:12,color:P.txM,cursor:"pointer"}}>{rv.n+(beat?" / "+beat:"")}</div>
-          <button onClick={()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;let best=ALL_RV[0],bestD=999;ALL_RV.forEach(r=>{const d=Math.sqrt((r.lat-lat)**2+(r.lng-lng)**2);if(d<bestD){bestD=d;best=r}});setRiv(best.id);setPick(false)},()=>{},{enableHighAccuracy:true,timeout:8000})}} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 12px",color:P.txM,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Near me</button>
+          <button onClick={()=>{if(navigator.geolocation)navigator.geolocation.getCurrentPosition(pos=>{const lat=pos.coords.latitude,lng=pos.coords.longitude;let best=ALL_RV[0],bestD=999;ALL_RV.forEach(r=>{const d=Math.sqrt((r.lat-lat)**2+(r.lng-lng)**2);if(d<bestD){bestD=d;best=r}});setRiv(best.id);setCustomRv(null);setPick(false)},()=>{},{enableHighAccuracy:true,timeout:8000})}} style={{background:P.c2,border:`1px solid ${P.bd}`,borderRadius:8,padding:"9px 12px",color:P.txM,fontSize:10,fontWeight:600,cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>Near me</button>
         </div>
 
         {/* PICKER */}
@@ -816,7 +870,7 @@ export default function App(){
             if(riverSearch.trim())rivers=rivers.filter(r=>r.n.toLowerCase().includes(riverSearch.toLowerCase())||r.rg?.toLowerCase().includes(riverSearch.toLowerCase()));
             rivers=rivers.sort((a,b)=>{const af=favs.includes(a.id)?0:1,bf=favs.includes(b.id)?0:1;if(af!==bf)return af-bf;const ap=a.premium?0:1,bp=b.premium?0:1;if(ap!==bp)return ap-bp;return a.n.localeCompare(b.n)});
             if(!rivers.length)return<div style={{textAlign:"center",padding:12,color:P.txD,fontSize:11}}>No rivers found</div>;
-            return rivers.slice(0,20).map(r=><div key={r.id} onClick={()=>{setRiv(r.id);if(!r.b||r.b.length<=1)setPick(false);setRiverSearch("")}} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 4px",borderBottom:`1px solid ${P.bd}`,cursor:"pointer"}}>
+            return rivers.slice(0,20).map(r=><div key={r.id} onClick={()=>{setRiv(r.id);setCustomRv(null);if(!r.b||r.b.length<=1)setPick(false);setRiverSearch("")}} style={{display:"flex",alignItems:"center",gap:6,padding:"6px 4px",borderBottom:`1px solid ${P.bd}`,cursor:"pointer"}}>
               <button onClick={e=>{e.stopPropagation();toggleFav(r.id)}} style={{background:"none",border:"none",color:favs.includes(r.id)?P.rust:P.txD,fontSize:11,cursor:"pointer",padding:0,flexShrink:0,width:16}}>{favs.includes(r.id)?"★":"☆"}</button>
               <span style={{flex:1,fontSize:11,fontWeight:riv===r.id?700:400,color:riv===r.id?P.gn:P.tx}}>{r.n}</span>
               <span style={{fontSize:8,color:r.premium?P.gn:P.txD,flexShrink:0}}>{r.premium?"●":r.rg||""}</span>
@@ -835,8 +889,8 @@ export default function App(){
         </div>}
       </div>
 
-      {/* HERO CARD */}
-      <div style={{padding:"12px 14px",background:P.bg}}>
+      {/* HERO CARD — hidden on map (map has its own score badge) */}
+      {tab!=="map"&&tab!=="feed"&&<div style={{padding:"12px 14px",background:P.bg}}>
         <div style={{background:P.c1,borderRadius:12,border:`1px solid ${P.bd}`,padding:"16px"}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start"}}>
             <div style={{flex:1}}>
@@ -854,7 +908,7 @@ export default function App(){
             <div><span style={{fontSize:10,color:P.txD}}>Cloud </span><span style={{fontSize:10,color:P.tx}}>{cC}%</span></div>
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* SESSION MODE BAR */}
       <div style={{background:onRiver?P.rustS:P.c2,padding:!onRiver&&!reviewing?"12px 14px":"8px 14px",borderBottom:`1px solid ${onRiver?P.rustB:P.bd}`}}>
@@ -886,7 +940,26 @@ export default function App(){
       </div>
 
       {/* TABS */}
-      <div style={{padding:14}}>
+      {/* MAP TAB — full bleed, no padding */}
+      {tab==="map"&&<MapHome
+        P={P} rv={rv} riv={riv} beat={beat}
+        cond={cond} topH={topH} cT={cT} cW={cW} cC={cC} cHumidity={cHumidity}
+        mapsLoaded={mapsLoaded} allRivers={[...UK_RIVERS,...USA_RIVERS,...NZ_RIVERS]}
+        setRiv={(id)=>{setRiv(id);setCustomRv(null)}}
+        setBeat={setBeat}
+        onFishHere={onFishHere}
+        customRv={customRv}
+      />}
+
+      {/* FEED TAB — full bleed */}
+      {tab==="feed"&&<FeedTab
+        P={P} user={user}
+        posts={posts} loadingPosts={loadingPosts}
+        onCreatePost={createPost} onDeletePost={deletePost}
+        currentRv={rv} cT={cT} cAir={cAir} cW={cW} cHumidity={cHumidity}
+      />}
+
+      <div style={{padding:tab==="map"||tab==="feed"?0:14}}>
 
         {/* GUIDE */}
         {tab==="guide"&&<GuideTab
@@ -917,7 +990,7 @@ export default function App(){
         />}
 
         {/* FLY BOX */}
-        {tab==="fly"&&<FlyBoxTab
+        {(tab==="flies"||tab==="fly")&&<FlyBoxTab
           P={P} FLIES={FLIES} actIds={actIds}
           flyT={flyT} setFlyT={setFlyT} openFly={openFly} setOpenFly={setOpenFly}
           scanFlyBox={scanFlyBox} flyBoxScanning={flyBoxScanning} flyBoxScan={flyBoxScan}
@@ -945,7 +1018,7 @@ export default function App(){
         </div>}
 
         {/* LOG */}
-        {tab==="reports"&&<LogTab
+        {(tab==="log"||tab==="reports")&&<LogTab
           P={P} sessions={sessions} rv={rv} beat={beat}
           showForm={showForm} setShowForm={setShowForm}
           fDate={fDate} setFDate={setFDate}
@@ -1021,10 +1094,18 @@ export default function App(){
       </div>}
 
       {/* NAV */}
-      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:P.c1,borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>
-        {[{id:"guide",l:"Guide"},{id:"hatches",l:"Hatches"},{id:"fly",l:"Flies"},{id:"outlook",l:"Outlook"},{id:"reports",l:"Log"},{id:"tips",l:"Tips"}].map(n=>(
-          <button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"10px 0 7px",border:"none",background:"none",color:tab===n.id?P.gn:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center"}}>
-            <div style={{fontSize:9,fontWeight:tab===n.id?700:500}}>{n.l}</div>
+      <div style={{position:"fixed",bottom:0,left:"50%",transform:"translateX(-50%)",width:"100%",maxWidth:480,background:light?"rgba(255,255,255,0.92)":"rgba(22,30,27,0.95)",backdropFilter:"blur(16px)",WebkitBackdropFilter:"blur(16px)",borderTop:`1px solid ${P.bd}`,display:"flex",zIndex:100,paddingBottom:"env(safe-area-inset-bottom, 0px)"}}>
+        {[
+          {id:"map",l:"Map",ic:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>},
+          {id:"guide",l:"Guide",ic:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>},
+          {id:"feed",l:"Feed",ic:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>},
+          {id:"log",l:"Log",ic:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>},
+          {id:"flies",l:"Flies",ic:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>}
+        ].map(n=>(
+          <button key={n.id} onClick={()=>setTab(n.id)} style={{flex:1,padding:"10px 0 8px",border:"none",background:"none",color:tab===n.id?P.gn:P.txD,cursor:"pointer",fontFamily:"inherit",textAlign:"center",display:"flex",flexDirection:"column",alignItems:"center",gap:3,position:"relative"}}>
+            {tab===n.id&&<div style={{position:"absolute",top:0,left:"50%",transform:"translateX(-50%)",width:20,height:2,background:P.gn,borderRadius:"0 0 2px 2px"}}/>}
+            {n.ic}
+            <div style={{fontSize:9,fontWeight:tab===n.id?700:400,letterSpacing:"0.03em"}}>{n.l}</div>
           </button>
         ))}
       </div>

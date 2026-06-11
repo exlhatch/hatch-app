@@ -4,3 +4,4 @@ const H={"Content-Type":"application/json","apikey":SB_KEY,"Authorization":`Bear
 export async function sbInsert(table,data){try{const r=await fetch(`${SB_URL}/rest/v1/${table}`,{method:"POST",headers:H,body:JSON.stringify(data)});return r.ok}catch{return false}}
 export async function sbSelect(table,query=""){try{const r=await fetch(`${SB_URL}/rest/v1/${table}?${query}`,{headers:{"apikey":SB_KEY,"Authorization":`Bearer ${SB_KEY}`}});return r.ok?await r.json():[]}catch{return[]}}
 export async function sbUpdate(table,match,data){try{const r=await fetch(`${SB_URL}/rest/v1/${table}?${match}`,{method:"PATCH",headers:H,body:JSON.stringify(data)});return r.ok}catch{return false}}
+export async function sbDelete(table,match){try{const r=await fetch(`${SB_URL}/rest/v1/${table}?${match}`,{method:"DELETE",headers:H});return r.ok}catch{return false}}
